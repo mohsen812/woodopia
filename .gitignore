@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+*.sqlite3
+.env
+.idea/
+.vscode/
+*_backup_*.py
+*_step_*.py
+python
