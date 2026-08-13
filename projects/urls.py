@@ -1,13 +1,20 @@
 from django.urls import path
-from projects.api.graph import project_graph
+from .views import (
+    ProjectVisualListCreateView,
+    ProjectVisualDetailView,
+)
 
 
 urlpatterns = [
 
     path(
-        "api/graph/<int:project_id>/",
-        project_graph,
-        name="project_graph"
+        "visuals/",
+        ProjectVisualListCreateView.as_view()
+    ),
+
+    path(
+        "visuals/<int:pk>/",
+        ProjectVisualDetailView.as_view()
     ),
 
 ]
