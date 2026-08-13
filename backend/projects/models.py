@@ -411,3 +411,212 @@ class ProjectToken(models.Model):
 
     def __str__(self):
         return self.title
+class ProjectRoad(models.Model):
+
+    name = models.CharField(
+        max_length=100
+    )
+
+    from_zone = models.ForeignKey(
+        ProjectZone,
+        on_delete=models.CASCADE,
+        related_name="outgoing_roads"
+    )
+
+    to_zone = models.ForeignKey(
+        ProjectZone,
+        on_delete=models.CASCADE,
+        related_name="incoming_roads"
+    )
+
+    direction = models.CharField(
+        max_length=50,
+        default="forward"
+    )
+
+    speed = models.FloatField(
+        default=1.0
+    )
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    def __str__(self):
+        return self.name
+
+class ProjectMovement(models.Model):
+
+    ACTION_CHOICES = [
+
+        ("created", "Created"),
+        ("moved", "Moved"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("assigned", "Assigned"),
+        ("completed", "Completed"),
+
+    ]
+
+
+    token = models.ForeignKey(
+        ProjectToken,
+        on_delete=models.CASCADE,
+        related_name="movements"
+    )
+
+
+    from_zone = models.ForeignKey(
+        ProjectZone,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="movement_from"
+    )
+
+
+    to_zone = models.ForeignKey(
+        ProjectZone,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="movement_to"
+    )
+
+
+    action = models.CharField(
+        max_length=50,
+        choices=ACTION_CHOICES,
+        default="moved"
+    )
+
+
+    note = models.TextField(
+        blank=True
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    def __str__(self):
+        return f"{self.token.title} - {self.action}"
+    
+class ProjectVisual(models.Model):
+
+    SHAPE_TYPES = [
+
+        ('triangle', 'Triangle'),
+        ('square', 'Square'),
+        ('pentagon', 'Pentagon'),
+        ('hexagon', 'Hexagon'),
+        ('polygon', 'Polygon'),
+
+    ]
+
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='visuals'
+    )
+
+
+    name = models.CharField(
+        max_length=100
+    )
+
+
+    shape_type = models.CharField(
+        max_length=50,
+        choices=SHAPE_TYPES,
+        default='triangle'
+    )
+
+
+    color = models.CharField(
+        max_length=50,
+        default='blue'
+    )
+
+
+    size = models.PositiveIntegerField(
+        default=1
+    )
+
+
+    rotation = models.IntegerField(
+        default=0
+    )
+
+
+    # برای تنظیمات پیشرفته گرافیکی آینده
+    visual_data = models.JSONField(
+        default=dict,
+        blank=True
+    )
+
+
+    # وضعیت زنده بودن آبجکت
+    STATUS_CHOICES = [
+
+        ('waiting', 'Waiting'),
+        ('active', 'Active'),
+        ('moving', 'Moving'),
+        ('completed', 'Completed'),
+        ('blocked', 'Blocked'),
+
+    ]
+
+
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='waiting'
+    )
+
+
+    current_zone = models.ForeignKey(
+        ProjectZone,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="visual_objects"
+    )
+
+
+    position_x = models.FloatField(
+        default=0
+    )
+
+
+    position_y = models.FloatField(
+        default=0
+    )
+
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+
+    def __str__(self):
+
+        return f"{self.project.title} - {self.name}"
