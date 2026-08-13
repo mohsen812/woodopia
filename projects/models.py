@@ -49,9 +49,10 @@ class Project(models.Model):
         auto_now=True
     )
 
-
     def __str__(self):
         return self.title
+
+
 
 class ProjectItem(models.Model):
 
@@ -93,3 +94,192 @@ class ProjectItem(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+class SubProjectType(models.Model):
+
+    name = models.CharField(
+        max_length=100,
+        unique=True
+    )
+
+    code = models.CharField(
+        max_length=50,
+        unique=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+
+    def __str__(self):
+        return self.name
+
+
+
+class SubProject(models.Model):
+
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('tender', 'Tender'),
+        ('selected', 'Workshop Selected'),
+        ('production', 'Production'),
+        ('qc', 'Quality Control'),
+        ('completed', 'Completed'),
+        ('blocked', 'Blocked'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+
+    project_item = models.ForeignKey(
+        ProjectItem,
+        on_delete=models.CASCADE,
+        related_name='subprojects'
+    )
+
+
+    name = models.CharField(
+        max_length=255
+    )
+
+
+    description = models.TextField(
+        blank=True
+    )
+
+
+    subproject_type = models.ForeignKey(
+        SubProjectType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='subprojects'
+    )
+
+
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='draft'
+    )
+
+
+    assigned_organization = models.ForeignKey(
+        Organization,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_subprojects'
+    )
+
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+
+    def __str__(self):
+        return self.name
+
+
+
+
+class SubProjectDependency(models.Model):
+
+
+    DEPENDENCY_TYPES = [
+
+        ('requires', 'Requires'),
+        ('blocks', 'Blocks'),
+        ('influences', 'Influences'),
+        ('optional', 'Optional'),
+        ('parallel', 'Parallel'),
+
+    ]
+
+
+    STATUS_CHOICES = [
+
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('blocked', 'Blocked'),
+
+    ]
+
+
+    from_subproject = models.ForeignKey(
+        SubProject,
+        on_delete=models.CASCADE,
+        related_name='outgoing_dependencies'
+    )
+
+
+    to_subproject = models.ForeignKey(
+        SubProject,
+        on_delete=models.CASCADE,
+        related_name='incoming_dependencies'
+    )
+
+
+    dependency_type = models.CharField(
+        max_length=50,
+        choices=DEPENDENCY_TYPES,
+        default='requires'
+    )
+
+
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+
+
+    delay_days = models.PositiveIntegerField(
+        default=0
+    )
+
+
+    is_blocking = models.BooleanField(
+        default=False
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    class Meta:
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    'from_subproject',
+                    'to_subproject'
+                ],
+                name='unique_subproject_dependency'
+            )
+
+        ]
+
+
+    def __str__(self):
+
+        return (
+            f"{self.from_subproject.name} -> "
+            f"{self.to_subproject.name}"
+        )
