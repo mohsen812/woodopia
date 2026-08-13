@@ -3,13 +3,15 @@ from django.urls import path, include
 
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
+
     path(
-        "admin/",
-        admin.site.urls
+        'api/organizations/',
+        include('organizations.urls')
     ),
 
     path(
-        "api/organizations/",
-        include("organizations.urls")
+        'projects/',
+        include('projects.urls')
     ),
 ]
