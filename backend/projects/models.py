@@ -283,3 +283,131 @@ class SubProjectDependency(models.Model):
             f"{self.from_subproject.name} -> "
             f"{self.to_subproject.name}"
         )
+
+class ProjectZone(models.Model):
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="zones",
+        null=True,
+        blank=True
+    )
+
+    name = models.CharField(
+        max_length=100
+    )
+
+    code = models.CharField(
+        max_length=50
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    x_position = models.IntegerField(
+        default=0
+    )
+
+    y_position = models.IntegerField(
+        default=0
+    )
+
+    order = models.PositiveIntegerField(
+        default=0
+    )
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+
+    class Meta:
+        ordering = [
+            "order",
+            "id"
+        ]
+
+
+    def __str__(self):
+        if self.project:
+            return f"{self.project.title} - {self.name}"
+        return self.name
+
+class ProjectToken(models.Model):
+
+    STATUS_CHOICES = [
+
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+
+    ]
+
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='tokens'
+    )
+
+
+    current_subproject = models.ForeignKey(
+        SubProject,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tokens'
+    )
+
+
+    current_zone = models.ForeignKey(
+        ProjectZone,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tokens'
+    )
+
+
+    title = models.CharField(
+        max_length=255
+    )
+
+
+    description = models.TextField(
+        blank=True
+    )
+
+
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+
+
+    position_x = models.FloatField(
+        default=0
+    )
+
+
+    position_y = models.FloatField(
+        default=0
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+
+    def __str__(self):
+        return self.title

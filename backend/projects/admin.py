@@ -6,6 +6,8 @@ from .models import (
     SubProject,
     SubProjectType,
     SubProjectDependency,
+    ProjectZone,
+    ProjectToken,
 )
 
 
@@ -24,7 +26,6 @@ class ProjectItemAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'project',
-        'quantity',
         'status',
     )
 
@@ -32,11 +33,6 @@ class ProjectItemAdmin(admin.ModelAdmin):
 @admin.register(SubProjectType)
 class SubProjectTypeAdmin(admin.ModelAdmin):
     list_display = (
-        'name',
-        'code',
-    )
-
-    search_fields = (
         'name',
         'code',
     )
@@ -52,11 +48,6 @@ class SubProjectAdmin(admin.ModelAdmin):
         'assigned_organization',
     )
 
-    list_filter = (
-        'status',
-        'subproject_type',
-    )
-
 
 @admin.register(SubProjectDependency)
 class SubProjectDependencyAdmin(admin.ModelAdmin):
@@ -64,8 +55,26 @@ class SubProjectDependencyAdmin(admin.ModelAdmin):
         'from_subproject',
         'to_subproject',
         'dependency_type',
+        'status',
+        'is_blocking',
     )
 
-    list_filter = (
-        'dependency_type',
+
+@admin.register(ProjectZone)
+class ProjectZoneAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'code',
+        'order',
+    )
+
+
+@admin.register(ProjectToken)
+class ProjectTokenAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'project',
+        'current_zone',
+        'current_subproject',
+        'status',
     )
