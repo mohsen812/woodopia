@@ -11,11 +11,18 @@ class ProjectVisualSerializer(serializers.ModelSerializer):
 
 class ProjectZoneSerializer(serializers.ModelSerializer):
 
-    visuals = ProjectVisualSerializer(
-        source="projectvisual_set",
-        many=True,
-        read_only=True
-    )
+    visuals = serializers.SerializerMethodField()
+
+    def get_visuals(self, obj):
+        visuals = ProjectVisual.objects.filter(
+            current_zone=obj
+        )
+
+        return ProjectVisualSerializer(
+            visuals,
+            many=True
+        ).data
+
 
     class Meta:
         model = ProjectZone
@@ -30,12 +37,9 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
             "is_active",
             "visuals",
         ]
-
-
 class ProjectFullSerializer(serializers.ModelSerializer):
 
     zones = ProjectZoneSerializer(
-        source="projectzone_set",
         many=True,
         read_only=True
     )
