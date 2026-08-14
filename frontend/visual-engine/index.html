@@ -1,0 +1,608 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FEEMAAS Visual Engine</title>
+
+    <link rel="stylesheet" href="css/visual-engine.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- =========================
+             TOP BAR
+        ========================== -->
+        <header class="topbar">
+
+            <div class="brand">
+                <div class="brand-mark">F</div>
+
+                <div class="brand-text">
+                    <strong>FEEMAAS</strong>
+                    <span>Visual Engine</span>
+                </div>
+            </div>
+
+            <div class="project-info">
+
+                <div class="project-name">
+                    Dining Table Custom Project
+                </div>
+
+                <div class="project-zone">
+                    Zone: <strong>Main Structure</strong>
+                </div>
+
+            </div>
+
+            <div class="topbar-actions">
+
+                <button class="toolbar-button" id="saveButton">
+                    Save
+                </button>
+
+                <button class="toolbar-button" id="resetButton">
+                    Reset
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- =========================
+             MAIN WORKSPACE
+        ========================== -->
+        <main class="workspace">
+
+
+            <!-- =========================
+                 LEFT TOOLBAR
+            ========================== -->
+            <aside class="left-panel">
+
+                <div class="panel-title">
+                    Shapes
+                </div>
+
+                <button
+                    class="shape-tool active"
+                    data-shape="triangle"
+                    id="triangleTool">
+
+                    <span class="shape-icon triangle-icon"></span>
+
+                    <span>Triangle</span>
+
+                </button>
+
+
+                <button
+                    class="shape-tool"
+                    data-shape="square"
+                    id="squareTool">
+
+                    <span class="shape-icon square-icon"></span>
+
+                    <span>Square</span>
+
+                </button>
+
+
+                <button
+                    class="shape-tool"
+                    data-shape="pentagon"
+                    id="pentagonTool">
+
+                    <span class="shape-icon pentagon-icon"></span>
+
+                    <span>Pentagon</span>
+
+                </button>
+
+
+                <button
+                    class="shape-tool"
+                    data-shape="hexagon"
+                    id="hexagonTool">
+
+                    <span class="shape-icon hexagon-icon"></span>
+
+                    <span>Hexagon</span>
+
+                </button>
+
+
+                <button
+                    class="shape-tool"
+                    data-shape="polygon"
+                    id="polygonTool">
+
+                    <span class="shape-icon polygon-icon"></span>
+
+                    <span>Polygon</span>
+
+                </button>
+
+
+                <div class="tool-divider"></div>
+
+
+                <button
+                    class="shape-tool"
+                    id="deleteTool">
+
+                    <span class="tool-symbol">×</span>
+
+                    <span>Delete</span>
+
+                </button>
+
+
+                <button
+                    class="shape-tool"
+                    id="duplicateTool">
+
+                    <span class="tool-symbol">+</span>
+
+                    <span>Duplicate</span>
+
+                </button>
+
+            </aside>
+
+
+
+            <!-- =========================
+                 VISUAL CANVAS
+            ========================== -->
+            <section class="visual-area">
+
+                <div class="canvas-header">
+
+                    <div>
+                        <span class="canvas-title">
+                            Operational Area
+                        </span>
+
+                        <span class="canvas-status">
+                            ● Live
+                        </span>
+                    </div>
+
+
+                    <div class="canvas-controls">
+
+                        <button id="zoomOut">
+                            −
+                        </button>
+
+                        <span id="zoomValue">
+                            100%
+                        </span>
+
+                        <button id="zoomIn">
+                            +
+                        </button>
+
+                        <button id="centerCanvas">
+                            Center
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!--
+                    SVG is intentionally used here.
+
+                    Later all visual objects will live
+                    inside this SVG workspace.
+                -->
+
+                <div
+                    class="svg-wrapper"
+                    id="svgWrapper">
+
+                    <svg
+                        id="visualCanvas"
+                        class="visual-canvas"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 1200 700">
+
+                        <!-- Background grid -->
+
+                        <defs>
+
+                            <pattern
+                                id="grid"
+                                width="40"
+                                height="40"
+                                patternUnits="userSpaceOnUse">
+
+                                <path
+                                    d="M 40 0 L 0 0 0 40"
+                                    fill="none"
+                                    stroke="rgba(255,255,255,0.045)"
+                                    stroke-width="1"/>
+
+                            </pattern>
+
+                        </defs>
+
+
+                        <rect
+                            width="1200"
+                            height="700"
+                            fill="url(#grid)"
+                        />
+
+
+                        <!--
+                            FEEMAAS visual objects will be
+                            dynamically inserted here.
+                        -->
+
+                        <g
+                            id="visualObjects"
+                            class="visual-objects">
+                        </g>
+
+
+                        <!--
+                            Selection layer.
+
+                            It will later contain:
+                            - resize handles
+                            - rotation handle
+                            - selection border
+                        -->
+
+                        <g
+                            id="selectionLayer"
+                            class="selection-layer">
+                        </g>
+
+                    </svg>
+
+                </div>
+
+
+                <!-- =========================
+                     BOTTOM STATUS BAR
+                ========================== -->
+
+                <div class="canvas-footer">
+
+                    <div>
+                        Position:
+                        <strong id="cursorPosition">
+                            0, 0
+                        </strong>
+                    </div>
+
+                    <div>
+                        Objects:
+                        <strong id="objectCount">
+                            0
+                        </strong>
+                    </div>
+
+                    <div>
+                        Connection:
+                        <strong class="connection-online">
+                            Online
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =========================
+                 RIGHT PROPERTIES PANEL
+            ========================== -->
+            <aside class="right-panel">
+
+                <div class="panel-title">
+                    Properties
+                </div>
+
+
+                <!-- Selected object -->
+
+                <div
+                    class="properties-empty"
+                    id="propertiesEmpty">
+
+                    <div class="empty-icon">
+                        ◇
+                    </div>
+
+                    <p>
+                        Select a visual object
+                    </p>
+
+                    <span>
+                        Object properties will appear here.
+                    </span>
+
+                </div>
+
+
+                <!-- Actual properties -->
+
+                <div
+                    class="properties"
+                    id="propertiesPanel"
+                    hidden>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="propertyName"
+                            value="Dining Table Core Triangle">
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Shape
+                        </label>
+
+                        <select id="propertyShape">
+
+                            <option value="triangle">
+                                Triangle
+                            </option>
+
+                            <option value="square">
+                                Square
+                            </option>
+
+                            <option value="pentagon">
+                                Pentagon
+                            </option>
+
+                            <option value="hexagon">
+                                Hexagon
+                            </option>
+
+                            <option value="polygon">
+                                Polygon
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Color
+                        </label>
+
+                        <div class="color-control">
+
+                            <input
+                                type="color"
+                                id="propertyColor"
+                                value="#8B4513">
+
+                            <input
+                                type="text"
+                                id="propertyColorText"
+                                value="#8B4513">
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Size
+                        </label>
+
+                        <div class="range-row">
+
+                            <input
+                                type="range"
+                                id="propertySize"
+                                min="20"
+                                max="400"
+                                value="100">
+
+                            <span id="propertySizeValue">
+                                100
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Rotation
+                        </label>
+
+                        <div class="range-row">
+
+                            <input
+                                type="range"
+                                id="propertyRotation"
+                                min="0"
+                                max="360"
+                                value="0">
+
+                            <span id="propertyRotationValue">
+                                0°
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="property-grid">
+
+                        <div class="property-section">
+
+                            <label>
+                                Position X
+                            </label>
+
+                            <input
+                                type="number"
+                                id="propertyX"
+                                value="0">
+
+                        </div>
+
+
+                        <div class="property-section">
+
+                            <label>
+                                Position Y
+                            </label>
+
+                            <input
+                                type="number"
+                                id="propertyY"
+                                value="0">
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select id="propertyStatus">
+
+                            <option value="waiting">
+                                Waiting
+                            </option>
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="completed">
+                                Completed
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Current Zone
+                        </label>
+
+                        <select id="propertyZone">
+
+                            <option value="1">
+                                Main Structure
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="property-section">
+
+                        <label>
+                            Visual Data
+                        </label>
+
+                        <textarea
+                            id="propertyVisualData"
+                            rows="6">{
+    "category": "table",
+    "material": "wood",
+    "description": "Main structural triangle"
+}</textarea>
+
+                    </div>
+
+
+                    <button
+                        class="apply-button"
+                        id="applyProperties">
+
+                        Apply Changes
+
+                    </button>
+
+                </div>
+
+            </aside>
+
+        </main>
+
+
+        <!-- =========================
+             BOTTOM PROJECT STATUS
+        ========================== -->
+
+        <footer class="app-footer">
+
+            <div>
+                FEEMAAS Visual Engine
+            </div>
+
+            <div>
+                Project #2
+            </div>
+
+            <div>
+                Zone: MAIN
+            </div>
+
+            <div class="realtime-indicator">
+
+                <span class="status-dot"></span>
+
+                Realtime Ready
+
+            </div>
+
+        </footer>
+
+    </div>
+
+
+    <!-- JavaScript -->
+
+    <script src="js/visual-engine.js"></script>
+
+</body>
+</html>
