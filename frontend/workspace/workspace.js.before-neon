@@ -1,0 +1,1537 @@
+﻿
+// =====================================
+// FEEMAAS Workspace Engine
+// Version 4
+// SVG Visual Object
+// Selection + Drag + Persistence
+// Zone Engine V1
+// =====================================
+
+const API_URL =
+    "http://127.0.0.1:8000/api/projects/";
+
+let currentProject = null;
+let currentVisual = null;
+let selectedVisualElement = null;
+
+let isDragging = false;
+
+let dragStartX = 0;
+let dragStartY = 0;
+
+let objectStartX = 0;
+let objectStartY = 0;
+
+
+// =====================================
+// WORKSPACE CONFIGURATION
+// =====================================
+
+const SVG_WIDTH = 800;
+const SVG_HEIGHT = 500;
+
+
+// =====================================
+// ZONE DEFINITIONS
+// =====================================
+
+const WORKSPACE_ZONES = [
+
+    {
+        id: "central-plaza",
+
+        name: "Central Plaza",
+
+        type: "plaza",
+
+        x: 280,
+        y: 140,
+
+        width: 240,
+        height: 180,
+
+        behavior: "neon"
+    }
+
+];
+
+
+// =====================================
+// START
+// =====================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadProject();
+
+    }
+);
+
+
+// =====================================
+// LOAD PROJECT
+// =====================================
+
+async function loadProject() {
+
+    try {
+
+        const response =
+            await fetch(API_URL);
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API error: ${response.status}`
+            );
+
+        }
+
+
+        const projects =
+            await response.json();
+
+
+        if (!projects.length) {
+
+            console.warn(
+                "No FEEMAAS projects found."
+            );
+
+            return;
+
+        }
+
+
+        currentProject =
+            projects[0];
+
+
+        showProject(
+            currentProject
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "FEEMAAS API Error:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================
+// SHOW PROJECT
+// =====================================
+
+function showProject(project) {
+
+    const projectTitle =
+        document.getElementById(
+            "projectTitle"
+        );
+
+
+    const projectDescription =
+        document.getElementById(
+            "projectDescription"
+        );
+
+
+    const zoneName =
+        document.getElementById(
+            "zoneName"
+        );
+
+
+    if (projectTitle) {
+
+        projectTitle.innerText =
+            project.title;
+
+    }
+
+
+    if (projectDescription) {
+
+        projectDescription.innerText =
+            project.description || "";
+
+    }
+
+
+    drawWorkspace();
+
+
+    if (
+        project.zones &&
+        project.zones.length
+    ) {
+
+        const zone =
+            project.zones[0];
+
+
+        if (zoneName) {
+
+            zoneName.innerText =
+                zone.name;
+
+        }
+
+
+        if (
+            zone.visuals &&
+            zone.visuals.length
+        ) {
+
+            drawVisual(
+                zone.visuals[0]
+            );
+
+        }
+
+    }
+
+}
+
+
+// =====================================
+// DRAW WORKSPACE
+// =====================================
+
+function drawWorkspace() {
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    if (!svg) {
+
+        return;
+
+    }
+
+
+    svg.innerHTML = "";
+
+
+    drawBackground(
+        svg
+    );
+
+
+    drawRoad(
+        svg
+    );
+
+
+    WORKSPACE_ZONES.forEach(
+        zone => {
+
+            drawZone(
+                svg,
+                zone
+            );
+
+        }
+    );
+
+}
+
+
+// =====================================
+// DRAW BACKGROUND
+// =====================================
+
+function drawBackground(svg) {
+
+    const background =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+        );
+
+
+    background.setAttribute(
+        "x",
+        "0"
+    );
+
+
+    background.setAttribute(
+        "y",
+        "0"
+    );
+
+
+    background.setAttribute(
+        "width",
+        SVG_WIDTH
+    );
+
+
+    background.setAttribute(
+        "height",
+        SVG_HEIGHT
+    );
+
+
+    background.setAttribute(
+        "fill",
+        "#f8fafc"
+    );
+
+
+    background.setAttribute(
+        "rx",
+        "18"
+    );
+
+
+    svg.appendChild(
+        background
+    );
+
+}
+
+
+// =====================================
+// DRAW ROAD
+// =====================================
+
+function drawRoad(svg) {
+
+    const road =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+        );
+
+
+    road.setAttribute(
+        "x",
+        "350"
+    );
+
+
+    road.setAttribute(
+        "y",
+        "0"
+    );
+
+
+    road.setAttribute(
+        "width",
+        "100"
+    );
+
+
+    road.setAttribute(
+        "height",
+        SVG_HEIGHT
+    );
+
+
+    road.setAttribute(
+        "fill",
+        "#dbe2ea"
+    );
+
+
+    road.setAttribute(
+        "opacity",
+        "0.8"
+    );
+
+
+    svg.appendChild(
+        road
+    );
+
+
+    const roadLine =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+
+    roadLine.setAttribute(
+        "x1",
+        "400"
+    );
+
+
+    roadLine.setAttribute(
+        "y1",
+        "0"
+    );
+
+
+    roadLine.setAttribute(
+        "x2",
+        "400"
+    );
+
+
+    roadLine.setAttribute(
+        "y2",
+        SVG_HEIGHT
+    );
+
+
+    roadLine.setAttribute(
+        "stroke",
+        "#ffffff"
+    );
+
+
+    roadLine.setAttribute(
+        "stroke-width",
+        "3"
+    );
+
+
+    roadLine.setAttribute(
+        "stroke-dasharray",
+        "12 12"
+    );
+
+
+    roadLine.setAttribute(
+        "opacity",
+        "0.8"
+    );
+
+
+    svg.appendChild(
+        roadLine
+    );
+
+}
+
+
+// =====================================
+// DRAW ZONE
+// =====================================
+
+function drawZone(svg, zone) {
+
+    const group =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "g"
+        );
+
+
+    group.setAttribute(
+        "data-zone-id",
+        zone.id
+    );
+
+
+    const zoneRect =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+        );
+
+
+    zoneRect.setAttribute(
+        "x",
+        zone.x
+    );
+
+
+    zoneRect.setAttribute(
+        "y",
+        zone.y
+    );
+
+
+    zoneRect.setAttribute(
+        "width",
+        zone.width
+    );
+
+
+    zoneRect.setAttribute(
+        "height",
+        zone.height
+    );
+
+
+    zoneRect.setAttribute(
+        "rx",
+        "24"
+    );
+
+
+    zoneRect.setAttribute(
+        "fill",
+        "#ffffff"
+    );
+
+
+    zoneRect.setAttribute(
+        "stroke",
+        "#cbd5e1"
+    );
+
+
+    zoneRect.setAttribute(
+        "stroke-width",
+        "2"
+    );
+
+
+    zoneRect.setAttribute(
+        "opacity",
+        "0.95"
+    );
+
+
+    zoneRect.setAttribute(
+        "class",
+        "workspace-zone"
+    );
+
+
+    group.appendChild(
+        zoneRect
+    );
+
+
+    const label =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+
+    label.setAttribute(
+        "x",
+        zone.x + zone.width / 2
+    );
+
+
+    label.setAttribute(
+        "y",
+        zone.y + 32
+    );
+
+
+    label.setAttribute(
+        "text-anchor",
+        "middle"
+    );
+
+
+    label.setAttribute(
+        "font-family",
+        "Tahoma, Arial, sans-serif"
+    );
+
+
+    label.setAttribute(
+        "font-size",
+        "16"
+    );
+
+
+    label.setAttribute(
+        "font-weight",
+        "bold"
+    );
+
+
+    label.setAttribute(
+        "fill",
+        "#64748b"
+    );
+
+
+    label.textContent =
+        "CENTRAL PLAZA";
+
+
+    group.appendChild(
+        label
+    );
+
+
+    svg.appendChild(
+        group
+    );
+
+}
+
+
+// =====================================
+// DRAW VISUAL
+// =====================================
+
+function drawVisual(visual) {
+
+    currentVisual =
+        visual;
+
+
+    updateVisualPanel(
+        visual
+    );
+
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    if (!svg) {
+
+        return;
+
+    }
+
+
+    // Workspace remains.
+    // Only visual objects are redrawn.
+
+    removeExistingVisuals(
+        svg
+    );
+
+
+    if (
+        visual.shape_type ===
+        "triangle"
+    ) {
+
+        createTriangle(
+            svg,
+            visual
+        );
+
+    }
+
+}
+
+
+// =====================================
+// REMOVE EXISTING VISUAL OBJECTS
+// =====================================
+
+function removeExistingVisuals(svg) {
+
+    const visuals =
+        svg.querySelectorAll(
+            "[data-visual-id]"
+        );
+
+
+    visuals.forEach(
+        element => {
+
+            element.remove();
+
+        }
+    );
+
+}
+
+
+// =====================================
+// CREATE TRIANGLE
+// =====================================
+
+function createTriangle(
+    svg,
+    visual
+) {
+
+    const size =
+        Number(visual.size) || 100;
+
+
+    const x =
+        Number(
+            visual.position_x
+        ) || 0;
+
+
+    const y =
+        Number(
+            visual.position_y
+        ) || 0;
+
+
+    const rotation =
+        Number(
+            visual.rotation
+        ) || 0;
+
+
+    const centerX =
+        400 + x;
+
+
+    const centerY =
+        250 + y;
+
+
+    const half =
+        size / 2;
+
+
+    const points = [
+
+        `${centerX},${centerY - half}`,
+
+        `${centerX - half},${centerY + half}`,
+
+        `${centerX + half},${centerY + half}`
+
+    ].join(" ");
+
+
+    const triangle =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "polygon"
+        );
+
+
+    triangle.setAttribute(
+        "points",
+        points
+    );
+
+
+    triangle.setAttribute(
+        "fill",
+        visual.color ||
+        "#8B4513"
+    );
+
+
+    triangle.setAttribute(
+        "stroke",
+        "#5b3a20"
+    );
+
+
+    triangle.setAttribute(
+        "stroke-width",
+        "3"
+    );
+
+
+    triangle.setAttribute(
+        "opacity",
+        "0.9"
+    );
+
+
+    triangle.setAttribute(
+        "data-visual-id",
+        visual.id
+    );
+
+
+    triangle.setAttribute(
+        "data-x",
+        x
+    );
+
+
+    triangle.setAttribute(
+        "data-y",
+        y
+    );
+
+
+    triangle.style.cursor =
+        "grab";
+
+
+    triangle.setAttribute(
+        "transform",
+        `rotate(
+            ${rotation}
+            ${centerX}
+            ${centerY}
+        )`
+    );
+
+
+    triangle.addEventListener(
+        "mousedown",
+        startDrag
+    );
+
+
+    triangle.addEventListener(
+        "click",
+        selectVisual
+    );
+
+
+    svg.appendChild(
+        triangle
+    );
+
+
+    selectedVisualElement =
+        null;
+
+
+    updateZoneState(
+        visual
+    );
+
+}
+
+
+// =====================================
+// SELECT VISUAL
+// =====================================
+
+function selectVisual(event) {
+
+    event.stopPropagation();
+
+
+    if (
+        selectedVisualElement
+    ) {
+
+        selectedVisualElement.setAttribute(
+            "stroke",
+            "#5b3a20"
+        );
+
+
+        selectedVisualElement.setAttribute(
+            "stroke-width",
+            "3"
+        );
+
+    }
+
+
+    selectedVisualElement =
+        event.currentTarget;
+
+
+    selectedVisualElement.setAttribute(
+        "stroke",
+        "#2563eb"
+    );
+
+
+    selectedVisualElement.setAttribute(
+        "stroke-width",
+        "6"
+    );
+
+
+    selectedVisualElement.style.cursor =
+        "grab";
+
+}
+
+
+// =====================================
+// START DRAG
+// =====================================
+
+function startDrag(event) {
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+
+    if (
+        selectedVisualElement !==
+        event.currentTarget
+    ) {
+
+        selectVisual(event);
+
+    }
+
+
+    isDragging =
+        true;
+
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    const point =
+        getSVGPoint(
+            svg,
+            event.clientX,
+            event.clientY
+        );
+
+
+    dragStartX =
+        point.x;
+
+
+    dragStartY =
+        point.y;
+
+
+    objectStartX =
+        Number(
+            event.currentTarget.dataset.x
+        );
+
+
+    objectStartY =
+        Number(
+            event.currentTarget.dataset.y
+        );
+
+
+    event.currentTarget.style.cursor =
+        "grabbing";
+
+
+    document.addEventListener(
+        "mousemove",
+        dragVisual
+    );
+
+
+    document.addEventListener(
+        "mouseup",
+        stopDrag
+    );
+
+}
+
+
+// =====================================
+// DRAG
+// =====================================
+
+function dragVisual(event) {
+
+    if (!isDragging) {
+
+        return;
+
+    }
+
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    const point =
+        getSVGPoint(
+            svg,
+            event.clientX,
+            event.clientY
+        );
+
+
+    const deltaX =
+        point.x -
+        dragStartX;
+
+
+    const deltaY =
+        point.y -
+        dragStartY;
+
+
+    const newX =
+        objectStartX +
+        deltaX;
+
+
+    const newY =
+        objectStartY +
+        deltaY;
+
+
+    updateTrianglePosition(
+        selectedVisualElement,
+        newX,
+        newY
+    );
+
+}
+
+
+// =====================================
+// UPDATE TRIANGLE POSITION
+// =====================================
+
+function updateTrianglePosition(
+    triangle,
+    x,
+    y
+) {
+
+    if (!triangle) {
+
+        return;
+
+    }
+
+
+    const size =
+        Number(
+            currentVisual.size
+        ) || 100;
+
+
+    const rotation =
+        Number(
+            currentVisual.rotation
+        ) || 0;
+
+
+    const centerX =
+        400 + x;
+
+
+    const centerY =
+        250 + y;
+
+
+    const half =
+        size / 2;
+
+
+    const points = [
+
+        `${centerX},${centerY - half}`,
+
+        `${centerX - half},${centerY + half}`,
+
+        `${centerX + half},${centerY + half}`
+
+    ].join(" ");
+
+
+    triangle.setAttribute(
+        "points",
+        points
+    );
+
+
+    triangle.setAttribute(
+        "transform",
+        `rotate(
+            ${rotation}
+            ${centerX}
+            ${centerY}
+        )`
+    );
+
+
+    triangle.dataset.x =
+        x;
+
+
+    triangle.dataset.y =
+        y;
+
+
+    currentVisual.position_x =
+        x;
+
+
+    currentVisual.position_y =
+        y;
+
+
+    updateVisualPanel(
+        currentVisual
+    );
+
+
+    // ================================
+    // ZONE ENGINE
+    // ================================
+
+    updateZoneState(
+        currentVisual
+    );
+
+}
+
+
+// =====================================
+// ZONE DETECTION
+// =====================================
+
+function detectVisualZone(visual) {
+
+    const centerX =
+        400 +
+        Number(
+            visual.position_x
+        );
+
+
+    const centerY =
+        250 +
+        Number(
+            visual.position_y
+        );
+
+
+    for (
+        const zone of WORKSPACE_ZONES
+    ) {
+
+        const inside =
+            centerX >= zone.x &&
+            centerX <=
+                zone.x + zone.width &&
+            centerY >= zone.y &&
+            centerY <=
+                zone.y + zone.height;
+
+
+        if (inside) {
+
+            return zone;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+// =====================================
+// UPDATE ZONE STATE
+// =====================================
+
+function updateZoneState(visual) {
+
+    const zone =
+        detectVisualZone(
+            visual
+        );
+
+
+    if (zone) {
+
+        applyZoneBehavior(
+            visual,
+            zone
+        );
+
+    }
+
+    else {
+
+        resetZoneBehavior(
+            visual
+        );
+
+    }
+
+}
+
+
+// =====================================
+// APPLY ZONE BEHAVIOR
+// =====================================
+
+function applyZoneBehavior(
+    visual,
+    zone
+) {
+
+    const triangle =
+        document.querySelector(
+            `[data-visual-id="${visual.id}"]`
+        );
+
+
+    if (!triangle) {
+
+        return;
+
+    }
+
+
+    if (
+        zone.behavior ===
+        "neon"
+    ) {
+
+        triangle.setAttribute(
+            "stroke",
+            "#22d3ee"
+        );
+
+
+        triangle.setAttribute(
+            "stroke-width",
+            "5"
+        );
+
+
+        triangle.setAttribute(
+            "filter",
+            "drop-shadow(0 0 8px #22d3ee)"
+        );
+
+
+        triangle.setAttribute(
+            "data-active-zone",
+            zone.id
+        );
+
+    }
+
+}
+
+
+// =====================================
+// RESET ZONE BEHAVIOR
+// =====================================
+
+function resetZoneBehavior(
+    visual
+) {
+
+    const triangle =
+        document.querySelector(
+            `[data-visual-id="${visual.id}"]`
+        );
+
+
+    if (!triangle) {
+
+        return;
+
+    }
+
+
+    triangle.setAttribute(
+        "stroke",
+        selectedVisualElement === triangle
+            ? "#2563eb"
+            : "#5b3a20"
+    );
+
+
+    triangle.setAttribute(
+        "stroke-width",
+        selectedVisualElement === triangle
+            ? "6"
+            : "3"
+    );
+
+
+    triangle.removeAttribute(
+        "filter"
+    );
+
+
+    triangle.removeAttribute(
+        "data-active-zone"
+    );
+
+}
+
+
+// =====================================
+// STOP DRAG
+// =====================================
+
+async function stopDrag() {
+
+    if (!isDragging) {
+
+        return;
+
+    }
+
+
+    isDragging =
+        false;
+
+
+    if (
+        selectedVisualElement
+    ) {
+
+        selectedVisualElement.style.cursor =
+            "grab";
+
+    }
+
+
+    document.removeEventListener(
+        "mousemove",
+        dragVisual
+    );
+
+
+    document.removeEventListener(
+        "mouseup",
+        stopDrag
+    );
+
+
+    // =================================
+    // SAVE POSITION
+    // =================================
+
+    if (
+        currentVisual &&
+        currentVisual.id
+    ) {
+
+        await saveVisualPosition();
+
+    }
+
+}
+
+
+// =====================================
+// SAVE VISUAL POSITION
+// =====================================
+
+async function saveVisualPosition() {
+
+    const visualId =
+        currentVisual.id;
+
+
+    const url =
+        `${API_URL}visuals/${visualId}/`;
+
+
+    const payload = {
+
+        position_x:
+            Number(
+                currentVisual.position_x
+            ),
+
+
+        position_y:
+            Number(
+                currentVisual.position_y
+            )
+
+    };
+
+
+    try {
+
+        const response =
+            await fetch(
+                url,
+                {
+
+                    method:
+                        "PATCH",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            payload
+                        )
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Save failed: ${response.status}`
+            );
+
+        }
+
+
+        const savedVisual =
+            await response.json();
+
+
+        currentVisual =
+            savedVisual;
+
+
+        updateVisualPanel(
+            currentVisual
+        );
+
+
+        updateZoneState(
+            currentVisual
+        );
+
+
+        console.log(
+            "FEEMAAS Visual saved:",
+            savedVisual
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "FEEMAAS Save Error:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================
+// SVG COORDINATES
+// =====================================
+
+function getSVGPoint(
+    svg,
+    clientX,
+    clientY
+) {
+
+    const rect =
+        svg.getBoundingClientRect();
+
+
+    const viewBox =
+        svg.viewBox.baseVal;
+
+
+    const scaleX =
+        viewBox.width /
+        rect.width;
+
+
+    const scaleY =
+        viewBox.height /
+        rect.height;
+
+
+    return {
+
+        x:
+            (clientX - rect.left) *
+            scaleX,
+
+        y:
+            (clientY - rect.top) *
+            scaleY
+
+    };
+
+}
+
+
+// =====================================
+// VISUAL INFORMATION PANEL
+// =====================================
+
+function updateVisualPanel(
+    visual
+) {
+
+    const visualName =
+        document.getElementById(
+            "visualName"
+        );
+
+
+    const visualType =
+        document.getElementById(
+            "visualType"
+        );
+
+
+    const visualMaterial =
+        document.getElementById(
+            "visualMaterial"
+        );
+
+
+    if (visualName) {
+
+        visualName.innerText =
+            "???: " +
+            (
+                visual.name ||
+                "-"
+            );
+
+    }
+
+
+    if (visualType) {
+
+        visualType.innerText =
+            "???: " +
+            (
+                visual.shape_type ||
+                "-"
+            );
+
+    }
+
+
+    const material =
+        visual.visual_data &&
+        visual.visual_data.material
+            ? visual.visual_data.material
+            : "-";
+
+
+    if (visualMaterial) {
+
+        visualMaterial.innerText =
+            "???: " +
+            material;
+
+    }
+
+}

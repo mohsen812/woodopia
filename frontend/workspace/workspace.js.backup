@@ -1,0 +1,1944 @@
+﻿
+// =====================================
+// FEEMAAS Workspace Engine
+// Version 5
+// Shape-Agnostic Visual Object Engine
+//
+// Supported Shapes:
+// triangle
+// square
+// hexagon
+//
+// Selection + Drag + Persistence
+// Zone Engine V1
+// =====================================
+
+const API_URL =
+    "http://127.0.0.1:8000/api/projects/";
+
+let currentProject = null;
+let currentVisual = null;
+let selectedVisualElement = null;
+
+let isDragging = false;
+
+let dragStartX = 0;
+let dragStartY = 0;
+
+let objectStartX = 0;
+let objectStartY = 0;
+
+
+// =====================================
+// WORKSPACE CONFIGURATION
+// =====================================
+
+const SVG_WIDTH = 800;
+const SVG_HEIGHT = 500;
+
+const SVG_NS =
+    "http://www.w3.org/2000/svg";
+
+
+// =====================================
+// ZONE DEFINITIONS
+// =====================================
+
+const WORKSPACE_ZONES = [
+
+    {
+        id: "central-plaza",
+
+        name: "Central Plaza",
+
+        type: "plaza",
+
+        x: 280,
+        y: 140,
+
+        width: 240,
+        height: 180,
+
+        behavior: "neon"
+    }
+
+];
+
+
+// =====================================
+// START
+// =====================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadProject();
+
+    }
+);
+
+
+// =====================================
+// LOAD PROJECT
+// =====================================
+
+async function loadProject() {
+
+    try {
+
+        const response =
+            await fetch(API_URL);
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API error: ${response.status}`
+            );
+
+        }
+
+
+        const projects =
+            await response.json();
+
+
+        if (!projects.length) {
+
+            console.warn(
+                "No FEEMAAS projects found."
+            );
+
+            return;
+
+        }
+
+
+        currentProject =
+            projects[0];
+
+
+        showProject(
+            currentProject
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "FEEMAAS API Error:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================
+// SHOW PROJECT
+// =====================================
+
+function showProject(project) {
+
+    const projectTitle =
+        document.getElementById(
+            "projectTitle"
+        );
+
+
+    const projectDescription =
+        document.getElementById(
+            "projectDescription"
+        );
+
+
+    const zoneName =
+        document.getElementById(
+            "zoneName"
+        );
+
+
+    if (projectTitle) {
+
+        projectTitle.innerText =
+            project.title;
+
+    }
+
+
+    if (projectDescription) {
+
+        projectDescription.innerText =
+            project.description || "";
+
+    }
+
+
+    drawWorkspace();
+
+
+    if (
+        project.zones &&
+        project.zones.length
+    ) {
+
+        const zone =
+            project.zones[0];
+
+
+        if (zoneName) {
+
+            zoneName.innerText =
+                zone.name;
+
+        }
+
+
+        if (
+            zone.visuals &&
+            zone.visuals.length
+        ) {
+
+            drawVisual(
+                zone.visuals[0]
+            );
+
+        }
+
+    }
+
+}
+
+
+// =====================================
+// DRAW WORKSPACE
+// =====================================
+
+function drawWorkspace() {
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    if (!svg) {
+
+        return;
+
+    }
+
+
+    svg.innerHTML = "";
+
+
+    drawBackground(
+        svg
+    );
+
+
+    drawRoad(
+        svg
+    );
+
+
+    WORKSPACE_ZONES.forEach(
+        zone => {
+
+            drawZone(
+                svg,
+                zone
+            );
+
+        }
+    );
+
+}
+
+
+// =====================================
+// DRAW BACKGROUND
+// =====================================
+
+function drawBackground(svg) {
+
+    const background =
+        document.createElementNS(
+            SVG_NS,
+            "rect"
+        );
+
+
+    background.setAttribute(
+        "x",
+        "0"
+    );
+
+
+    background.setAttribute(
+        "y",
+        "0"
+    );
+
+
+    background.setAttribute(
+        "width",
+        SVG_WIDTH
+    );
+
+
+    background.setAttribute(
+        "height",
+        SVG_HEIGHT
+    );
+
+
+    background.setAttribute(
+        "fill",
+        "#f8fafc"
+    );
+
+
+    background.setAttribute(
+        "rx",
+        "18"
+    );
+
+
+    svg.appendChild(
+        background
+    );
+
+}
+
+
+// =====================================
+// DRAW ROAD
+// =====================================
+
+function drawRoad(svg) {
+
+    const road =
+        document.createElementNS(
+            SVG_NS,
+            "rect"
+        );
+
+
+    road.setAttribute(
+        "x",
+        "350"
+    );
+
+
+    road.setAttribute(
+        "y",
+        "0"
+    );
+
+
+    road.setAttribute(
+        "width",
+        "100"
+    );
+
+
+    road.setAttribute(
+        "height",
+        SVG_HEIGHT
+    );
+
+
+    road.setAttribute(
+        "fill",
+        "#dbe2ea"
+    );
+
+
+    road.setAttribute(
+        "opacity",
+        "0.8"
+    );
+
+
+    svg.appendChild(
+        road
+    );
+
+
+    const roadLine =
+        document.createElementNS(
+            SVG_NS,
+            "line"
+        );
+
+
+    roadLine.setAttribute(
+        "x1",
+        "400"
+    );
+
+
+    roadLine.setAttribute(
+        "y1",
+        "0"
+    );
+
+
+    roadLine.setAttribute(
+        "x2",
+        "400"
+    );
+
+
+    roadLine.setAttribute(
+        "y2",
+        SVG_HEIGHT
+    );
+
+
+    roadLine.setAttribute(
+        "stroke",
+        "#ffffff"
+    );
+
+
+    roadLine.setAttribute(
+        "stroke-width",
+        "3"
+    );
+
+
+    roadLine.setAttribute(
+        "stroke-dasharray",
+        "12 12"
+    );
+
+
+    roadLine.setAttribute(
+        "opacity",
+        "0.8"
+    );
+
+
+    svg.appendChild(
+        roadLine
+    );
+
+}
+
+
+// =====================================
+// DRAW ZONE
+// =====================================
+
+function drawZone(svg, zone) {
+
+    const group =
+        document.createElementNS(
+            SVG_NS,
+            "g"
+        );
+
+
+    group.setAttribute(
+        "data-zone-id",
+        zone.id
+    );
+
+
+    // =================================
+    // CENTRAL PLAZA
+    // =================================
+
+    if (
+        zone.type === "plaza"
+    ) {
+
+        const centerX =
+            zone.x +
+            zone.width / 2;
+
+
+        const centerY =
+            zone.y +
+            zone.height / 2;
+
+
+        const radius =
+            Math.min(
+                zone.width,
+                zone.height
+            ) / 2 - 18;
+
+
+        // Outer glass circle
+
+        const plaza =
+            document.createElementNS(
+                SVG_NS,
+                "circle"
+            );
+
+
+        plaza.setAttribute(
+            "cx",
+            centerX
+        );
+
+
+        plaza.setAttribute(
+            "cy",
+            centerY
+        );
+
+
+        plaza.setAttribute(
+            "r",
+            radius
+        );
+
+
+        plaza.setAttribute(
+            "fill",
+            "rgba(255,255,255,0.55)"
+        );
+
+
+        plaza.setAttribute(
+            "stroke",
+            "#cbd5e1"
+        );
+
+
+        plaza.setAttribute(
+            "stroke-width",
+            "2"
+        );
+
+
+        plaza.setAttribute(
+            "class",
+            "workspace-zone central-plaza"
+        );
+
+
+        group.appendChild(
+            plaza
+        );
+
+
+        // Inner glass ring
+
+        const innerRing =
+            document.createElementNS(
+                SVG_NS,
+                "circle"
+            );
+
+
+        innerRing.setAttribute(
+            "cx",
+            centerX
+        );
+
+
+        innerRing.setAttribute(
+            "cy",
+            centerY
+        );
+
+
+        innerRing.setAttribute(
+            "r",
+            radius - 10
+        );
+
+
+        innerRing.setAttribute(
+            "fill",
+            "none"
+        );
+
+
+        innerRing.setAttribute(
+            "stroke",
+            "#e2e8f0"
+        );
+
+
+        innerRing.setAttribute(
+            "stroke-width",
+            "1"
+        );
+
+
+        innerRing.setAttribute(
+            "opacity",
+            "0.9"
+        );
+
+
+        group.appendChild(
+            innerRing
+        );
+
+
+        // Central label
+
+        const label =
+            document.createElementNS(
+                SVG_NS,
+                "text"
+            );
+
+
+        label.setAttribute(
+            "x",
+            centerX
+        );
+
+
+        label.setAttribute(
+            "y",
+            centerY + 5
+        );
+
+
+        label.setAttribute(
+            "text-anchor",
+            "middle"
+        );
+
+
+        label.setAttribute(
+            "font-family",
+            "Tahoma, Arial, sans-serif"
+        );
+
+
+        label.setAttribute(
+            "font-size",
+            "13"
+        );
+
+
+        label.setAttribute(
+            "font-weight",
+            "bold"
+        );
+
+
+        label.setAttribute(
+            "fill",
+            "#64748b"
+        );
+
+
+        label.setAttribute(
+            "letter-spacing",
+            "1"
+        );
+
+
+        label.textContent =
+            "CENTRAL PLAZA";
+
+
+        group.appendChild(
+            label
+        );
+
+
+        svg.appendChild(
+            group
+        );
+
+
+        return;
+
+    }
+
+
+    // =================================
+    // DEFAULT RECTANGULAR ZONE
+    // =================================
+
+    const zoneRect =
+        document.createElementNS(
+            SVG_NS,
+            "rect"
+        );
+
+
+    zoneRect.setAttribute(
+        "x",
+        zone.x
+    );
+
+
+    zoneRect.setAttribute(
+        "y",
+        zone.y
+    );
+
+
+    zoneRect.setAttribute(
+        "width",
+        zone.width
+    );
+
+
+    zoneRect.setAttribute(
+        "height",
+        zone.height
+    );
+
+
+    zoneRect.setAttribute(
+        "rx",
+        "24"
+    );
+
+
+    zoneRect.setAttribute(
+        "fill",
+        "rgba(255,255,255,0.45)"
+    );
+
+
+    zoneRect.setAttribute(
+        "stroke",
+        "#cbd5e1"
+    );
+
+
+    zoneRect.setAttribute(
+        "stroke-width",
+        "1"
+    );
+
+
+    zoneRect.setAttribute(
+        "class",
+        "workspace-zone"
+    );
+
+
+    group.appendChild(
+        zoneRect
+    );
+
+
+    svg.appendChild(
+        group
+    );
+
+}
+
+
+// =====================================
+// DRAW VISUAL
+// =====================================
+
+function drawVisual(visual) {
+
+    currentVisual =
+        visual;
+
+
+    updateVisualPanel(
+        visual
+    );
+
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    if (!svg) {
+
+        return;
+
+    }
+
+
+    removeExistingVisuals(
+        svg
+    );
+
+
+    const shapeType =
+        String(
+            visual.shape_type || ""
+        ).toLowerCase();
+
+
+    switch (shapeType) {
+
+        case "triangle":
+
+            createTriangle(
+                svg,
+                visual
+            );
+
+            break;
+
+
+        case "square":
+
+            createSquare(
+                svg,
+                visual
+            );
+
+            break;
+
+
+        case "hexagon":
+
+            createHexagon(
+                svg,
+                visual
+            );
+
+            break;
+
+
+        default:
+
+            console.warn(
+                "FEEMAAS: Unsupported visual shape:",
+                visual.shape_type
+            );
+
+            break;
+
+    }
+
+}
+
+
+// =====================================
+// REMOVE EXISTING VISUAL OBJECTS
+// =====================================
+
+function removeExistingVisuals(svg) {
+
+    const visuals =
+        svg.querySelectorAll(
+            "[data-visual-id]"
+        );
+
+
+    visuals.forEach(
+        element => {
+
+            element.remove();
+
+        }
+    );
+
+
+    selectedVisualElement =
+        null;
+
+}
+
+
+// =====================================
+// CREATE TRIANGLE
+// =====================================
+
+function createTriangle(
+    svg,
+    visual
+) {
+
+    createPolygonVisual(
+        svg,
+        visual,
+        3,
+        -90
+    );
+
+}
+
+
+// =====================================
+// CREATE SQUARE
+// =====================================
+
+function createSquare(
+    svg,
+    visual
+) {
+
+    createPolygonVisual(
+        svg,
+        visual,
+        4,
+        45
+    );
+
+}
+
+
+// =====================================
+// CREATE HEXAGON
+// =====================================
+
+function createHexagon(
+    svg,
+    visual
+) {
+
+    createPolygonVisual(
+        svg,
+        visual,
+        6,
+        30
+    );
+
+}
+
+
+// =====================================
+// GENERIC POLYGON VISUAL
+// =====================================
+
+function createPolygonVisual(
+    svg,
+    visual,
+    sides,
+    angleOffset
+) {
+
+    const size =
+        Number(
+            visual.size
+        ) || 100;
+
+
+    const x =
+        Number(
+            visual.position_x
+        ) || 0;
+
+
+    const y =
+        Number(
+            visual.position_y
+        ) || 0;
+
+
+    const rotation =
+        Number(
+            visual.rotation
+        ) || 0;
+
+
+    const centerX =
+        400 + x;
+
+
+    const centerY =
+        250 + y;
+
+
+    const points =
+        buildPolygonPoints(
+            centerX,
+            centerY,
+            size,
+            sides,
+            angleOffset
+        );
+
+
+    const polygon =
+        document.createElementNS(
+            SVG_NS,
+            "polygon"
+        );
+
+
+    polygon.setAttribute(
+        "points",
+        points
+    );
+
+
+    polygon.setAttribute(
+        "fill",
+        visual.color ||
+        "#8B4513"
+    );
+
+
+    polygon.setAttribute(
+        "stroke",
+        "#5b3a20"
+    );
+
+
+    polygon.setAttribute(
+        "stroke-width",
+        "3"
+    );
+
+
+    polygon.setAttribute(
+        "opacity",
+        "0.9"
+    );
+
+
+    polygon.setAttribute(
+        "data-visual-id",
+        visual.id
+    );
+
+
+    polygon.setAttribute(
+        "data-shape-type",
+        visual.shape_type
+    );
+
+
+    polygon.setAttribute(
+        "data-sides",
+        sides
+    );
+
+
+    polygon.setAttribute(
+        "data-angle-offset",
+        angleOffset
+    );
+
+
+    polygon.setAttribute(
+        "data-x",
+        x
+    );
+
+
+    polygon.setAttribute(
+        "data-y",
+        y
+    );
+
+
+    polygon.style.cursor =
+        "grab";
+
+
+    polygon.setAttribute(
+        "transform",
+        `rotate(
+            ${rotation}
+            ${centerX}
+            ${centerY}
+        )`
+    );
+
+
+    polygon.addEventListener(
+        "mousedown",
+        startDrag
+    );
+
+
+    polygon.addEventListener(
+        "click",
+        selectVisual
+    );
+
+
+    svg.appendChild(
+        polygon
+    );
+
+
+    selectedVisualElement =
+        null;
+
+
+    updateZoneState(
+        visual
+    );
+
+}
+
+
+// =====================================
+// BUILD POLYGON POINTS
+// =====================================
+
+function buildPolygonPoints(
+    centerX,
+    centerY,
+    size,
+    sides,
+    angleOffset
+) {
+
+    const radius =
+        size / 2;
+
+
+    const points = [];
+
+
+    for (
+        let i = 0;
+        i < sides;
+        i++
+    ) {
+
+        const angle =
+            (
+                angleOffset +
+                (360 / sides) * i
+            ) *
+            Math.PI /
+            180;
+
+
+        const pointX =
+            centerX +
+            radius *
+            Math.cos(angle);
+
+
+        const pointY =
+            centerY +
+            radius *
+            Math.sin(angle);
+
+
+        points.push(
+            `${pointX},${pointY}`
+        );
+
+    }
+
+
+    return points.join(
+        " "
+    );
+
+}
+
+
+// =====================================
+// SELECT VISUAL
+// =====================================
+
+function selectVisual(event) {
+
+    event.stopPropagation();
+
+
+    if (
+        selectedVisualElement
+    ) {
+
+        selectedVisualElement.setAttribute(
+            "stroke",
+            "#5b3a20"
+        );
+
+
+        selectedVisualElement.setAttribute(
+            "stroke-width",
+            "3"
+        );
+
+    }
+
+
+    selectedVisualElement =
+        event.currentTarget;
+
+
+    selectedVisualElement.setAttribute(
+        "stroke",
+        "#2563eb"
+    );
+
+
+    selectedVisualElement.setAttribute(
+        "stroke-width",
+        "6"
+    );
+
+
+    selectedVisualElement.style.cursor =
+        "grab";
+
+}
+
+
+// =====================================
+// START DRAG
+// =====================================
+
+function startDrag(event) {
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+
+    if (
+        selectedVisualElement !==
+        event.currentTarget
+    ) {
+
+        selectVisual(
+            event
+        );
+
+    }
+
+
+    isDragging =
+        true;
+
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    const point =
+        getSVGPoint(
+            svg,
+            event.clientX,
+            event.clientY
+        );
+
+
+    dragStartX =
+        point.x;
+
+
+    dragStartY =
+        point.y;
+
+
+    objectStartX =
+        Number(
+            event.currentTarget.dataset.x
+        );
+
+
+    objectStartY =
+        Number(
+            event.currentTarget.dataset.y
+        );
+
+
+    event.currentTarget.style.cursor =
+        "grabbing";
+
+
+    document.addEventListener(
+        "mousemove",
+        dragVisual
+    );
+
+
+    document.addEventListener(
+        "mouseup",
+        stopDrag
+    );
+
+}
+
+
+// =====================================
+// DRAG
+// =====================================
+
+function dragVisual(event) {
+
+    if (!isDragging) {
+
+        return;
+
+    }
+
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    const point =
+        getSVGPoint(
+            svg,
+            event.clientX,
+            event.clientY
+        );
+
+
+    const deltaX =
+        point.x -
+        dragStartX;
+
+
+    const deltaY =
+        point.y -
+        dragStartY;
+
+
+    const newX =
+        objectStartX +
+        deltaX;
+
+
+    const newY =
+        objectStartY +
+        deltaY;
+
+
+    updateVisualPosition(
+        selectedVisualElement,
+        newX,
+        newY
+    );
+
+}
+
+
+// =====================================
+// UPDATE VISUAL POSITION
+// =====================================
+
+function updateVisualPosition(
+    visualElement,
+    x,
+    y
+) {
+
+    if (!visualElement) {
+
+        return;
+
+    }
+
+
+    if (!currentVisual) {
+
+        return;
+
+    }
+
+
+    const size =
+        Number(
+            currentVisual.size
+        ) || 100;
+
+
+    const rotation =
+        Number(
+            currentVisual.rotation
+        ) || 0;
+
+
+    const sides =
+        Number(
+            visualElement.dataset.sides
+        ) || 3;
+
+
+    const angleOffset =
+        Number(
+            visualElement.dataset.angleOffset
+        ) || 0;
+
+
+    const centerX =
+        400 + x;
+
+
+    const centerY =
+        250 + y;
+
+
+    const points =
+        buildPolygonPoints(
+            centerX,
+            centerY,
+            size,
+            sides,
+            angleOffset
+        );
+
+
+    visualElement.setAttribute(
+        "points",
+        points
+    );
+
+
+    visualElement.setAttribute(
+        "transform",
+        `rotate(
+            ${rotation}
+            ${centerX}
+            ${centerY}
+        )`
+    );
+
+
+    visualElement.dataset.x =
+        x;
+
+
+    visualElement.dataset.y =
+        y;
+
+
+    currentVisual.position_x =
+        x;
+
+
+    currentVisual.position_y =
+        y;
+
+
+    updateVisualPanel(
+        currentVisual
+    );
+
+
+    updateZoneState(
+        currentVisual
+    );
+
+}
+
+
+// =====================================
+// BACKWARD COMPATIBILITY
+// =====================================
+
+function updateTrianglePosition(
+    triangle,
+    x,
+    y
+) {
+
+    updateVisualPosition(
+        triangle,
+        x,
+        y
+    );
+
+}
+
+
+// =====================================
+// ZONE DETECTION
+// =====================================
+
+function detectVisualZone(
+    visual
+) {
+
+    const centerX =
+        400 +
+        Number(
+            visual.position_x
+        );
+
+
+    const centerY =
+        250 +
+        Number(
+            visual.position_y
+        );
+
+
+    for (
+        const zone of WORKSPACE_ZONES
+    ) {
+
+        const inside =
+            centerX >= zone.x &&
+            centerX <=
+                zone.x + zone.width &&
+            centerY >= zone.y &&
+            centerY <=
+                zone.y + zone.height;
+
+
+        if (inside) {
+
+            return zone;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+// =====================================
+// UPDATE ZONE STATE
+// =====================================
+
+function updateZoneState(
+    visual
+) {
+
+    const zone =
+        detectVisualZone(
+            visual
+        );
+
+
+    if (zone) {
+
+        applyZoneBehavior(
+            visual,
+            zone
+        );
+
+    }
+
+    else {
+
+        resetZoneBehavior(
+            visual
+        );
+
+    }
+
+}
+
+
+// =====================================
+// FIND VISUAL ELEMENT
+// =====================================
+
+function findVisualElement(
+    visualId
+) {
+
+    const elements =
+        document.querySelectorAll(
+            "[data-visual-id]"
+        );
+
+
+    for (
+        const element of elements
+    ) {
+
+        if (
+            String(
+                element.getAttribute(
+                    "data-visual-id"
+                )
+            ) ===
+            String(
+                visualId
+            )
+        ) {
+
+            return element;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+// =====================================
+// APPLY ZONE BEHAVIOR
+// =====================================
+
+function applyZoneBehavior(
+    visual,
+    zone
+) {
+
+    const visualElement =
+        findVisualElement(
+            visual.id
+        );
+
+
+    if (!visualElement) {
+
+        return;
+
+    }
+
+
+    if (
+        zone.behavior ===
+        "neon"
+    ) {
+
+        visualElement.setAttribute(
+            "stroke",
+            "#22d3ee"
+        );
+
+
+        visualElement.setAttribute(
+            "stroke-width",
+            "5"
+        );
+
+
+        visualElement.setAttribute(
+            "filter",
+            "drop-shadow(0 0 8px #22d3ee)"
+        );
+
+
+        visualElement.setAttribute(
+            "data-active-zone",
+            zone.id
+        );
+
+    }
+
+}
+
+
+// =====================================
+// RESET ZONE BEHAVIOR
+// =====================================
+
+function resetZoneBehavior(
+    visual
+) {
+
+    const visualElement =
+        findVisualElement(
+            visual.id
+        );
+
+
+    if (!visualElement) {
+
+        return;
+
+    }
+
+
+    visualElement.setAttribute(
+        "stroke",
+        selectedVisualElement === visualElement
+            ? "#2563eb"
+            : "#5b3a20"
+    );
+
+
+    visualElement.setAttribute(
+        "stroke-width",
+        selectedVisualElement === visualElement
+            ? "6"
+            : "3"
+    );
+
+
+    visualElement.removeAttribute(
+        "filter"
+    );
+
+
+    visualElement.removeAttribute(
+        "data-active-zone"
+    );
+
+}
+
+
+// =====================================
+// STOP DRAG
+// =====================================
+
+async function stopDrag() {
+
+    if (!isDragging) {
+
+        return;
+
+    }
+
+
+    isDragging =
+        false;
+
+
+    if (
+        selectedVisualElement
+    ) {
+
+        selectedVisualElement.style.cursor =
+            "grab";
+
+    }
+
+
+    document.removeEventListener(
+        "mousemove",
+        dragVisual
+    );
+
+
+    document.removeEventListener(
+        "mouseup",
+        stopDrag
+    );
+
+
+    if (
+        currentVisual &&
+        currentVisual.id
+    ) {
+
+        await saveVisualPosition();
+
+    }
+
+}
+
+
+// =====================================
+// SAVE VISUAL POSITION
+// =====================================
+
+async function saveVisualPosition() {
+
+    const visualId =
+        currentVisual.id;
+
+
+    const url =
+        `${API_URL}visuals/${visualId}/`;
+
+
+    const payload = {
+
+        position_x:
+            Number(
+                currentVisual.position_x
+            ),
+
+
+        position_y:
+            Number(
+                currentVisual.position_y
+            )
+
+    };
+
+
+    try {
+
+        const response =
+            await fetch(
+                url,
+                {
+
+                    method:
+                        "PATCH",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            payload
+                        )
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Save failed: ${response.status}`
+            );
+
+        }
+
+
+        const savedVisual =
+            await response.json();
+
+
+        currentVisual =
+            savedVisual;
+
+
+        updateVisualPanel(
+            currentVisual
+        );
+
+
+        updateZoneState(
+            currentVisual
+        );
+
+
+        console.log(
+            "FEEMAAS Visual saved:",
+            savedVisual
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "FEEMAAS Save Error:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================
+// SVG COORDINATES
+// =====================================
+
+function getSVGPoint(
+    svg,
+    clientX,
+    clientY
+) {
+
+    const rect =
+        svg.getBoundingClientRect();
+
+
+    const viewBox =
+        svg.viewBox.baseVal;
+
+
+    const scaleX =
+        viewBox.width /
+        rect.width;
+
+
+    const scaleY =
+        viewBox.height /
+        rect.height;
+
+
+    return {
+
+        x:
+            (clientX - rect.left) *
+            scaleX,
+
+
+        y:
+            (clientY - rect.top) *
+            scaleY
+
+    };
+
+}
+
+
+// =====================================
+// VISUAL INFORMATION PANEL
+// =====================================
+
+function updateVisualPanel(
+    visual
+) {
+
+    const visualName =
+        document.getElementById(
+            "visualName"
+        );
+
+
+    const visualType =
+        document.getElementById(
+            "visualType"
+        );
+
+
+    const visualMaterial =
+        document.getElementById(
+            "visualMaterial"
+        );
+
+
+    if (visualName) {
+
+        visualName.innerText =
+            "نام: " +
+            (
+                visual.name ||
+                "-"
+            );
+
+    }
+
+
+    if (visualType) {
+
+        visualType.innerText =
+            "نوع: " +
+            (
+                visual.shape_type ||
+                "-"
+            );
+
+    }
+
+
+    const material =
+        visual.visual_data &&
+        visual.visual_data.material
+            ? visual.visual_data.material
+            : "-";
+
+
+    if (visualMaterial) {
+
+        visualMaterial.innerText =
+            "متریال: " +
+            material;
+
+    }
+
+}
