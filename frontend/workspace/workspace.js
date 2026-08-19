@@ -952,7 +952,26 @@ function drawZone(svg, zone) {
 // =====================================
 
 function drawVisual(visual) {
+// Normalize old visual positions
 
+visual.position_x =
+    Math.max(
+        -350,
+        Math.min(
+            350,
+            Number(visual.position_x) || 0
+        )
+    );
+
+
+visual.position_y =
+    Math.max(
+        -200,
+        Math.min(
+            200,
+            Number(visual.position_y) || 0
+        )
+    );
     currentVisual =
         visual;
 
@@ -1544,6 +1563,13 @@ function updateVisualPosition(
         return;
 
     }
+    // =================================
+    // FEEMAAS COORDINATE LIMIT
+    // Keep visual inside workspace
+    // =================================
+
+    x = Math.max(-350, Math.min(350, x));
+    y = Math.max(-200, Math.min(200, y));
 
 
     if (!currentVisual) {
@@ -1618,13 +1644,12 @@ function updateVisualPosition(
     visualElement.dataset.y =
         y;
 
+currentVisual.position_x =
+    Number(x.toFixed(2));
 
-    currentVisual.position_x =
-        x;
 
-
-    currentVisual.position_y =
-        y;
+currentVisual.position_y =
+    Number(y.toFixed(2));
 
 
     updateVisualPanel(
