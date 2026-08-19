@@ -1,95 +1,73 @@
-# FEEMAAS Workspace Engine Test
+# FEEMAAS Workspace Testing Log
 
-Version:
-V1.1
+## Version
+Workspace Engine V5
 
----
+Date:
+2026-08-19
 
-## 1. Project Loading
 
-Action:
-Open workspace.
+# Test 1 - Project Loading
 
-Expected:
+Status: PASS
 
-- Project title is visible.
-- Project description is visible.
-- Active zone information is visible.
+Result:
+- Project loaded from Django API
+- Title displayed
+- Description displayed
+- Zone displayed
 
----
 
-## 2. Visual Rendering
+# Test 2 - Visual Rendering
 
-Action:
-Load project with existing visual object.
+Status: PASS
 
-Expected:
+Result:
+- Triangle visual rendered
+- Shape type detected from API
+- Material information displayed
 
-- Triangle is visible.
-- Shape type is displayed as triangle.
-- Material information is displayed.
 
----
+# Test 3 - SVG Coordinate System
 
-## 3. Visual Selection
+Status: PASS
 
-Action:
-Click triangle.
+Result:
+- Object position matches SVG coordinates
+- Center origin works correctly
+- No hidden/off-screen object
 
-Expected:
 
-- Triangle receives blue selection border.
-- Previous selection is removed.
+# Test 4 - Drag System
 
----
+Status: PASS
 
-## 4. Drag Test
+Result:
+- Triangle draggable
+- Movement smooth
+- Selection works
 
-Action:
-Drag triangle to another position.
 
-Expected:
+# Test 5 - Persistence
 
-- Triangle follows mouse correctly.
-- No coordinate offset happens.
-- Shape remains visible.
+Status: PASS
 
----
+Result:
+- Position saved through PATCH API
+- Refresh keeps new position
 
-## 5. Persistence Test
 
-Action:
+# Current Supported Shapes
 
-1. Move triangle.
-2. Release mouse.
-3. Refresh page.
+- Triangle
+- Square
+- Hexagon
 
-Expected:
 
-- Triangle stays in new position.
-- Database contains updated coordinates.
+# Next Tests
 
----
-
-## 6. API Test
-
-Endpoint:
-
-GET /api/projects/
-
-Expected:
-
-- Project JSON returned.
-- Zones returned.
-- Visual objects returned.
-
----
-
-## Current Stable Features
-
-- SVG Rendering
-- Polygon Visual Engine
-- Triangle Object
-- Drag System
-- Position Persistence
-- Django API Connection
+- Zone behavior
+- Shape transformation
+- Multiple visuals
+- Project complexity rules
+- Permission based interaction
