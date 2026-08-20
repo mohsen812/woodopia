@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import Project, ProjectZone, ProjectVisual
+
+from .models import (
+    Project,
+    ProjectZone,
+    ProjectVisual,
+)
 
 
 class ProjectVisualSerializer(serializers.ModelSerializer):
@@ -14,6 +19,7 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
     visuals = serializers.SerializerMethodField()
 
     def get_visuals(self, obj):
+
         visuals = ProjectVisual.objects.filter(
             current_zone=obj
         )
@@ -23,9 +29,9 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
             many=True
         ).data
 
-
     class Meta:
         model = ProjectZone
+
         fields = [
             "id",
             "name",
@@ -37,6 +43,12 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
             "is_active",
             "visuals",
         ]
+
+
+# =====================================
+# PROJECT READ SERIALIZER
+# =====================================
+
 class ProjectFullSerializer(serializers.ModelSerializer):
 
     zones = ProjectZoneSerializer(
@@ -46,6 +58,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
+
         fields = [
             "id",
             "title",
@@ -54,4 +67,31 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "zones",
+        ]
+
+
+# =====================================
+# PROJECT CREATE SERIALIZER
+# =====================================
+
+class ProjectCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Project
+
+        fields = [
+            "id",
+            "title",
+            "description",
+            "customer",
+            "created_by",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
         ]

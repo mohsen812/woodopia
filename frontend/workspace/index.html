@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 
 <title>
-FEEMAAS Project Workspace
+FEEMAAS Workspace
 </title>
 
 <link rel="stylesheet" href="workspace.css">
@@ -23,33 +23,39 @@ FEEMAAS Project Workspace
 FEEMAAS
 </div>
 
-
 <div>
-محیط کاری پروژه
+Workspace
 </div>
-
 
 </header>
 
 
 
-<section class="project-info">
+<section class="capacity-bar">
 
-<h1 id="projectTitle">
-در حال دریافت پروژه...
-</h1>
-
-
-<p id="projectDescription"></p>
-
-
-<div class="zone-box">
 
 <h3>
-ناحیه فعال
+پروژه‌های قابل ایجاد
 </h3>
 
-<p id="zoneName"></p>
+
+<div class="capacity-items">
+
+<div class="capacity-triangle active"
+data-slot="1"></div>
+
+<div class="capacity-triangle"
+data-slot="2"></div>
+
+<div class="capacity-triangle"
+data-slot="3"></div>
+
+<div class="capacity-triangle"
+data-slot="4"></div>
+
+<div class="capacity-triangle"
+data-slot="5"></div>
+
 
 </div>
 
@@ -65,12 +71,9 @@ FEEMAAS
 <div class="canvas-area">
 
 
-<svg 
+<svg
 id="visualCanvas"
-width="800"
-height="500"
 viewBox="0 0 800 500">
-
 
 </svg>
 
@@ -78,25 +81,53 @@ viewBox="0 0 800 500">
 </div>
 
 
-
-<div class="visual-panel">
-
-<h3>
-مشخصات شیء
-</h3>
+</main>
 
 
-<p id="visualName"></p>
 
-<p id="visualType"></p>
 
-<p id="visualMaterial"></p>
+<div id="projectModal" class="modal hidden">
+
+
+<div class="modal-box">
+
+
+<h2>
+ثبت پروژه جدید
+</h2>
+
+
+<input id="projectTitleInput"
+placeholder="عنوان سفارش">
+
+
+<textarea id="projectDescriptionInput"
+placeholder="توضیحات"></textarea>
+
+
+<input id="projectQuantityInput"
+placeholder="تعداد">
+
+
+<input id="projectBudgetInput"
+placeholder="بودجه تقریبی">
+
+
+<button id="createProjectBtn">
+ارسال به مشاور
+</button>
+
+
+<button id="closeModal">
+انصراف
+</button>
 
 
 </div>
 
 
-</main>
+</div>
+
 
 
 

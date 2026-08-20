@@ -1,7 +1,7 @@
-﻿
-// =====================================
-// FEEMAAS Workspace Engine
-// Version 5
+﻿// =====================================
+// FEEMAAS WORKSPACE ENGINE
+// Version 6
+//
 // Shape-Agnostic Visual Object Engine
 //
 // Supported Shapes:
@@ -9,15 +9,39 @@
 // square
 // hexagon
 //
-// Selection + Drag + Persistence
-// Zone Engine V1
+// Features:
+// - Workspace rendering
+// - 4 customer zones
+// - Central plaza
+// - Coordinate system
+// - Visual selection
+// - Visual drag
+// - Visual persistence
+// - Zone detection
+// - Zone highlighting
+//
+// IMPORTANT:
+// The 5 initial customer triangles are NOT created here.
+// They belong to the customer/palette layer.
+// This engine only renders actual project visuals.
+// =====================================
+
+
+// =====================================
+// API
 // =====================================
 
 const API_URL =
     "http://127.0.0.1:8000/api/projects/";
 
+
+// =====================================
+// GLOBAL STATE
+// =====================================
+
 let currentProject = null;
 let currentVisual = null;
+
 let selectedVisualElement = null;
 
 let isDragging = false;
@@ -36,12 +60,36 @@ let objectStartY = 0;
 const SVG_WIDTH = 800;
 const SVG_HEIGHT = 500;
 
+const SVG_CENTER_X = SVG_WIDTH / 2;
+const SVG_CENTER_Y = SVG_HEIGHT / 2;
+
 const SVG_NS =
     "http://www.w3.org/2000/svg";
 
 
 // =====================================
-// ZONE DEFINITIONS
+// CENTRAL PLAZA CONFIG
+// =====================================
+
+const CENTRAL_PLAZA = {
+    x: SVG_CENTER_X,
+    y: SVG_CENTER_Y,
+    radius: 55
+};
+
+
+// =====================================
+// CUSTOMER ZONES
+//
+// The workspace has exactly 4 zones.
+//
+// A = top-left
+// B = top-right
+// C = bottom-left
+// D = bottom-right
+//
+// IMPORTANT:
+// Central plaza is NOT a fifth zone.
 // =====================================
 
 const WORKSPACE_ZONES = [
@@ -50,247 +98,372 @@ const WORKSPACE_ZONES = [
         id: "A",
         name: "ZONE A",
         role: "customer",
-        x: 80,
-        y: 80,
-        width: 220,
-        height: 140
+
+        x: 40,
+        y: 40,
+
+        width: 300,
+        height: 170,
+
+        behavior: "neon"
     },
 
     {
         id: "B",
         name: "ZONE B",
         role: "customer",
-        x: 500,
-        y: 80,
-        width: 220,
-        height: 140
+
+        x: 460,
+        y: 40,
+
+        width: 300,
+        height: 170,
+
+        behavior: "neon"
     },
 
     {
         id: "C",
         name: "ZONE C",
         role: "customer",
-        x: 80,
-        y: 330,
-        width: 220,
-        height: 140
+
+        x: 40,
+        y: 290,
+
+        width: 300,
+        height: 170,
+
+        behavior: "neon"
     },
 
     {
         id: "D",
         name: "ZONE D",
         role: "customer",
-        x: 500,
-        y: 330,
-        width: 220,
-        height: 140
+
+        x: 460,
+        y: 290,
+
+        width: 300,
+        height: 170,
+
+        behavior: "neon"
     }
 
 ];
-function drawPlaza(svg){
 
-    const plaza =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-        );
-
-
-    plaza.setAttribute(
-        "cx",
-        "400"
-    );
-
-    plaza.setAttribute(
-        "cy",
-        "250"
-    );
-
-    plaza.setAttribute(
-        "r",
-        "45"
-    );
-
-
-    plaza.setAttribute(
-        "fill",
-        "#ffffff"
-    );
-
-
-    plaza.setAttribute(
-        "stroke",
-        "#94a3b8"
-    );
-
-
-    plaza.setAttribute(
-        "stroke-width",
-        "2"
-    );
-
-
-    svg.appendChild(plaza);
-
-
-}
 
 // =====================================
 // START
 // =====================================
-
 document.addEventListener(
     "DOMContentLoaded",
     () => {
+
+        initializeCapacityTriangles();
+
+        initializeWorkspaceDropZone();
+
+        initializeProjectModal();
 
         loadProject();
 
     }
 );
 
+// =====================================
+// CUSTOMER CAPACITY TRIANGLES
+// =====================================
+//
+// These are the 5 initial project slots.
+//
+// IMPORTANT:
+// They are NOT project visuals yet.
+//
+// They become a project only after
+// the customer starts an interaction.
+// =====================================
+
+let draggedCapacityTriangle = null;
+
 
 // =====================================
-// LOAD PROJECT
+// INITIALIZE CAPACITY TRIANGLES
 // =====================================
 
-async function loadProject() {
+function initializeCapacityTriangles() {
 
-    try {
-
-        const response =
-            await fetch(API_URL);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                `API error: ${response.status}`
-            );
-
-        }
-
-
-        const projects =
-            await response.json();
-
-
-        if (!projects.length) {
-
-            console.warn(
-                "No FEEMAAS projects found."
-            );
-
-            return;
-
-        }
-
-
-        currentProject =
-            projects[0];
-
-
-        showProject(
-            currentProject
+    const triangles =
+        document.querySelectorAll(
+            ".capacity-triangle"
         );
+
+
+    if (!triangles.length) {
+
+        console.warn(
+            "FEEMAAS: Capacity triangles not found."
+        );
+
+        return;
 
     }
 
-    catch (error) {
 
-        console.error(
-            "FEEMAAS API Error:",
-            error
-        );
+    triangles.forEach(
+        triangle => {
 
-    }
+            // ---------------------------------
+            // Native drag
+            // ---------------------------------
+
+            triangle.setAttribute(
+                "draggable",
+                "true"
+            );
+
+
+            triangle.addEventListener(
+                "dragstart",
+                startCapacityDrag
+            );
+
+
+            triangle.addEventListener(
+                "dragend",
+                stopCapacityDrag
+            );
+
+
+            // ---------------------------------
+            // Double click
+            // ---------------------------------
+
+            triangle.addEventListener(
+                "dblclick",
+                () => {
+
+                    openProjectModal(
+                        triangle
+                    );
+
+                }
+            );
+
+
+            // ---------------------------------
+            // Click / selection
+            // ---------------------------------
+
+            triangle.addEventListener(
+                "click",
+                () => {
+
+                    selectCapacityTriangle(
+                        triangle
+                    );
+
+                }
+            );
+
+        }
+    );
 
 }
 
 
 // =====================================
-// SHOW PROJECT
+// SELECT CAPACITY TRIANGLE
 // =====================================
-function showProject(project) {
 
-    const projectTitle =
-        document.getElementById(
-            "projectTitle"
+function selectCapacityTriangle(
+    triangle
+) {
+
+    const triangles =
+        document.querySelectorAll(
+            ".capacity-triangle"
         );
 
 
-    const projectDescription =
-        document.getElementById(
-            "projectDescription"
+    triangles.forEach(
+        item => {
+
+            item.classList.remove(
+                "selected"
+            );
+
+        }
+    );
+
+
+    triangle.classList.add(
+        "selected"
+    );
+
+
+    console.log(
+        "FEEMAAS: Capacity triangle selected:",
+        triangle.dataset.slot
+    );
+
+}
+
+
+// =====================================
+// START CAPACITY DRAG
+// =====================================
+
+function startCapacityDrag(event) {
+
+    draggedCapacityTriangle =
+        event.currentTarget;
+
+
+    const slot =
+        draggedCapacityTriangle.dataset.slot;
+
+
+    // ---------------------------------
+    // Store slot information
+    // ---------------------------------
+
+    event.dataTransfer.effectAllowed =
+        "copy";
+
+
+    event.dataTransfer.setData(
+        "text/plain",
+        slot
+    );
+
+
+    // ---------------------------------
+    // Select triangle
+    // ---------------------------------
+
+    selectCapacityTriangle(
+        draggedCapacityTriangle
+    );
+
+
+    draggedCapacityTriangle.classList.add(
+        "dragging"
+    );
+
+
+    console.log(
+        "FEEMAAS: Drag started:",
+        slot
+    );
+
+}
+
+
+// =====================================
+// STOP CAPACITY DRAG
+// =====================================
+
+function stopCapacityDrag() {
+
+    if (
+        draggedCapacityTriangle
+    ) {
+
+        draggedCapacityTriangle.classList.remove(
+            "dragging"
         );
-
-
-    const zoneName =
-        document.getElementById(
-            "zoneName"
-        );
-
-
-    if (projectTitle) {
-
-        projectTitle.innerText =
-            project.title;
 
     }
 
 
-    if (projectDescription) {
+    draggedCapacityTriangle =
+        null;
 
-        projectDescription.innerText =
-            project.description || "";
+}
+
+
+// =====================================
+// ENABLE DROP ON WORKSPACE
+// =====================================
+
+function initializeWorkspaceDropZone() {
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+
+    if (!svg) {
+
+        console.warn(
+            "FEEMAAS: visualCanvas not found."
+        );
+
+        return;
 
     }
 
 
-    // ===============================
-    // DRAW MAIN CITY MAP
-    // ===============================
+    // ---------------------------------
+    // Allow drag over SVG
+    // ---------------------------------
 
-    drawWorkspace();
+    svg.addEventListener(
+        "dragover",
+        handleWorkspaceDragOver
+    );
+
+
+    // ---------------------------------
+    // Drop
+    // ---------------------------------
+
+    svg.addEventListener(
+        "drop",
+        handleWorkspaceDrop
+    );
+
+}
+
+
+// =====================================
+// DRAG OVER WORKSPACE
+// =====================================
+
+function handleWorkspaceDragOver(
+    event
+) {
+
+    event.preventDefault();
+
+
+    event.dataTransfer.dropEffect =
+        "copy";
+
+}
+
+
+// =====================================
+// DROP CAPACITY TRIANGLE
+// =====================================
+
+function handleWorkspaceDrop(
+    event
+) {
+
+    event.preventDefault();
 
 
     if (
-        project.zones &&
-        project.zones.length
+        !draggedCapacityTriangle
     ) {
 
-        const zone =
-            project.zones[0];
-
-
-        if (zoneName) {
-
-            zoneName.innerText =
-                zone.name;
-
-        }
-
-
-        if (
-            zone.visuals &&
-            zone.visuals.length
-        ) {
-
-            drawVisual(
-                zone.visuals[0]
-            );
-
-        }
+        return;
 
     }
 
-}
-
-
-// =====================================
-// DRAW WORKSPACE
-// =====================================
-
-function drawWorkspace() {
 
     const svg =
         document.getElementById(
@@ -305,18 +478,630 @@ function drawWorkspace() {
     }
 
 
+    const point =
+        getSVGPoint(
+            svg,
+            event.clientX,
+            event.clientY
+        );
+
+
+    const zone =
+        detectPointZone(
+            point.x,
+            point.y
+        );
+
+
+    console.log(
+        "FEEMAAS: Capacity triangle dropped:",
+        {
+            x: point.x,
+            y: point.y,
+            zone: zone
+                ? zone.id
+                : null
+        }
+    );
+
+
+    // ---------------------------------
+    // If dropped outside customer zones
+    // ---------------------------------
+
+    if (!zone) {
+
+        console.log(
+            "FEEMAAS: Triangle dropped outside customer zone."
+        );
+
+        return;
+
+    }
+
+
+    // ---------------------------------
+    // Store pending creation data
+    // ---------------------------------
+
+    window.pendingProjectCreation = {
+
+        slot:
+            draggedCapacityTriangle.dataset.slot,
+
+        zoneId:
+            zone.id,
+
+        position_x:
+            Number(
+                point.x -
+                SVG_CENTER_X
+            ),
+
+        position_y:
+            Number(
+                point.y -
+                SVG_CENTER_Y
+            )
+
+    };
+
+
+    // ---------------------------------
+    // Open project form
+    // ---------------------------------
+
+    openProjectModal(
+        draggedCapacityTriangle
+    );
+
+}
+
+
+// =====================================
+// DETECT ZONE FROM SVG POINT
+// =====================================
+
+function detectPointZone(
+    x,
+    y
+) {
+
+    for (
+        const zone of WORKSPACE_ZONES
+    ) {
+
+        const inside =
+            x >= zone.x &&
+            x <=
+                zone.x +
+                zone.width &&
+            y >= zone.y &&
+            y <=
+                zone.y +
+                zone.height;
+
+
+        if (inside) {
+
+            return zone;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+// =====================================
+// PROJECT MODAL
+// =====================================
+
+function initializeProjectModal() {
+
+    const modal =
+        document.getElementById(
+            "projectModal"
+        );
+
+
+    const closeButton =
+        document.getElementById(
+            "closeModal"
+        );
+
+
+    const createButton =
+        document.getElementById(
+            "createProjectBtn"
+        );
+
+
+    if (!modal) {
+
+        console.warn(
+            "FEEMAAS: projectModal not found."
+        );
+
+        return;
+
+    }
+
+
+    // ---------------------------------
+    // Close
+    // ---------------------------------
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeProjectModal
+        );
+
+    }
+
+
+    // ---------------------------------
+    // Create project
+    // ---------------------------------
+
+    if (createButton) {
+
+        createButton.addEventListener(
+            "click",
+            handleCreateProject
+        );
+
+    }
+
+
+    // ---------------------------------
+    // Click outside modal box
+    // ---------------------------------
+
+    modal.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target === modal
+            ) {
+
+                closeProjectModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+// =====================================
+// OPEN PROJECT MODAL
+// =====================================
+
+function openProjectModal(
+    triangle = null
+) {
+
+    const modal =
+        document.getElementById(
+            "projectModal"
+        );
+
+
+    if (!modal) {
+
+        console.warn(
+            "FEEMAAS: projectModal not found."
+        );
+
+        return;
+
+    }
+
+
+    if (triangle) {
+
+        selectCapacityTriangle(
+            triangle
+        );
+
+
+        // ---------------------------------
+        // If opened by double click rather
+        // than drag, create pending data.
+        // ---------------------------------
+
+        if (
+            !window.pendingProjectCreation
+        ) {
+
+            window.pendingProjectCreation = {
+
+                slot:
+                    triangle.dataset.slot,
+
+                zoneId:
+                    null,
+
+                position_x:
+                    0,
+
+                position_y:
+                    0
+
+            };
+
+        }
+
+    }
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+// =====================================
+// CLOSE PROJECT MODAL
+// =====================================
+
+function closeProjectModal() {
+
+    const modal =
+        document.getElementById(
+            "projectModal"
+        );
+
+
+    if (!modal) {
+
+        return;
+
+    }
+
+
+    modal.classList.add(
+        "hidden"
+    );
+
+
+    // ---------------------------------
+    // Do not destroy the selected slot.
+    // Just clear pending operation.
+    // ---------------------------------
+
+    window.pendingProjectCreation =
+        null;
+
+}
+
+
+// =====================================
+// CREATE PROJECT
+// =====================================
+//
+// IMPORTANT:
+//
+// For now this function does NOT invent
+// a backend payload.
+//
+// We first verify that the UI flow works.
+//
+// Backend creation will be connected
+// after we confirm the exact API schema.
+// =====================================
+
+function handleCreateProject() {
+
+    const title =
+        document.getElementById(
+            "projectTitleInput"
+        );
+
+
+    const description =
+        document.getElementById(
+            "projectDescriptionInput"
+        );
+
+
+    const quantity =
+        document.getElementById(
+            "projectQuantityInput"
+        );
+
+
+    const budget =
+        document.getElementById(
+            "projectBudgetInput"
+        );
+
+
+    const pending =
+        window.pendingProjectCreation;
+
+
+    console.log(
+        "FEEMAAS: Project creation request",
+        {
+
+            title:
+                title
+                    ? title.value
+                    : "",
+
+            description:
+                description
+                    ? description.value
+                    : "",
+
+            quantity:
+                quantity
+                    ? quantity.value
+                    : "",
+
+            budget:
+                budget
+                    ? budget.value
+                    : "",
+
+            pending
+
+        }
+    );
+
+
+    // ---------------------------------
+    // Temporary UI confirmation
+    // ---------------------------------
+
+    closeProjectModal();
+
+
+    console.log(
+        "FEEMAAS: Project form captured."
+    );
+
+}
+// =====================================
+// LOAD PROJECT
+// =====================================
+
+async function loadProject() {
+
+    try {
+
+        const response =
+            await fetch(API_URL);
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API error: ${response.status}`
+            );
+
+        }
+
+        const projects =
+            await response.json();
+
+        if (
+            !Array.isArray(projects) ||
+            projects.length === 0
+        ) {
+
+            console.warn(
+                "FEEMAAS: No projects found."
+            );
+
+            drawWorkspace();
+
+            return;
+
+        }
+
+        // ---------------------------------
+        // Current temporary strategy:
+        // use first project.
+        // ---------------------------------
+
+        currentProject =
+            projects[0];
+
+        showProject(
+            currentProject
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "FEEMAAS API Error:",
+            error
+        );
+
+        // Even if API fails,
+        // workspace itself should render.
+
+        drawWorkspace();
+
+    }
+
+}
+
+
+// =====================================
+// SHOW PROJECT
+// =====================================
+
+function showProject(project) {
+
+    if (!project) {
+
+        return;
+
+    }
+
+    // ---------------------------------
+    // PROJECT INFORMATION
+    // ---------------------------------
+
+    const projectTitle =
+        document.getElementById(
+            "projectTitle"
+        );
+
+    const projectDescription =
+        document.getElementById(
+            "projectDescription"
+        );
+
+    const zoneName =
+        document.getElementById(
+            "zoneName"
+        );
+
+
+    if (projectTitle) {
+
+        projectTitle.innerText =
+            project.title || "";
+
+    }
+
+
+    if (projectDescription) {
+
+        projectDescription.innerText =
+            project.description || "";
+
+    }
+
+
+    // ---------------------------------
+    // DRAW WORKSPACE
+    // ---------------------------------
+
+    drawWorkspace();
+
+
+    // ---------------------------------
+    // FIND PROJECT VISUAL
+    // ---------------------------------
+
+    if (
+        !project.zones ||
+        !project.zones.length
+    ) {
+
+        return;
+
+    }
+
+
+    const zone =
+        project.zones[0];
+
+
+    if (zoneName) {
+
+        zoneName.innerText =
+            zone.name || "";
+
+    }
+
+
+    if (
+        zone.visuals &&
+        zone.visuals.length
+    ) {
+
+        drawVisual(
+            zone.visuals[0]
+        );
+
+    }
+
+}
+
+
+// =====================================
+// DRAW WORKSPACE
+// =====================================
+//
+// Rendering order:
+//
+// 1. Background
+// 2. Coordinate system
+// 3. Four zones
+// 4. Central plaza
+//
+// There is NO ROAD layer.
+// There is NO extra central shape.
+// =====================================
+
+function drawWorkspace() {
+
+    const svg =
+        document.getElementById(
+            "visualCanvas"
+        );
+
+    if (!svg) {
+
+        console.warn(
+            "FEEMAAS: #visualCanvas not found."
+        );
+
+        return;
+
+    }
+
+
+    // ---------------------------------
+    // Clear old workspace
+    // ---------------------------------
+
     svg.innerHTML = "";
 
 
-    drawBackground(
-        svg
+    // ---------------------------------
+    // Make sure SVG has correct viewBox
+    // ---------------------------------
+
+    svg.setAttribute(
+        "viewBox",
+        `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`
     );
 
 
-    drawRoad(
-        svg
-    );
+    // ---------------------------------
+    // Background
+    // ---------------------------------
 
+    drawBackground(svg);
+
+
+    // ---------------------------------
+    // Coordinate system
+    // ---------------------------------
+
+    drawCoordinateSystem(svg);
+
+
+    // ---------------------------------
+    // Four zones
+    // ---------------------------------
 
     WORKSPACE_ZONES.forEach(
         zone => {
@@ -328,6 +1113,13 @@ function drawWorkspace() {
 
         }
     );
+
+
+    // ---------------------------------
+    // Central plaza
+    // ---------------------------------
+
+    drawCentralPlaza(svg);
 
 }
 
@@ -350,34 +1142,35 @@ function drawBackground(svg) {
         "0"
     );
 
-
     background.setAttribute(
         "y",
         "0"
     );
-
 
     background.setAttribute(
         "width",
         SVG_WIDTH
     );
 
-
     background.setAttribute(
         "height",
         SVG_HEIGHT
     );
-
 
     background.setAttribute(
         "fill",
         "#f8fafc"
     );
 
-
     background.setAttribute(
         "rx",
         "18"
+    );
+
+
+    background.setAttribute(
+        "data-workspace-background",
+        "true"
     );
 
 
@@ -389,260 +1182,234 @@ function drawBackground(svg) {
 
 
 // =====================================
-// DRAW ROAD
+// DRAW COORDINATE SYSTEM
 // =====================================
+//
+// IMPORTANT:
+//
+// No roads.
+//
+// Only two thin crossing lines:
+//
+// horizontal:
+// Y = 250
+//
+// vertical:
+// X = 400
+//
+// They visually divide the workspace
+// into four quadrants.
 // =====================================
-// DRAW CROSSROAD SYSTEM
-// 4 TWO-WAY ROADS + CENTRAL PLAZA
-// =====================================
 
-function drawRoad(svg) {
+function drawCoordinateSystem(svg) {
 
+    // ---------------------------------
+    // Horizontal axis
+    // ---------------------------------
 
-    // NORTH - SOUTH ROAD
-
-    const verticalRoad =
+    const horizontal =
         document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "rect"
+            SVG_NS,
+            "line"
         );
 
 
-    verticalRoad.setAttribute(
-        "x",
-        "365"
-    );
-
-    verticalRoad.setAttribute(
-        "y",
+    horizontal.setAttribute(
+        "x1",
         "0"
     );
 
-    verticalRoad.setAttribute(
-        "width",
-        "70"
+    horizontal.setAttribute(
+        "y1",
+        SVG_CENTER_Y
     );
 
-    verticalRoad.setAttribute(
-        "height",
-        SVG_HEIGHT
-    );
-
-    verticalRoad.setAttribute(
-        "fill",
-        "#e2e8f0"
-    );
-
-
-    svg.appendChild(
-        verticalRoad
-    );
-
-
-
-    // EAST - WEST ROAD
-
-    const horizontalRoad =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "rect"
-        );
-
-
-    horizontalRoad.setAttribute(
-        "x",
-        "0"
-    );
-
-    horizontalRoad.setAttribute(
-        "y",
-        "215"
-    );
-
-    horizontalRoad.setAttribute(
-        "width",
+    horizontal.setAttribute(
+        "x2",
         SVG_WIDTH
     );
 
-    horizontalRoad.setAttribute(
-        "height",
-        "70"
+    horizontal.setAttribute(
+        "y2",
+        SVG_CENTER_Y
     );
 
 
-    horizontalRoad.setAttribute(
-        "fill",
-        "#e2e8f0"
+    horizontal.setAttribute(
+        "stroke",
+        "#cbd5e1"
+    );
+
+    horizontal.setAttribute(
+        "stroke-width",
+        "2"
+    );
+
+
+    horizontal.setAttribute(
+        "pointer-events",
+        "none"
     );
 
 
     svg.appendChild(
-        horizontalRoad
+        horizontal
     );
 
 
+    // ---------------------------------
+    // Vertical axis
+    // ---------------------------------
 
-    // ROAD CENTER LINES
-
-    const lines = [
-
-        {
-            x1:400,
-            y1:0,
-            x2:400,
-            y2:140
-        },
-
-        {
-            x1:400,
-            y1:360,
-            x2:400,
-            y2:500
-        },
-
-        {
-            x1:0,
-            y1:250,
-            x2:280,
-            y2:250
-        },
-
-        {
-            x1:520,
-            y1:250,
-            x2:800,
-            y2:250
-        }
-
-    ];
-
-
-
-    lines.forEach(
-        item => {
-
-
-            const line =
-                document.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "line"
-                );
-
-
-            line.setAttribute(
-                "x1",
-                item.x1
-            );
-
-
-            line.setAttribute(
-                "y1",
-                item.y1
-            );
-
-
-            line.setAttribute(
-                "x2",
-                item.x2
-            );
-
-
-            line.setAttribute(
-                "y2",
-                item.y2
-            );
-
-
-            line.setAttribute(
-                "stroke",
-                "#ffffff"
-            );
-
-
-            line.setAttribute(
-                "stroke-width",
-                "3"
-            );
-
-
-            line.setAttribute(
-                "stroke-dasharray",
-                "12 12"
-            );
-
-
-            svg.appendChild(
-                line
-            );
-
-
-        }
-    );
-
-
-
-    // CENTRAL PLAZA
-
-    const plaza =
+    const vertical =
         document.createElementNS(
-            "http://www.w3.org/2000/svg",
+            SVG_NS,
+            "line"
+        );
+
+
+    vertical.setAttribute(
+        "x1",
+        SVG_CENTER_X
+    );
+
+    vertical.setAttribute(
+        "y1",
+        "0"
+    );
+
+    vertical.setAttribute(
+        "x2",
+        SVG_CENTER_X
+    );
+
+    vertical.setAttribute(
+        "y2",
+        SVG_HEIGHT
+    );
+
+
+    vertical.setAttribute(
+        "stroke",
+        "#cbd5e1"
+    );
+
+    vertical.setAttribute(
+        "stroke-width",
+        "2"
+    );
+
+
+    vertical.setAttribute(
+        "pointer-events",
+        "none"
+    );
+
+
+    svg.appendChild(
+        vertical
+    );
+
+}
+
+
+// =====================================
+// DRAW CENTRAL PLAZA
+// =====================================
+//
+// The plaza is infrastructure,
+// not a project visual.
+//
+// Therefore:
+// - no visual id
+// - no drag
+// - no project shape
+// - no extra triangle
+// =====================================
+
+function drawCentralPlaza(svg) {
+
+    const circle =
+        document.createElementNS(
+            SVG_NS,
             "circle"
         );
 
 
-    plaza.setAttribute(
+    circle.setAttribute(
         "cx",
-        "400"
+        CENTRAL_PLAZA.x
     );
 
-
-    plaza.setAttribute(
+    circle.setAttribute(
         "cy",
-        "250"
+        CENTRAL_PLAZA.y
     );
 
-
-    plaza.setAttribute(
+    circle.setAttribute(
         "r",
-        "65"
+        CENTRAL_PLAZA.radius
     );
 
 
-    plaza.setAttribute(
+    circle.setAttribute(
         "fill",
         "#ffffff"
     );
 
 
-    plaza.setAttribute(
+    circle.setAttribute(
         "stroke",
-        "#cbd5e1"
+        "#38bdf8"
     );
 
 
-    plaza.setAttribute(
+    circle.setAttribute(
         "stroke-width",
-        "3"
+        "4"
     );
 
 
-    plaza.setAttribute(
+    circle.setAttribute(
+        "id",
+        "consultantPlaza"
+    );
+
+
+    circle.setAttribute(
         "data-plaza",
         "central"
     );
 
 
-    svg.appendChild(
-        plaza
+    circle.setAttribute(
+        "pointer-events",
+        "none"
     );
 
 
+    svg.appendChild(
+        circle
+    );
+
 }
+
+
 // =====================================
 // DRAW ZONE
 // =====================================
 
-function drawZone(svg, zone) {
+function drawZone(
+    svg,
+    zone
+) {
+
+    if (!zone) {
+
+        return;
+
+    }
+
 
     const group =
         document.createElementNS(
@@ -657,222 +1424,15 @@ function drawZone(svg, zone) {
     );
 
 
-    // =================================
-    // CENTRAL PLAZA
-    // =================================
-
-    if (
-        zone.type === "plaza"
-    ) {
-
-        const centerX =
-            zone.x +
-            zone.width / 2;
-
-
-        const centerY =
-            zone.y +
-            zone.height / 2;
-
-
-        const radius =
-            Math.min(
-                zone.width,
-                zone.height
-            ) / 2 - 18;
-
-
-        // Outer glass circle
-
-        const plaza =
-            document.createElementNS(
-                SVG_NS,
-                "circle"
-            );
-
-
-        plaza.setAttribute(
-            "cx",
-            centerX
-        );
-
-
-        plaza.setAttribute(
-            "cy",
-            centerY
-        );
-
-
-        plaza.setAttribute(
-            "r",
-            radius
-        );
-
-
-        plaza.setAttribute(
-            "fill",
-            "rgba(255,255,255,0.55)"
-        );
-
-
-        plaza.setAttribute(
-            "stroke",
-            "#cbd5e1"
-        );
-
-
-        plaza.setAttribute(
-            "stroke-width",
-            "2"
-        );
-
-
-        plaza.setAttribute(
-            "class",
-            "workspace-zone central-plaza"
-        );
-
-
-        group.appendChild(
-            plaza
-        );
-
-
-        // Inner glass ring
-
-        const innerRing =
-            document.createElementNS(
-                SVG_NS,
-                "circle"
-            );
-
-
-        innerRing.setAttribute(
-            "cx",
-            centerX
-        );
-
-
-        innerRing.setAttribute(
-            "cy",
-            centerY
-        );
-
-
-        innerRing.setAttribute(
-            "r",
-            radius - 10
-        );
-
-
-        innerRing.setAttribute(
-            "fill",
-            "none"
-        );
-
-
-        innerRing.setAttribute(
-            "stroke",
-            "#e2e8f0"
-        );
-
-
-        innerRing.setAttribute(
-            "stroke-width",
-            "1"
-        );
-
-
-        innerRing.setAttribute(
-            "opacity",
-            "0.9"
-        );
-
-
-        group.appendChild(
-            innerRing
-        );
-
-
-        // Central label
-
-        const label =
-            document.createElementNS(
-                SVG_NS,
-                "text"
-            );
-
-
-        label.setAttribute(
-            "x",
-            centerX
-        );
-
-
-        label.setAttribute(
-            "y",
-            centerY + 5
-        );
-
-
-        label.setAttribute(
-            "text-anchor",
-            "middle"
-        );
-
-
-        label.setAttribute(
-            "font-family",
-            "Tahoma, Arial, sans-serif"
-        );
-
-
-        label.setAttribute(
-            "font-size",
-            "13"
-        );
-
-
-        label.setAttribute(
-            "font-weight",
-            "bold"
-        );
-
-
-        label.setAttribute(
-            "fill",
-            "#64748b"
-        );
-
-
-        label.setAttribute(
-            "letter-spacing",
-            "1"
-        );
-
-
-        label.textContent =
-            "CENTRAL PLAZA";
-
-
-        group.appendChild(
-            label
-        );
-
-
-        svg.appendChild(
-            group
-        );
-
-
-        return;
-
-    }
-
-
-    // =================================
-    // DEFAULT RECTANGULAR ZONE
-    // =================================
+    group.setAttribute(
+        "data-zone-role",
+        zone.role || ""
+    );
+
+
+    // ---------------------------------
+    // Zone rectangle
+    // ---------------------------------
 
     const zoneRect =
         document.createElementNS(
@@ -886,18 +1446,15 @@ function drawZone(svg, zone) {
         zone.x
     );
 
-
     zoneRect.setAttribute(
         "y",
         zone.y
     );
 
-
     zoneRect.setAttribute(
         "width",
         zone.width
     );
-
 
     zoneRect.setAttribute(
         "height",
@@ -935,8 +1492,76 @@ function drawZone(svg, zone) {
     );
 
 
+    zoneRect.setAttribute(
+        "pointer-events",
+        "none"
+    );
+
+
     group.appendChild(
         zoneRect
+    );
+
+
+    // ---------------------------------
+    // Zone label
+    // ---------------------------------
+
+    const label =
+        document.createElementNS(
+            SVG_NS,
+            "text"
+        );
+
+
+    label.setAttribute(
+        "x",
+        zone.x + 18
+    );
+
+
+    label.setAttribute(
+        "y",
+        zone.y + 28
+    );
+
+
+    label.setAttribute(
+        "font-family",
+        "Tahoma, Arial, sans-serif"
+    );
+
+
+    label.setAttribute(
+        "font-size",
+        "11"
+    );
+
+
+    label.setAttribute(
+        "font-weight",
+        "bold"
+    );
+
+
+    label.setAttribute(
+        "fill",
+        "#94a3b8"
+    );
+
+
+    label.setAttribute(
+        "pointer-events",
+        "none"
+    );
+
+
+    label.textContent =
+        zone.name;
+
+
+    group.appendChild(
+        label
     );
 
 
@@ -950,28 +1575,52 @@ function drawZone(svg, zone) {
 // =====================================
 // DRAW VISUAL
 // =====================================
+//
+// This function renders the ACTUAL
+// project visual.
+//
+// It does NOT create the 5 initial
+// customer triangles.
+//
+// The 5 triangles belong to the
+// customer interaction/palette layer.
+// =====================================
 
 function drawVisual(visual) {
-// Normalize old visual positions
 
-visual.position_x =
-    Math.max(
-        -350,
-        Math.min(
-            350,
-            Number(visual.position_x) || 0
-        )
-    );
+    if (!visual) {
+
+        return;
+
+    }
 
 
-visual.position_y =
-    Math.max(
-        -200,
-        Math.min(
-            200,
-            Number(visual.position_y) || 0
-        )
-    );
+    // ---------------------------------
+    // Normalize position
+    // ---------------------------------
+
+    visual.position_x =
+        clamp(
+            Number(
+                visual.position_x
+            ) || 0,
+
+            -350,
+            350
+        );
+
+
+    visual.position_y =
+        clamp(
+            Number(
+                visual.position_y
+            ) || 0,
+
+            -200,
+            200
+        );
+
+
     currentVisual =
         visual;
 
@@ -1052,7 +1701,7 @@ visual.position_y =
 
 
 // =====================================
-// REMOVE EXISTING VISUAL OBJECTS
+// REMOVE EXISTING VISUALS
 // =====================================
 
 function removeExistingVisuals(svg) {
@@ -1171,11 +1820,11 @@ function createPolygonVisual(
 
 
     const centerX =
-        400 + x;
+        SVG_CENTER_X + x;
 
 
     const centerY =
-        250 + y;
+        SVG_CENTER_Y + y;
 
 
     const points =
@@ -1268,13 +1917,13 @@ function createPolygonVisual(
 
     polygon.setAttribute(
         "transform",
-        `rotate(
-            ${rotation}
-            ${centerX}
-            ${centerY}
-        )`
+        `rotate(${rotation} ${centerX} ${centerY})`
     );
 
+
+    // ---------------------------------
+    // Interaction
+    // ---------------------------------
 
     polygon.addEventListener(
         "mousedown",
@@ -1293,9 +1942,10 @@ function createPolygonVisual(
     );
 
 
-    selectedVisualElement =
-        null;
-
+    // ---------------------------------
+    // IMPORTANT:
+    // Do NOT reset selection here.
+    // ---------------------------------
 
     updateZoneState(
         visual
@@ -1373,26 +2023,32 @@ function selectVisual(event) {
     event.stopPropagation();
 
 
+    const element =
+        event.currentTarget;
+
+
+    // ---------------------------------
+    // Clear previous selection
+    // ---------------------------------
+
     if (
-        selectedVisualElement
+        selectedVisualElement &&
+        selectedVisualElement !== element
     ) {
 
-        selectedVisualElement.setAttribute(
-            "stroke",
-            "#5b3a20"
-        );
-
-
-        selectedVisualElement.setAttribute(
-            "stroke-width",
-            "3"
+        restoreVisualAppearance(
+            selectedVisualElement
         );
 
     }
 
 
+    // ---------------------------------
+    // Select current
+    // ---------------------------------
+
     selectedVisualElement =
-        event.currentTarget;
+        element;
 
 
     selectedVisualElement.setAttribute(
@@ -1410,6 +2066,53 @@ function selectVisual(event) {
     selectedVisualElement.style.cursor =
         "grab";
 
+
+    // ---------------------------------
+    // Keep zone state synchronized
+    // ---------------------------------
+
+    if (currentVisual) {
+
+        updateZoneState(
+            currentVisual
+        );
+
+    }
+
+}
+
+
+// =====================================
+// RESTORE VISUAL APPEARANCE
+// =====================================
+
+function restoreVisualAppearance(
+    element
+) {
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    element.setAttribute(
+        "stroke",
+        "#5b3a20"
+    );
+
+
+    element.setAttribute(
+        "stroke-width",
+        "3"
+    );
+
+
+    element.removeAttribute(
+        "filter"
+    );
+
 }
 
 
@@ -1420,13 +2123,20 @@ function selectVisual(event) {
 function startDrag(event) {
 
     event.preventDefault();
-
     event.stopPropagation();
 
 
+    const element =
+        event.currentTarget;
+
+
+    // ---------------------------------
+    // Select before dragging
+    // ---------------------------------
+
     if (
         selectedVisualElement !==
-        event.currentTarget
+        element
     ) {
 
         selectVisual(
@@ -1444,6 +2154,13 @@ function startDrag(event) {
         document.getElementById(
             "visualCanvas"
         );
+
+
+    if (!svg) {
+
+        return;
+
+    }
 
 
     const point =
@@ -1464,17 +2181,17 @@ function startDrag(event) {
 
     objectStartX =
         Number(
-            event.currentTarget.dataset.x
-        );
+            element.dataset.x
+        ) || 0;
 
 
     objectStartY =
         Number(
-            event.currentTarget.dataset.y
-        );
+            element.dataset.y
+        ) || 0;
 
 
-    event.currentTarget.style.cursor =
+    element.style.cursor =
         "grabbing";
 
 
@@ -1493,7 +2210,7 @@ function startDrag(event) {
 
 
 // =====================================
-// DRAG
+// DRAG VISUAL
 // =====================================
 
 function dragVisual(event) {
@@ -1505,10 +2222,24 @@ function dragVisual(event) {
     }
 
 
+    if (!selectedVisualElement) {
+
+        return;
+
+    }
+
+
     const svg =
         document.getElementById(
             "visualCanvas"
         );
+
+
+    if (!svg) {
+
+        return;
+
+    }
 
 
     const point =
@@ -1563,13 +2294,6 @@ function updateVisualPosition(
         return;
 
     }
-    // =================================
-    // FEEMAAS COORDINATE LIMIT
-    // Keep visual inside workspace
-    // =================================
-
-    x = Math.max(-350, Math.min(350, x));
-    y = Math.max(-200, Math.min(200, y));
 
 
     if (!currentVisual) {
@@ -1583,6 +2307,62 @@ function updateVisualPosition(
         Number(
             currentVisual.size
         ) || 100;
+
+
+    // ---------------------------------
+    // Keep visual inside workspace
+    // ---------------------------------
+
+    const radius =
+        size / 2;
+
+
+    const minX =
+        -SVG_CENTER_X +
+        radius;
+
+
+    const maxX =
+        SVG_CENTER_X -
+        radius;
+
+
+    const minY =
+        -SVG_CENTER_Y +
+        radius;
+
+
+    const maxY =
+        SVG_CENTER_Y -
+        radius;
+
+
+    x =
+        clamp(
+            x,
+            minX,
+            maxX
+        );
+
+
+    y =
+        clamp(
+            y,
+            minY,
+            maxY
+        );
+
+
+    // ---------------------------------
+    // Calculate new center
+    // ---------------------------------
+
+    const centerX =
+        SVG_CENTER_X + x;
+
+
+    const centerY =
+        SVG_CENTER_Y + y;
 
 
     const rotation =
@@ -1603,14 +2383,6 @@ function updateVisualPosition(
         ) || 0;
 
 
-    const centerX =
-        400 + x;
-
-
-    const centerY =
-        250 + y;
-
-
     const points =
         buildPolygonPoints(
             centerX,
@@ -1629,11 +2401,7 @@ function updateVisualPosition(
 
     visualElement.setAttribute(
         "transform",
-        `rotate(
-            ${rotation}
-            ${centerX}
-            ${centerY}
-        )`
+        `rotate(${rotation} ${centerX} ${centerY})`
     );
 
 
@@ -1644,12 +2412,17 @@ function updateVisualPosition(
     visualElement.dataset.y =
         y;
 
-currentVisual.position_x =
-    Number(x.toFixed(2));
+
+    currentVisual.position_x =
+        Number(
+            x.toFixed(2)
+        );
 
 
-currentVisual.position_y =
-    Number(y.toFixed(2));
+    currentVisual.position_y =
+        Number(
+            y.toFixed(2)
+        );
 
 
     updateVisualPanel(
@@ -1691,15 +2464,22 @@ function detectVisualZone(
     visual
 ) {
 
+    if (!visual) {
+
+        return null;
+
+    }
+
+
     const centerX =
-        400 +
+        SVG_CENTER_X +
         Number(
             visual.position_x
         );
 
 
     const centerY =
-        250 +
+        SVG_CENTER_Y +
         Number(
             visual.position_y
         );
@@ -1740,6 +2520,13 @@ function updateZoneState(
     visual
 ) {
 
+    if (!visual) {
+
+        return;
+
+    }
+
+
     const zone =
         detectVisualZone(
             visual
@@ -1773,6 +2560,16 @@ function updateZoneState(
 function findVisualElement(
     visualId
 ) {
+
+    if (
+        visualId === null ||
+        visualId === undefined
+    ) {
+
+        return null;
+
+    }
+
 
     const elements =
         document.querySelectorAll(
@@ -1829,21 +2626,50 @@ function applyZoneBehavior(
     }
 
 
+    // ---------------------------------
+    // Active customer zone
+    // ---------------------------------
+
     if (
         zone.behavior ===
         "neon"
     ) {
 
-        visualElement.setAttribute(
-            "stroke",
-            "#22d3ee"
-        );
+        // ---------------------------------
+        // IMPORTANT:
+        // Selection has priority.
+        // ---------------------------------
 
+        if (
+            selectedVisualElement ===
+            visualElement
+        ) {
 
-        visualElement.setAttribute(
-            "stroke-width",
-            "5"
-        );
+            visualElement.setAttribute(
+                "stroke",
+                "#2563eb"
+            );
+
+            visualElement.setAttribute(
+                "stroke-width",
+                "6"
+            );
+
+        }
+
+        else {
+
+            visualElement.setAttribute(
+                "stroke",
+                "#22d3ee"
+            );
+
+            visualElement.setAttribute(
+                "stroke-width",
+                "5"
+            );
+
+        }
 
 
         visualElement.setAttribute(
@@ -1883,22 +2709,6 @@ function resetZoneBehavior(
     }
 
 
-    visualElement.setAttribute(
-        "stroke",
-        selectedVisualElement === visualElement
-            ? "#2563eb"
-            : "#5b3a20"
-    );
-
-
-    visualElement.setAttribute(
-        "stroke-width",
-        selectedVisualElement === visualElement
-            ? "6"
-            : "3"
-    );
-
-
     visualElement.removeAttribute(
         "filter"
     );
@@ -1907,6 +2717,38 @@ function resetZoneBehavior(
     visualElement.removeAttribute(
         "data-active-zone"
     );
+
+
+    if (
+        selectedVisualElement ===
+        visualElement
+    ) {
+
+        visualElement.setAttribute(
+            "stroke",
+            "#2563eb"
+        );
+
+        visualElement.setAttribute(
+            "stroke-width",
+            "6"
+        );
+
+    }
+
+    else {
+
+        visualElement.setAttribute(
+            "stroke",
+            "#5b3a20"
+        );
+
+        visualElement.setAttribute(
+            "stroke-width",
+            "3"
+        );
+
+    }
 
 }
 
@@ -1968,6 +2810,16 @@ async function stopDrag() {
 
 async function saveVisualPosition() {
 
+    if (
+        !currentVisual ||
+        !currentVisual.id
+    ) {
+
+        return;
+
+    }
+
+
     const visualId =
         currentVisual.id;
 
@@ -1982,7 +2834,6 @@ async function saveVisualPosition() {
             Number(
                 currentVisual.position_x
             ),
-
 
         position_y:
             Number(
@@ -2082,13 +2933,27 @@ function getSVGPoint(
         svg.viewBox.baseVal;
 
 
+    // ---------------------------------
+    // Fallback if viewBox is missing
+    // ---------------------------------
+
+    const viewBoxWidth =
+        viewBox.width ||
+        SVG_WIDTH;
+
+
+    const viewBoxHeight =
+        viewBox.height ||
+        SVG_HEIGHT;
+
+
     const scaleX =
-        viewBox.width /
+        viewBoxWidth /
         rect.width;
 
 
     const scaleY =
-        viewBox.height /
+        viewBoxHeight /
         rect.height;
 
 
@@ -2097,7 +2962,6 @@ function getSVGPoint(
         x:
             (clientX - rect.left) *
             scaleX,
-
 
         y:
             (clientY - rect.top) *
@@ -2115,6 +2979,13 @@ function getSVGPoint(
 function updateVisualPanel(
     visual
 ) {
+
+    if (!visual) {
+
+        return;
+
+    }
+
 
     const visualName =
         document.getElementById(
@@ -2172,5 +3043,26 @@ function updateVisualPanel(
             material;
 
     }
+
+}
+
+
+// =====================================
+// UTILITY
+// =====================================
+
+function clamp(
+    value,
+    min,
+    max
+) {
+
+    return Math.max(
+        min,
+        Math.min(
+            max,
+            value
+        )
+    );
 
 }
