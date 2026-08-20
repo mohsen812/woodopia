@@ -1,27 +1,69 @@
 from rest_framework import generics
 
 from .models import Project, ProjectVisual
+
 from .serializers import (
     ProjectFullSerializer,
+    ProjectCreateSerializer,
     ProjectVisualSerializer,
 )
 
 
-class ProjectListCreateView(generics.ListCreateAPIView):
-    queryset = Project.objects.all().order_by("-created_at")
-    serializer_class = ProjectFullSerializer
+# =====================================
+# PROJECT LIST + CREATE
+# =====================================
+
+class ProjectListCreateView(
+    generics.ListCreateAPIView
+):
+
+    queryset = Project.objects.all().order_by(
+        "-created_at"
+    )
+
+    def get_serializer_class(self):
+
+        if self.request.method == "POST":
+
+            return ProjectCreateSerializer
+
+        return ProjectFullSerializer
 
 
-class ProjectDetailView(generics.RetrieveAPIView):
+# =====================================
+# PROJECT DETAIL
+# =====================================
+
+class ProjectDetailView(
+    generics.RetrieveAPIView
+):
+
     queryset = Project.objects.all()
+
     serializer_class = ProjectFullSerializer
 
 
-class ProjectVisualListCreateView(generics.ListCreateAPIView):
+# =====================================
+# PROJECT VISUAL LIST + CREATE
+# =====================================
+
+class ProjectVisualListCreateView(
+    generics.ListCreateAPIView
+):
+
     queryset = ProjectVisual.objects.all()
+
     serializer_class = ProjectVisualSerializer
 
 
-class ProjectVisualDetailView(generics.RetrieveUpdateDestroyAPIView):
+# =====================================
+# PROJECT VISUAL DETAIL
+# =====================================
+
+class ProjectVisualDetailView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+
     queryset = ProjectVisual.objects.all()
+
     serializer_class = ProjectVisualSerializer

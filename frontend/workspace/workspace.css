@@ -1,15 +1,15 @@
-/* ==========================
-   FEEMAAS Workspace
-   RTL Persian Interface
-========================== */
-{
+/* =========================================
+   FEEMAAS WORKSPACE UI
+   Version 2
+   Customer Project Operation Space
+========================================= */
 
+
+* {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-
+    margin:0;
+    padding:0;
 }
-
 
 
 body {
@@ -19,63 +19,60 @@ body {
     Arial,
     sans-serif;
 
-
-    direction: rtl;
-
-
-    background:
-    linear-gradient(
-        135deg,
-        #eef2ff,
-        #f8fafc
-    );
-
-
-    color:#1e293b;
-
+    direction:rtl;
 
     min-height:100vh;
+
+    background:
+    radial-gradient(
+        circle at top right,
+        #dbeafe,
+        transparent 35%
+    ),
+    linear-gradient(
+        135deg,
+        #f8fafc,
+        #eef2ff
+    );
+
+    color:#1e293b;
 
 }
 
 
+/* =====================================
+   TOP BAR
+===================================== */
 
-/* TOP BAR */
 
 .topbar {
 
+    height:72px;
 
-    height:70px;
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:0 35px;
 
 
     background:
+
     linear-gradient(
         90deg,
-        #111827,
-        #1d4ed8
+        #0f172a,
+        #1e40af
     );
 
 
     color:white;
 
 
-    display:flex;
-
-
-    align-items:center;
-
-
-    justify-content:space-between;
-
-
-    padding:0 40px;
-
-
-    font-size:20px;
-
-
     box-shadow:
-    0 5px 20px rgba(0,0,0,.15);
+
+    0 10px 30px rgba(15,23,42,.25);
 
 }
 
@@ -85,79 +82,143 @@ body {
 
     font-size:30px;
 
-    font-weight:bold;
+    font-weight:800;
+
+    letter-spacing:1px;
+
+}
+
+
+.workspace-title {
+
+    font-size:18px;
+
+    opacity:.9;
 
 }
 
 
 
-/* PROJECT INFO */
+/* =====================================
+   CUSTOMER CAPACITY PANEL
+   5 TRIANGLES AREA
+===================================== */
 
 
-.project-info {
+.capacity-bar {
 
 
-    background:white;
+    margin:25px 35px;
 
 
-    margin:30px;
+    background:
+
+    rgba(255,255,255,.75);
 
 
-    padding:25px;
+    backdrop-filter:blur(15px);
 
 
-    border-radius:20px;
+    border-radius:24px;
+
+
+    padding:20px;
 
 
     box-shadow:
-    0 10px 30px rgba(0,0,0,.08);
+
+    0 15px 40px rgba(15,23,42,.08);
 
 
 }
 
 
 
-.project-info h1 {
+.capacity-title {
 
 
-    font-size:28px;
+    font-size:18px;
 
+    font-weight:bold;
 
-    margin-bottom:10px;
-
-}
-
-
-
-.project-info p {
-
-
-    color:#64748b;
-
-}
-
-
-
-.zone-box {
-
-
-    margin-top:20px;
-
-
-    padding:15px;
-
-
-    background:#f1f5f9;
-
-
-    border-radius:15px;
+    margin-bottom:15px;
 
 
 }
 
 
 
-/* WORKSPACE */
+.capacity-items {
+
+
+    display:flex;
+
+    gap:18px;
+
+}
+
+
+
+.capacity-triangle {
+
+
+    width:55px;
+
+    height:55px;
+
+
+    background:
+
+    linear-gradient(
+        135deg,
+        #38bdf8,
+        #2563eb
+    );
+
+
+    clip-path:
+
+    polygon(
+        50% 0%,
+        0% 100%,
+        100% 100%
+    );
+
+
+    cursor:pointer;
+
+
+    transition:.3s;
+
+
+    filter:
+
+    drop-shadow(
+        0 8px 12px rgba(37,99,235,.35)
+    );
+
+
+}
+
+
+
+.capacity-triangle:hover {
+
+
+    transform:
+
+    translateY(-8px)
+    scale(1.08);
+
+
+}
+
+
+
+
+/* =====================================
+   MAIN WORKSPACE
+===================================== */
 
 
 .workspace {
@@ -169,11 +230,18 @@ body {
     gap:25px;
 
 
-    padding:0 30px 30px;
+    padding:
+
+    0 35px 35px;
 
 
 }
 
+
+
+/* =====================================
+   CANVAS
+===================================== */
 
 
 .canvas-area {
@@ -182,67 +250,86 @@ body {
     flex:1;
 
 
-    background:white;
+    min-height:600px;
 
 
-    border-radius:25px;
+    background:
 
 
-    min-height:550px;
+    rgba(255,255,255,.65);
+
+
+    backdrop-filter:
+
+    blur(18px);
+
+
+    border-radius:30px;
 
 
     display:flex;
 
 
-    align-items:center;
-
-
     justify-content:center;
+
+
+    align-items:center;
 
 
     box-shadow:
 
-    0 15px 40px rgba(0,0,0,.08);
+
+    0 20px 50px rgba(15,23,42,.1);
 
 
 }
 
 
 
-/* SVG AREA */
+/* SVG */
 
 
 #visualCanvas {
 
 
-    background:
+    width:800px;
 
-    linear-gradient(
-        45deg,
-        #fafafa,
-        #f1f5f9
-    );
+    height:500px;
 
 
-    border-radius:20px;
+    border-radius:25px;
+
+
+    overflow:hidden;
+
 
 }
 
 
 
-/* SIDE PANEL */
+/* =====================================
+   RIGHT CONTROL PANEL
+===================================== */
 
 
-.visual-panel {
+.control-panel {
 
 
-    width:300px;
+    width:330px;
 
 
-    background:white;
+    background:
 
 
-    border-radius:25px;
+    rgba(255,255,255,.85);
+
+
+    backdrop-filter:
+
+    blur(20px);
+
+
+    border-radius:30px;
 
 
     padding:25px;
@@ -250,14 +337,47 @@ body {
 
     box-shadow:
 
-    0 15px 40px rgba(0,0,0,.08);
+
+    0 20px 50px rgba(15,23,42,.1);
 
 
 }
 
 
 
-.visual-panel h3 {
+.control-panel h3 {
+
+
+    font-size:20px;
+
+    margin-bottom:20px;
+
+}
+
+
+
+/* =====================================
+   PROJECT STATUS CARD
+===================================== */
+
+
+.status-card {
+
+
+    background:
+
+
+    linear-gradient(
+        135deg,
+        #eff6ff,
+        #ffffff
+    );
+
+
+    border-radius:20px;
+
+
+    padding:20px;
 
 
     margin-bottom:20px;
@@ -267,17 +387,197 @@ body {
 
 
 
-.visual-panel p {
+.status-card span {
 
 
-    padding:10px 0;
+    display:block;
 
 
-    border-bottom:
-
-    1px solid #e2e8f0;
+    color:#64748b;
 
 
-    color:#475569;
+    margin-top:8px;
+
+
+}
+
+
+
+/* =====================================
+   ACTION BUTTONS
+===================================== */
+
+
+.workspace-button {
+
+
+    width:100%;
+
+
+    padding:14px;
+
+
+    border:none;
+
+
+    border-radius:16px;
+
+
+    background:
+
+
+    linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+    );
+
+
+    color:white;
+
+
+    font-size:16px;
+
+
+    cursor:pointer;
+
+
+    transition:.3s;
+
+
+}
+
+
+
+.workspace-button:hover {
+
+
+    transform:
+
+    translateY(-3px);
+
+
+    box-shadow:
+
+    0 10px 25px rgba(37,99,235,.35);
+
+
+}
+
+
+
+
+/* =====================================
+   ZONE VISUAL STYLE
+===================================== */
+
+
+.workspace-zone {
+
+
+    transition:.3s;
+
+
+}
+
+
+.workspace-zone:hover {
+
+
+    opacity:.85;
+
+
+}
+
+
+
+/* =====================================
+   MOBILE
+===================================== */
+
+
+@media(max-width:900px){
+
+
+    .workspace {
+
+
+        flex-direction:column;
+
+    }
+
+
+    .control-panel {
+
+        width:100%;
+
+    }
+
+
+    #visualCanvas {
+
+        width:100%;
+
+        height:auto;
+
+    }
+
+
+}
+.hidden {
+
+    display:none !important;
+
+}
+
+
+.modal {
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+    rgba(15,23,42,.45);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:1000;
+
+}
+
+
+.modal-box {
+
+    width:420px;
+
+    background:white;
+
+    border-radius:25px;
+
+    padding:30px;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.25);
+
+}
+
+
+.modal-box input,
+.modal-box textarea {
+
+    width:100%;
+
+    margin:10px 0;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    border:1px solid #cbd5e1;
 
 }
