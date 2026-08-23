@@ -7,6 +7,10 @@ from .models import (
 )
 
 
+# =====================================
+# PROJECT VISUAL SERIALIZER
+# =====================================
+
 class ProjectVisualSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -14,9 +18,14 @@ class ProjectVisualSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# =====================================
+# PROJECT ZONE SERIALIZER
+# =====================================
+
 class ProjectZoneSerializer(serializers.ModelSerializer):
 
     visuals = serializers.SerializerMethodField()
+
 
     def get_visuals(self, obj):
 
@@ -29,7 +38,9 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
             many=True
         ).data
 
+
     class Meta:
+
         model = ProjectZone
 
         fields = [
@@ -45,6 +56,7 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
         ]
 
 
+
 # =====================================
 # PROJECT READ SERIALIZER
 # =====================================
@@ -56,8 +68,11 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+
     class Meta:
+
         model = Project
+
 
         fields = [
             "id",
@@ -70,14 +85,27 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         ]
 
 
+
 # =====================================
 # PROJECT CREATE SERIALIZER
 # =====================================
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
 
+    # Temporary FEEMAAS capacity slot
+    # Will later connect to Workspace Zone Engine
+
+    capacity_slot = serializers.IntegerField(
+        write_only=True,
+        required=False,
+        default=1
+    )
+
+
     class Meta:
+
         model = Project
+
 
         fields = [
             "id",
@@ -86,12 +114,91 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "customer",
             "created_by",
             "status",
+            "capacity_slot",
             "created_at",
             "updated_at",
         ]
+
 
         read_only_fields = [
             "id",
             "created_at",
             "updated_at",
         ]
+
+
+
+    def create(self, validated_data):
+
+
+        capacity_slot = validated_data.pop(
+            "capacity_slot",
+            1
+        )
+
+
+        # -----------------------------
+        # Create Project
+        # -----------------------------
+
+        project = Project.objects.create(
+            **validated_data
+        )
+
+
+
+        # -----------------------------
+        # Initial Customer Zone
+        # -----------------------------
+
+        zone = ProjectZone.objects.create(
+
+            project=project,
+
+            name="Customer Zone",
+
+            code="CUSTOMER",
+
+            x_position=0,
+
+            y_position=0
+
+        )
+
+
+
+        # -----------------------------
+        # Initial Project Visual
+        # -----------------------------
+
+        ProjectVisual.objects.create(
+
+            project=project,
+
+            current_zone=zone,
+
+            name="Initial Project Shape",
+
+            shape_type="triangle",
+
+            color="#8B4513",
+
+            size=100,
+
+            position_x=0,
+
+            position_y=0,
+
+
+            visual_data={
+
+                "capacity_slot": capacity_slot,
+
+                "engine_version": "phase_2"
+
+            }
+
+        )
+
+
+        return project
