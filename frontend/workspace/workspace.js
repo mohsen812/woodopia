@@ -1204,6 +1204,32 @@ async function loadProjects() {
             currentProjects
         );
 
+if (
+    window.FEEMAAS &&
+    FEEMAAS.WorkspaceInteraction
+) {
+
+    FEEMAAS.WorkspaceInteraction.setProjects(
+        projects
+    );
+if (
+    window.FEEMAAS &&
+    FEEMAAS.WorkspaceInteraction
+) {
+
+    FEEMAAS.WorkspaceInteraction.initialize();
+
+    console.log(
+        "FEEMAAS: Interaction Engine initialized after project sync"
+    );
+
+}
+    console.log(
+        "FEEMAAS: Projects registered in Interaction Engine:",
+        projects.length
+    );
+
+}
         /*
          * IMPORTANT:
          *
