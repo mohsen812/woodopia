@@ -1218,7 +1218,101 @@ if (
 ) {
 
     FEEMAAS.WorkspaceInteraction.initialize();
+FEEMAAS.WorkspaceInteraction.subscribe(
+    "visual-double-click",
+    function(payload) {
 
+        console.log(
+            "FEEMAAS Workspace Bridge: visual-double-click received",
+            payload
+        );
+openProjectInformation(
+    payload.visual
+);
+
+    }
+);
+FEEMAAS.WorkspaceInteraction.subscribe(
+    "drag-move",
+    function(payload) {
+
+        console.log(
+            "FEEMAAS Workspace Bridge: drag-move received",
+            payload
+        );
+console.log(
+    "TEST AFTER DRAG BRIDGE",
+    payload.visualId
+);
+const element =
+    FEEMAAS.WorkspaceInteraction.getVisualElement(
+        payload.visualId
+    );
+
+console.log(
+    "FOUND ELEMENT:",
+    element
+);
+currentVisual =
+    FEEMAAS.WorkspaceInteraction.findVisualData(
+        payload.visualId
+    );
+
+const svg =
+    document.getElementById(
+        "visualCanvas"
+    );
+
+const point =
+    getSVGPoint(
+        svg,
+        payload.x,
+        payload.y
+    );
+
+console.log(
+    "UPDATING POSITION:",
+    point.x,
+    point.y,
+    currentVisual
+);
+console.log(
+    "CURRENT VISUAL POSITION:",
+    currentVisual.position_x,
+    currentVisual.position_y
+);
+updateVisualPosition(
+    element,
+    point.x - SVG_CENTER_X,
+    point.y - SVG_CENTER_Y
+);
+    }
+);
+FEEMAAS.WorkspaceInteraction.subscribe(
+    "drag-end",
+    async function(payload) {
+
+        console.log(
+            "FEEMAAS Workspace Bridge: drag-end received",
+            payload
+        );
+
+        currentVisual =
+            FEEMAAS.WorkspaceInteraction.findVisualData(
+                payload.visualId
+            );
+
+        if (
+            currentVisual &&
+            currentVisual.id
+        ) {
+
+            await saveVisualPosition();
+
+        }
+
+    }
+);
     console.log(
         "FEEMAAS: Interaction Engine initialized after project sync"
     );
@@ -2295,40 +2389,32 @@ function createPolygonVisual(
     // --------------------------------------------------------
     // Click = select project
     // --------------------------------------------------------
-
-    polygon.addEventListener(
-        "click",
-        selectVisual
-    );
-
-
-    // --------------------------------------------------------
-    // Double click = project information
-    // --------------------------------------------------------
-
-    polygon.addEventListener(
-        "dblclick",
-        event => {
-
-            event.stopPropagation();
-
-            openProjectInformation(
-                visual
-            );
-
-        }
-    );
+/*
+polygon.addEventListener(
+    "click",
+    selectVisual
+);
 
 
-    // --------------------------------------------------------
-    // Mouse down = drag
-    // --------------------------------------------------------
+polygon.addEventListener(
+    "dblclick",
+    event => {
 
-    polygon.addEventListener(
-        "mousedown",
-        startDrag
-    );
+        event.stopPropagation();
 
+        openProjectInformation(
+            visual
+        );
+
+    }
+);
+
+
+polygon.addEventListener(
+    "mousedown",
+    startDrag
+);
+*/
     svg.appendChild(
         polygon
     );
@@ -2662,7 +2748,14 @@ function dragVisual(
     const newY =
         objectStartY +
         deltaY;
-
+console.log(
+    "DRAG ELEMENT:",
+    element,
+    "VISUAL:",
+    visual,
+    "CURRENT:",
+    currentVisual
+);
     updateVisualPosition(
         selectedVisualElement,
         newX,
@@ -2763,6 +2856,13 @@ function updateVisualPosition(
         "points",
         points
     );
+if (currentVisual) {
+
+    currentVisual.position_x = x;
+
+    currentVisual.position_y = y;
+
+}
 
     visualElement.setAttribute(
         "transform",
@@ -2872,6 +2972,11 @@ async function saveVisualPosition() {
             )
 
     };
+    console.log(
+        "FEEMAAS SAVE POSITION START:",
+        visualId,
+        payload
+    );
 
     try {
 
