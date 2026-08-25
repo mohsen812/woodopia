@@ -155,7 +155,7 @@
         selectedProject: null,
 
         dragging: false,
-
+        pendingDrag: null,
         draggingVisualId: null,
 
         dragStartX: 0,
@@ -1323,25 +1323,23 @@
 
         }
 
-        emit(
-            "drag-move",
-            {
+ emit(
+    "drag-move",
+    {
+        visualId:
+            state.draggingVisualId,
 
-                visualId:
-                    state.draggingVisualId,
+        x:
+            pointer.clientX,
 
-                x:
-                    pointer.clientX,
+        y:
+            pointer.clientY,
 
-                y:
-                    pointer.clientY,
-
-                zone:
-                    state.currentZone
-
-            }
-        );
+        zone:
+            state.currentZone
     }
+);
+}
 
 
     // --------------------------------------------------------
@@ -1494,32 +1492,126 @@
             return;
         }
 
-        beginDrag(
-            event,
-            element
-        );
+       const visualId =
+    getVisualIdFromElement(
+        element
+    );
+
+if (visualId === null) {
+    return;
+}
+
+state.pendingDrag = {
+
+    visualId,
+
+    element,
+
+    startX:
+        event.clientX,
+
+    startY:
+        event.clientY
+};
     }
 
+function handlePointerMove(event) {
 
-    function handlePointerMove(event) {
+    if (
+        !state.dragging &&
+        state.pendingDrag
+    ) {
 
-        if (!state.dragging) {
-            return;
+        const deltaX =
+            event.clientX -
+            state.pendingDrag.startX;
+
+        const deltaY =
+            event.clientY -
+            state.pendingDrag.startY;
+
+
+        const distance =
+            Math.sqrt(
+                deltaX * deltaX +
+                deltaY * deltaY
+            );
+
+console.log(
+    "FEEMAAS Drag Threshold Check:",
+    {
+        visualId:
+            state.pendingDrag.visualId,
+
+        deltaX,
+        deltaY,
+        distance,
+
+        threshold:
+            config.drag.threshold
+    }
+);
+
+        if (
+            distance >=
+            config.drag.threshold
+        ) {
+
+            beginDrag(
+                {
+                    clientX:
+                        state.pendingDrag.startX,
+
+                    clientY:
+                        state.pendingDrag.startY,
+
+                    target:
+                        state.pendingDrag.element
+                },
+
+                state.pendingDrag.element
+            );
+
+            state.pendingDrag = null;
+            event.preventDefault();
         }
-
-        moveDrag(event);
     }
 
 
-    function handlePointerUp(event) {
-
-        if (!state.dragging) {
-            return;
-        }
-
-        endDrag(event);
+    if (!state.dragging) {
+        return;
     }
 
+
+    moveDrag(event);
+}
+    
+
+
+ function handlePointerUp(event) {
+if (state.pendingDrag) {
+
+    state.pendingDrag = null;
+
+}
+    if (
+        state.pendingDrag &&
+        !state.dragging
+    ) {
+
+        state.pendingDrag = null;
+
+        return;
+    }
+
+
+    if (!state.dragging) {
+        return;
+    }
+
+
+    endDrag(event);
+}
 
     function handleClick(event) {
 
@@ -1540,6 +1632,10 @@
         if (!element) {
             return;
         }
+console.log(
+    "FEEMAAS CLICK DETECTED",
+    getVisualIdFromElement(element)
+);
 
         processVisualClick(
             element
@@ -1614,12 +1710,13 @@
             handleClick
         );
 
-        workspace.addEventListener(
-            "click",
-            handleWorkspaceClick,
-            true
-        );
-
+/*
+workspace.addEventListener(
+    "click",
+    handleWorkspaceClick,
+    true
+);
+*/
         state.handlersAttached = true;
 
         log(
