@@ -18,4 +18,8 @@ urlpatterns = [
     "api/projects/",
     include("projects.urls")
 ),
+path(
+    "api/tenders/",
+    include("tenders.urls")
+),
 ]
