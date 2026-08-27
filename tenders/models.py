@@ -65,8 +65,6 @@ class TenderParticipant(models.Model):
         auto_now_add=True
     )
 
-
-
 class Bid(models.Model):
 
     tender = models.ForeignKey(
@@ -85,14 +83,28 @@ class Bid(models.Model):
         decimal_places=0
     )
 
-    description = models.TextField(
+    production_days = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
+    delivery_days = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
+    warranty_months = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
+    technical_notes = models.TextField(
         blank=True
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True
     )
-
 
     def __str__(self):
         return f"{self.workshop.name} - {self.amount}"

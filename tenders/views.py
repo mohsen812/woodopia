@@ -1,9 +1,14 @@
 from rest_framework import generics
 
-from .models import Tender, Bid
+from .models import (
+    Tender,
+    TenderParticipant,
+    Bid,
+)
 
 from .serializers import (
     TenderSerializer,
+    TenderParticipantSerializer,
     BidSerializer,
 )
 
@@ -21,7 +26,6 @@ class TenderListCreateView(
     serializer_class = TenderSerializer
 
 
-
 class TenderDetailView(
     generics.RetrieveAPIView
 ):
@@ -30,6 +34,22 @@ class TenderDetailView(
 
     serializer_class = TenderSerializer
 
+
+class TenderParticipantListCreateView(
+    generics.ListCreateAPIView
+):
+
+    queryset = (
+        TenderParticipant.objects
+        .select_related(
+            "tender",
+            "organization"
+        )
+        .all()
+        .order_by("-invited_at")
+    )
+
+    serializer_class = TenderParticipantSerializer
 
 
 class BidCreateView(
