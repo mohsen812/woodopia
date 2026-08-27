@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 
 from .models import (
     Tender,
@@ -59,3 +60,42 @@ class BidCreateView(
     queryset = Bid.objects.all()
 
     serializer_class = BidSerializer
+
+    def perform_create(self, serializer):
+
+        tender = serializer.validated_data["tender"]
+        workshop = serializer.validated_data["workshop"]
+
+        participant_exists = TenderParticipant.objects.filter(
+            tender=tender,
+            organization=workshop
+        ).exists()
+
+        if not participant_exists:
+
+            raise ValidationError(
+                {
+                    "workshop": (
+                        "This workshop is not a participant "
+                        "in this tender."
+                    )
+                }
+            )
+
+        existing_bid = Bid.objects.filter(
+            tender=tender,
+            workshop=workshop
+        ).exists()
+
+        if existing_bid:
+
+            raise ValidationError(
+                {
+                    "workshop": (
+                        "This workshop has already submitted "
+                        "a bid for this tender."
+                    )
+                }
+            )
+
+        serializer.save()
