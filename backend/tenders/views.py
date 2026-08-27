@@ -1,6 +1,7 @@
 from rest_framework import generics
+from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-
+from evaluation.services import evaluate_tender
 from .models import (
     Tender,
     TenderParticipant,
@@ -99,3 +100,16 @@ class BidCreateView(
             )
 
         serializer.save()
+
+
+class TenderEvaluationView(
+    generics.GenericAPIView
+):
+
+    queryset = Tender.objects.all()
+
+    def get(self, request, pk):
+
+        result = evaluate_tender(pk)
+
+        return Response(result)
