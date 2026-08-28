@@ -1,0 +1,495 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FEEMAAS Workspace</title>
+
+    <link rel="stylesheet" href="css/workspace.css">
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar">
+
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                F
+            </div>
+
+            <div class="brand-text">
+
+                <strong>
+                    FEEMAAS
+                </strong>
+
+                <span>
+                    Workspace
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <nav class="main-nav">
+
+
+            <div class="nav-section">
+
+                <span class="nav-title">
+                    پیشخوان
+                </span>
+
+
+                <button
+                    class="nav-item active"
+                    data-page="dashboard"
+                >
+
+                    <span class="nav-icon">
+                        ◈
+                    </span>
+
+                    <span>
+                        پیشخوان
+                    </span>
+
+                </button>
+
+
+            </div>
+
+
+
+            <div class="nav-section">
+
+                <span class="nav-title">
+                    مدیریت
+                </span>
+
+
+                <button
+                    class="nav-item"
+                    data-page="projects"
+                >
+
+                    <span class="nav-icon">
+                        ◇
+                    </span>
+
+                    <span>
+                        پروژه‌های من
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="tenders"
+                >
+
+                    <span class="nav-icon">
+                        △
+                    </span>
+
+                    <span>
+                        مناقصه‌های من
+                    </span>
+
+                </button>
+
+
+            </div>
+
+
+
+            <div class="nav-section">
+
+                <span class="nav-title">
+                    سیستم
+                </span>
+
+
+                <button
+                    class="nav-item"
+                    data-page="profile"
+                >
+
+                    <span class="nav-icon">
+                        ○
+                    </span>
+
+                    <span>
+                        پروفایل
+                    </span>
+
+                </button>
+
+
+            </div>
+
+
+        </nav>
+
+
+
+        <div class="sidebar-footer">
+
+            <div class="role-badge">
+
+                <span>
+                    نقش فعلی
+                </span>
+
+                <strong>
+                    مشتری
+                </strong>
+
+            </div>
+
+        </div>
+
+
+    </aside>
+
+
+
+    <!-- =========================
+         MAIN WORKSPACE
+    ========================== -->
+
+    <main class="workspace">
+
+
+        <header class="workspace-header">
+
+
+            <div>
+
+                <div class="breadcrumb">
+                    FEEMAAS / Workspace
+                </div>
+
+                <h1 id="page-title">
+                    پیشخوان
+                </h1>
+
+            </div>
+
+
+
+            <div class="header-actions">
+
+                <button class="header-button">
+                    اعلان‌ها
+                </button>
+
+                <div class="user-avatar">
+                    M
+                </div>
+
+            </div>
+
+
+        </header>
+
+
+
+        <section class="workspace-content">
+
+
+            <!-- DASHBOARD -->
+
+            <div
+                id="dashboard-page"
+                class="page active"
+            >
+
+                <div class="page-intro">
+
+                    <h2>
+                        خوش آمدید 👋
+                    </h2>
+
+                    <p>
+                        وضعیت پروژه‌ها و فعالیت‌های شما در یک نگاه
+                    </p>
+
+                </div>
+
+
+                <div class="dashboard-grid">
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            پروژه‌ها
+                        </span>
+
+                        <strong id="project-count">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            پروژه‌های در حال اجرا
+                        </span>
+
+                        <strong>
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            مناقصه‌های فعال
+                        </span>
+
+                        <strong>
+                            -
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="section-card">
+
+                    <div class="section-header">
+
+                        <h2>
+                            پروژه‌های اخیر
+                        </h2>
+
+                        <button
+                            class="ghost-button"
+                            data-page="projects"
+                        >
+                            مشاهده همه
+                        </button>
+
+                    </div>
+
+
+                    <section id="projects">
+
+                        Loading...
+
+                    </section>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- PROJECTS -->
+
+            <div
+                id="projects-page"
+                class="page"
+            >
+
+                <div class="page-intro">
+
+                    <h2>
+                        پروژه‌های من
+                    </h2>
+
+                    <p>
+                        پروژه‌هایی که توسط شما ایجاد یا مدیریت می‌شوند
+                    </p>
+
+                </div>
+
+
+                <section
+                    id="all-projects"
+                    class="projects-grid"
+                >
+
+                    Loading...
+
+                </section>
+
+            </div>
+
+
+
+            <!-- TENDERS -->
+
+            <div
+                id="tenders-page"
+                class="page"
+            >
+
+                <div class="page-intro">
+
+                    <h2>
+                        مناقصه‌های من
+                    </h2>
+
+                    <p>
+                        مناقصه‌ها و فرآیندهای انتخاب کارگاه
+                    </p>
+
+                </div>
+
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        △
+                    </div>
+
+                    <h3>
+                        هنوز مناقصه‌ای نمایش داده نمی‌شود
+                    </h3>
+
+                    <p>
+                        این بخش در مرحله بعد به Tender Engine متصل خواهد شد.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PROFILE -->
+
+            <div
+                id="profile-page"
+                class="page"
+            >
+
+                <div class="page-intro">
+
+                    <h2>
+                        پروفایل
+                    </h2>
+
+                    <p>
+                        اطلاعات حساب و نقش کاربری
+                    </p>
+
+                </div>
+
+
+                <div class="profile-card">
+
+                    <div class="user-avatar large">
+                        M
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            کاربر FEEMAAS
+                        </h3>
+
+                        <p>
+                            نقش: مشتری
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+
+<!-- =========================
+     PROJECT MODAL
+========================== -->
+
+<div
+    id="project-modal"
+    class="modal hidden"
+>
+
+
+    <div class="modal-backdrop"></div>
+
+
+    <div class="modal-window">
+
+
+        <button
+            id="close-project-modal"
+            class="modal-close"
+        >
+            ×
+        </button>
+
+
+        <div id="project-detail">
+
+            <h2>
+                جزئیات پروژه
+            </h2>
+
+            <p>
+                یک پروژه را انتخاب کنید
+            </p>
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<script src="js/api.js"></script>
+
+<script src="js/project-card.js"></script>
+
+<script src="js/workspace.js"></script>
+
+
+</body>
+
+</html>

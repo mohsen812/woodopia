@@ -1,0 +1,630 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FEEMAAS Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="css/workspace.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- =========================
+         DASHBOARD SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                F
+            </div>
+
+            <div class="brand-text">
+
+                <strong>
+                    FEEMAAS
+                </strong>
+
+                <span>
+                    Smart Manufacturing
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- USER / ROLE -->
+
+        <div class="user-panel">
+
+            <div class="user-avatar">
+                م
+            </div>
+
+            <div class="user-info">
+
+                <strong>
+                    کاربر
+                </strong>
+
+                <span>
+                    مشتری
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="dashboard-nav">
+
+            <div class="nav-section-title">
+                پیشخوان
+            </div>
+
+
+            <button
+                class="nav-item active"
+                data-view="dashboard"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    پیشخوان
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-view="projects"
+            >
+
+                <span class="nav-icon">
+                    ▣
+                </span>
+
+                <span>
+                    پروژه‌های من
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-view="tenders"
+            >
+
+                <span class="nav-icon">
+                    ◇
+                </span>
+
+                <span>
+                    مناقصه‌ها
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-view="messages"
+            >
+
+                <span class="nav-icon">
+                    ✉
+                </span>
+
+                <span>
+                    پیام‌ها
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-view="contracts"
+            >
+
+                <span class="nav-icon">
+                    ▤
+                </span>
+
+                <span>
+                    قراردادها
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-view="payments"
+            >
+
+                <span class="nav-icon">
+                    ◈
+                </span>
+
+                <span>
+                    پرداخت‌ها
+                </span>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-view="files"
+            >
+
+                <span class="nav-icon">
+                    □
+                </span>
+
+                <span>
+                    فایل‌ها
+                </span>
+
+            </button>
+
+        </nav>
+
+
+        <!-- SIDEBAR BOTTOM -->
+
+ <button  
+    class="nav-item" 
+    data-view="settings"
+>
+    ⚙
+    تنظیمات
+</button>
+
+
+<button  
+    class="nav-item" 
+    data-view="profile"
+>
+    ●
+    حساب کاربری
+</button>
+</aside>
+    <!-- =========================
+         MAIN WORKSPACE
+    ========================== -->
+
+    <main class="content">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <div class="breadcrumb">
+                    FEEMAAS / Workspace
+                </div>
+
+                <h1>
+                    Workspace
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-actions">
+
+                <button class="icon-button">
+                    🔔
+                </button>
+
+
+                <button class="profile-button">
+
+                    <span class="profile-avatar">
+                        م
+                    </span>
+
+                    <span>
+                        حساب من
+                    </span>
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================
+             DASHBOARD
+        ========================== -->
+
+        <section
+            id="dashboard-view"
+            class="workspace-view"
+        >
+
+            <div class="welcome-panel">
+
+                <div>
+
+                    <span class="eyebrow">
+                        FEEMAAS WORKSPACE
+                    </span>
+
+                    <h2>
+                        به فضای کاری خود خوش آمدید
+                    </h2>
+
+                    <p>
+                        تمام پروژه‌ها، مناقصه‌ها،
+                        قراردادها و فعالیت‌های شما
+                        از اینجا قابل مدیریت است.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- STATISTICS -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <span>
+                        پروژه‌های فعال
+                    </span>
+
+                    <strong>
+                        1
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        مناقصه‌های فعال
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        قراردادها
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        پیام‌های جدید
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT PROJECTS -->
+
+            <div class="section-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        PROJECTS
+                    </span>
+
+                    <h2>
+                        پروژه‌های اخیر
+                    </h2>
+
+                </div>
+
+
+                <button
+                    class="secondary-button"
+                    data-view="projects"
+                >
+                    مشاهده همه
+                </button>
+
+            </div>
+
+
+            <section id="projects">
+
+                Loading...
+
+            </section>
+
+        </section>
+
+
+
+        <!-- =========================
+             PROJECTS
+        ========================== -->
+
+        <section
+            id="projects-view"
+            class="workspace-view hidden"
+        >
+
+            <div class="page-heading">
+
+                <span class="eyebrow">
+                    PROJECTS
+                </span>
+
+                <h2>
+                    پروژه‌های من
+                </h2>
+
+                <p>
+                    پروژه‌هایی که در آن‌ها نقش دارید.
+                </p>
+
+            </div>
+
+
+            <section id="projects-list">
+
+                Loading...
+
+            </section>
+
+        </section>
+
+
+
+        <!-- =========================
+             TENDERS
+        ========================== -->
+
+        <section
+            id="tenders-view"
+            class="workspace-view hidden"
+        >
+
+            <div class="page-heading">
+
+                <span class="eyebrow">
+                    TENDERS
+                </span>
+
+                <h2>
+                    مناقصه‌ها
+                </h2>
+
+                <p>
+                    مناقصه‌های مرتبط با پروژه‌های شما.
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             MESSAGES
+        ========================== -->
+
+        <section
+            id="messages-view"
+            class="workspace-view hidden"
+        >
+
+            <div class="page-heading">
+
+                <span class="eyebrow">
+                    MESSAGES
+                </span>
+
+                <h2>
+                    پیام‌ها
+                </h2>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             CONTRACTS
+        ========================== -->
+
+        <section
+            id="contracts-view"
+            class="workspace-view hidden"
+        >
+
+            <div class="page-heading">
+
+                <span class="eyebrow">
+                    CONTRACTS
+                </span>
+
+                <h2>
+                    قراردادها
+                </h2>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             PAYMENTS
+        ========================== -->
+
+        <section
+            id="payments-view"
+            class="workspace-view hidden"
+        >
+
+            <div class="page-heading">
+
+                <span class="eyebrow">
+                    PAYMENTS
+                </span>
+
+                <h2>
+                    پرداخت‌ها
+                </h2>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             FILES
+        ========================== -->
+
+        <section
+            id="files-view"
+            class="workspace-view hidden"
+        >
+
+            <div class="page-heading">
+
+                <span class="eyebrow">
+                    FILES
+                </span>
+
+                <h2>
+                    فایل‌ها
+                </h2>
+
+            </div>
+
+        </section>
+
+
+
+<section id="settings-view" class="workspace-view hidden">
+
+...
+
+</section>
+
+
+<section id="profile-view" class="workspace-view hidden">
+
+...
+
+</section>
+
+
+</main>
+  
+
+</div>
+
+
+
+<!-- =========================
+     PROJECT DETAIL MODAL
+========================== -->
+
+<div
+    id="project-modal"
+    class="modal hidden"
+>
+
+    <div class="modal-backdrop"></div>
+
+
+    <div class="modal-panel">
+
+        <button
+            id="close-project-modal"
+            class="modal-close"
+        >
+            ×
+        </button>
+
+
+        <div id="project-detail">
+
+            <h2>
+                جزئیات پروژه
+            </h2>
+
+            <p>
+                یک پروژه را انتخاب کنید
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script src="js/api.js"></script>
+
+<script src="js/project-card.js"></script>
+
+<script src="js/workspace.js"></script>
+
+</body>
+
+</html>
