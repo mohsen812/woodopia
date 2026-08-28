@@ -14,38 +14,48 @@
 
 async function loadProjects() {
 
-
     const dashboardContainer =
-        document.getElementById("projects");
+        document.getElementById(
+            "projects"
+        );
 
 
     const projectsContainer =
-        document.getElementById("projects-list");
+        document.getElementById(
+            "projects-list"
+        );
 
 
     try {
 
-
         const projects =
-            await apiGet("/projects/");
+            await apiGet(
+                "/projects/"
+            );
+
+
+        console.log(
+            "FEEMAAS Workspace: Projects loaded:",
+            projects
+        );
 
 
 
         /*
-        ================================
-        Dashboard Recent Projects
-        ================================
+        ====================================================
+         DASHBOARD — RECENT PROJECTS
+        ====================================================
         */
 
-
         if (dashboardContainer) {
-
 
             dashboardContainer.innerHTML = "";
 
 
-            if (!projects.length) {
-
+            if (
+                !Array.isArray(projects) ||
+                projects.length === 0
+            ) {
 
                 dashboardContainer.innerHTML = `
 
@@ -57,23 +67,20 @@ async function loadProjects() {
 
                 `;
 
-
             }
             else {
 
-
                 projects
-                    .slice(0,5)
+                    .slice(0, 5)
                     .forEach(project => {
 
-
                         dashboardContainer.appendChild(
-                            createProjectCard(project)
+                            createProjectCard(
+                                project
+                            )
                         );
 
-
                     });
-
 
             }
 
@@ -82,20 +89,20 @@ async function loadProjects() {
 
 
         /*
-        ================================
-        All Projects View
-        ================================
+        ====================================================
+         PROJECTS PAGE — ALL PROJECTS
+        ====================================================
         */
 
-
         if (projectsContainer) {
-
 
             projectsContainer.innerHTML = "";
 
 
-            if (!projects.length) {
-
+            if (
+                !Array.isArray(projects) ||
+                projects.length === 0
+            ) {
 
                 projectsContainer.innerHTML = `
 
@@ -107,29 +114,30 @@ async function loadProjects() {
 
                 `;
 
-
             }
             else {
 
-
                 projects.forEach(project => {
 
-
                     projectsContainer.appendChild(
-                        createProjectCard(project)
+                        createProjectCard(
+                            project
+                        )
                     );
 
-
                 });
-
 
             }
 
         }
 
-
     }
-    catch(error) {
+    catch (error) {
+
+        console.error(
+            "FEEMAAS Workspace: Project loading error:",
+            error
+        );
 
 
         const message = `
@@ -143,8 +151,7 @@ async function loadProjects() {
         `;
 
 
-
-        if(dashboardContainer){
+        if (dashboardContainer) {
 
             dashboardContainer.innerHTML =
                 message;
@@ -152,28 +159,16 @@ async function loadProjects() {
         }
 
 
-
-        if(projectsContainer){
+        if (projectsContainer) {
 
             projectsContainer.innerHTML =
                 message;
 
         }
 
-
-
-        console.error(
-            "FEEMAAS Workspace:",
-            error
-        );
-
-
     }
 
-
 }
-
-
 
 
 
@@ -183,8 +178,13 @@ async function loadProjects() {
 ============================================================
 */
 
+function showView(target) {
 
-function showView(target){
+    if (!target) {
+
+        return;
+
+    }
 
 
     const views =
@@ -193,45 +193,47 @@ function showView(target){
         );
 
 
-
     const navItems =
         document.querySelectorAll(
             ".nav-item[data-view]"
         );
 
 
-
     /*
-    Hide all views
+    ========================================================
+     HIDE ALL VIEWS
+    ========================================================
     */
 
     views.forEach(view => {
-
 
         view.classList.add(
             "hidden"
         );
 
-
     });
 
 
-
     /*
-    Remove active state
+    ========================================================
+     REMOVE ACTIVE NAVIGATION
+    ========================================================
     */
 
     navItems.forEach(nav => {
-
 
         nav.classList.remove(
             "active"
         );
 
-
     });
 
 
+    /*
+    ========================================================
+     FIND TARGET VIEW
+    ========================================================
+    */
 
     const targetView =
         document.getElementById(
@@ -239,27 +241,34 @@ function showView(target){
         );
 
 
-
-    if(!targetView){
-
+    if (!targetView) {
 
         console.warn(
-            "FEEMAAS: View not found",
+            "FEEMAAS: View not found:",
             target
         );
-
 
         return;
 
     }
 
 
+    /*
+    ========================================================
+     SHOW TARGET
+    ========================================================
+    */
 
     targetView.classList.remove(
         "hidden"
     );
 
 
+    /*
+    ========================================================
+     ACTIVE NAV ITEM
+    ========================================================
+    */
 
     const activeNav =
         document.querySelector(
@@ -267,32 +276,21 @@ function showView(target){
         );
 
 
-
-    if(activeNav){
-
+    if (activeNav) {
 
         activeNav.classList.add(
             "active"
         );
 
-
     }
 
 
-
     window.scrollTo({
-
-        top:0,
-
-        behavior:"smooth"
-
+        top: 0,
+        behavior: "smooth"
     });
 
-
 }
-
-
-
 
 
 
@@ -302,10 +300,13 @@ function showView(target){
 ============================================================
 */
 
+function setupNavigation() {
 
-function setupNavigation(){
-
-
+    /*
+    ========================================================
+     SIDEBAR NAVIGATION
+    ========================================================
+    */
 
     const navItems =
         document.querySelectorAll(
@@ -313,31 +314,34 @@ function setupNavigation(){
         );
 
 
-
     navItems.forEach(item => {
-
-
 
         item.addEventListener(
             "click",
-            function(){
+            function(event) {
 
+                event.preventDefault();
 
                 const target =
                     item.dataset.view;
 
 
-                showView(target);
-
+                showView(
+                    target
+                );
 
             }
         );
-
 
     });
 
 
 
+    /*
+    ========================================================
+     OTHER DATA-VIEW BUTTONS
+    ========================================================
+    */
 
     const buttons =
         document.querySelectorAll(
@@ -345,33 +349,28 @@ function setupNavigation(){
         );
 
 
-
     buttons.forEach(button => {
-
 
         button.addEventListener(
             "click",
-            function(){
+            function(event) {
+
+                event.preventDefault();
+
+                const target =
+                    button.dataset.view;
 
 
                 showView(
-                    button.dataset.view
+                    target
                 );
-
 
             }
         );
 
-
     });
 
-
-
 }
-
-
-
-
 
 
 
@@ -381,16 +380,12 @@ function setupNavigation(){
 ============================================================
 */
 
-
-function setupModal(){
-
-
+function setupModal() {
 
     const modal =
         document.getElementById(
             "project-modal"
         );
-
 
 
     const closeButton =
@@ -399,15 +394,17 @@ function setupModal(){
         );
 
 
-
     const backdrop =
         document.querySelector(
             "#project-modal .modal-backdrop"
         );
 
 
+    if (!modal) {
 
-    if(!modal){
+        console.warn(
+            "FEEMAAS: Project modal not found."
+        );
 
         return;
 
@@ -415,97 +412,145 @@ function setupModal(){
 
 
 
-    if(closeButton){
+    /*
+    ========================================================
+     CLOSE BUTTON
+    ========================================================
+    */
 
+    if (closeButton) {
 
         closeButton.addEventListener(
             "click",
-            closeProjectModal
-        );
+            function(event) {
 
-
-    }
-
-
-
-    if(backdrop){
-
-
-        backdrop.addEventListener(
-            "click",
-            closeProjectModal
-        );
-
-
-    }
-
-
-
-    document.addEventListener(
-        "keydown",
-        function(event){
-
-
-            if(
-                event.key === "Escape" &&
-                !modal.classList.contains("hidden")
-            ){
-
+                event.preventDefault();
 
                 closeProjectModal();
 
+            }
+        );
+
+    }
+
+
+
+    /*
+    ========================================================
+     BACKDROP
+    ========================================================
+    */
+
+    if (backdrop) {
+
+        backdrop.addEventListener(
+            "click",
+            function() {
+
+                closeProjectModal();
+
+            }
+        );
+
+    }
+
+
+
+    /*
+    ========================================================
+     ESC KEY
+    ========================================================
+    */
+
+    document.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Escape" &&
+                !modal.classList.contains("hidden")
+            ) {
+
+                closeProjectModal();
 
             }
 
-
         }
     );
-
-
 
 }
 
 
 
-
-
-
 /*
 ============================================================
- INITIAL DASHBOARD STATE
+ INITIALIZE WORKSPACE
 ============================================================
 */
 
+function initializeWorkspace() {
 
-function initializeWorkspace(){
+    console.log(
+        "FEEMAAS Workspace: Initializing..."
+    );
 
+
+    /*
+    ========================================================
+     INITIAL VIEW
+    ========================================================
+    */
 
     showView(
         "dashboard"
     );
 
 
+    /*
+    ========================================================
+     NAVIGATION
+    ========================================================
+    */
+
     setupNavigation();
 
+
+    /*
+    ========================================================
+     MODAL
+    ========================================================
+    */
 
     setupModal();
 
 
-    loadProjects();
+    /*
+    ========================================================
+     PROJECTS
+    ========================================================
+    */
 
+    loadProjects();
 
 }
 
 
 
-
-
+/*
+============================================================
+ DOM READY
+============================================================
+*/
 
 document.addEventListener(
     "DOMContentLoaded",
-    function(){
+    function() {
 
-        window.scrollTo(0,0);
+        window.scrollTo(
+            0,
+            0
+        );
+
 
         initializeWorkspace();
 
