@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        FEEMAAS Customer Workspace
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="css/customer.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="customer-app">
+
+
+    <!-- =================================
+         MAIN WORKSPACE
+    ================================== -->
+
+    <main class="customer-content">
+
+
+        <header class="customer-topbar">
+
+
+            <div>
+
+                <span class="eyebrow">
+                    CUSTOMER WORKSPACE
+                </span>
+
+
+                <h1 id="page-title">
+                    پیشخوان مشتری
+                </h1>
+
+
+            </div>
+
+
+
+            <div class="topbar-actions">
+
+
+                <button class="glass-button">
+                    🔔
+                </button>
+
+
+                <button class="profile-chip">
+
+                    <span>
+                        م
+                    </span>
+
+                    حساب من
+
+                </button>
+
+
+            </div>
+
+
+        </header>
+
+
+
+        <!--
+            صفحات اینجا بارگذاری می‌شوند
+        -->
+
+        <section
+            id="customer-view"
+            class="customer-view"
+        >
+
+            <div class="glass-panel">
+
+
+                <span class="eyebrow">
+                    FEEMAAS
+                </span>
+
+
+                <h2>
+                    به فضای کاری مشتری خوش آمدید
+                </h2>
+
+
+                <p>
+                    مدیریت پروژه‌ها، فایل‌ها،
+                    مناقصه‌ها و قراردادها
+                </p>
+
+
+            </div>
+
+
+        </section>
+
+
+
+    </main>
+
+
+
+
+
+    <!-- =================================
+         CUSTOMER SIDEBAR
+    ================================== -->
+
+
+    <aside class="customer-sidebar">
+
+
+        <div class="brand">
+
+
+            <div class="brand-logo">
+                F
+            </div>
+
+
+            <div>
+
+                <strong>
+                    FEEMAAS
+                </strong>
+
+
+                <span>
+                    Smart Manufacturing
+                </span>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+        <nav class="customer-nav">
+
+
+            <button
+                class="customer-nav-item active"
+                data-view="dashboard"
+            >
+
+                🏠
+                <span>
+                    پیشخوان
+                </span>
+
+            </button>
+
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="projects"
+            >
+
+                📁
+                <span>
+                    پروژه‌های من
+                </span>
+
+            </button>
+
+
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="create-project"
+            >
+
+                ➕
+                <span>
+                    ایجاد پروژه
+                </span>
+
+            </button>
+
+
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="tenders"
+            >
+
+                ◇
+                <span>
+                    مناقصه‌ها
+                </span>
+
+            </button>
+
+
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="messages"
+            >
+
+                💬
+                <span>
+                    پیام‌ها
+                </span>
+
+            </button>
+
+
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="contracts"
+            >
+
+                📄
+                <span>
+                    قراردادها
+                </span>
+
+            </button>
+
+
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="files"
+            >
+
+                📦
+                <span>
+                    فایل‌ها
+                </span>
+
+            </button>
+
+
+
+        </nav>
+
+
+
+
+        <div class="sidebar-bottom">
+
+
+            <button
+                class="customer-nav-item"
+                data-view="profile"
+            >
+
+                👤
+                حساب کاربری
+
+            </button>
+
+
+
+            <button
+                class="customer-nav-item"
+                data-view="settings"
+            >
+
+                ⚙
+                تنظیمات
+
+            </button>
+
+
+        </div>
+
+
+
+    </aside>
+
+
+
+</div>
+
+
+<script src="js/core/api.js"></script>
+<script src="js/core/router.js"></script>
+
+<script src="js/components/sidebar.js"></script>
+<script src="js/components/project-card.js"></script>
+<script src="js/components/project-workspace-modal.js"></script>
+
+<script src="js/pages/dashboard.js"></script>
+<script src="js/pages/projects.js"></script>
+<script src="js/pages/create-project.js"></script>
+<script src="js/pages/project-detail.js"></script>
+<script src="js/customer.js"></script>
+
+
+
+</body>
+
+</html>
