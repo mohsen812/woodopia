@@ -769,29 +769,25 @@ function openProjectDetail(project) {
             </div>
 
 
-            <div
-                class="project-detail-tab-content hidden"
-                data-project-tab-content="tender"
-            >
+           <div
+    class="project-detail-tab-content hidden"
+    data-project-tab-content="tender"
+>
 
-                <div class="project-tab-panel">
+    <div
+        class="project-tab-panel"
+        id="tender-dashboard"
+    >
 
-                    <span class="eyebrow">
-                        TENDER
-                    </span>
+        <div class="tender-loading">
 
-                    <h3>
-                        مناقصه
-                    </h3>
+            در حال دریافت اطلاعات مناقصه...
 
-                    <p>
-                        پیشنهادهای کارگاه‌ها،
-                        رتبه‌بندی و وضعیت مناقصه در این بخش قرار خواهد گرفت.
-                    </p>
+        </div>
 
-                </div>
+    </div>
 
-            </div>
+</div>
 
 
             <div
@@ -1033,6 +1029,15 @@ function openProjectDetail(project) {
                             );
 
                         }
+if (
+    target === "tender"
+) {
+
+    loadTenderDashboard(
+        project.id
+    );
+
+}
 
                     }
                 );
@@ -1054,7 +1059,551 @@ function openProjectDetail(project) {
 
 }
 
+/*
+============================================================
+ LOAD TENDER DASHBOARD
+============================================================
+*/
 
+async function loadTenderDashboard(projectId) {
+
+    const container =
+        document.getElementById(
+            "tender-dashboard"
+        );
+
+
+    if (!container) {
+
+        console.warn(
+            "FEEMAAS: Tender dashboard container not found."
+        );
+
+        return;
+
+    }
+
+
+    /*
+    --------------------------------------------------------
+    LOADING STATE
+    --------------------------------------------------------
+    */
+
+    container.innerHTML = `
+
+        <div class="tender-loading">
+
+            در حال دریافت اطلاعات مناقصه...
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const data =
+            await apiGet(
+                `/projects/${projectId}/tender/`
+            );
+
+
+        renderTenderDashboard(
+            container,
+            data
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "FEEMAAS: Tender dashboard load failed.",
+            error
+        );
+
+
+        container.innerHTML = `
+
+            <div class="tender-error">
+
+                <span class="eyebrow">
+                    TENDER ERROR
+                </span>
+
+                <h3>
+                    دریافت اطلاعات مناقصه ناموفق بود
+                </h3>
+
+                <p>
+                    اطلاعات مناقصه این پروژه در حال حاضر
+                    قابل دریافت نیست.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/*
+============================================================
+ RENDER TENDER DASHBOARD
+============================================================
+*/
+
+function renderTenderDashboard(
+    container,
+    data
+) {
+
+    const tender =
+        data.tender;
+
+
+    const evaluation =
+        data.evaluation;
+
+
+    if (!tender) {
+
+        container.innerHTML = `
+
+            <div class="tender-empty">
+
+                <span class="eyebrow">
+                    TENDER
+                </span>
+
+                <h3>
+                    مناقصه‌ای برای این پروژه وجود ندارد
+                </h3>
+
+                <p>
+                    هنوز مناقصه‌ای برای این پروژه ایجاد نشده است.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const summary =
+        evaluation?.summary || {};
+
+
+    const recommendation =
+        evaluation?.recommendation || {};
+
+
+    const results =
+        evaluation?.results || [];
+
+
+    container.innerHTML = `
+
+        <div class="tender-dashboard">
+
+
+            <!-- =========================================
+                 TENDER HEADER
+            ========================================== -->
+
+            <div class="tender-dashboard-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        TENDER
+                    </span>
+
+                    <h3>
+                        ${escapeHtml(
+                            tender.title ||
+                            "مناقصه پروژه"
+                        )}
+                    </h3>
+
+                    <p>
+                        ${escapeHtml(
+                            tender.description ||
+                            "بدون توضیحات"
+                        )}
+                    </p>
+
+                </div>
+
+
+                <div class="tender-status">
+
+                    ${escapeHtml(
+                        tender.status ||
+                        "نامشخص"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 SUMMARY
+            ========================================== -->
+
+            <div class="tender-summary-grid">
+
+
+                <div class="tender-stat">
+
+                    <span>
+                        شرکت‌کنندگان
+                    </span>
+
+                    <strong>
+                        ${
+                            tender.participants?.length ??
+                            0
+                        }
+                    </strong>
+
+                </div>
+
+
+                <div class="tender-stat">
+
+                    <span>
+                        پیشنهادها
+                    </span>
+
+                    <strong>
+                        ${
+                            tender.bids?.length ??
+                            0
+                        }
+                    </strong>
+
+                </div>
+
+
+                <div class="tender-stat">
+
+                    <span>
+                        رتبه اول
+                    </span>
+
+                    <strong>
+                        ${
+                            summary.winner ||
+                            "—"
+                        }
+                    </strong>
+
+                </div>
+
+
+                <div class="tender-stat">
+
+                    <span>
+                        امتیاز برنده
+                    </span>
+
+                    <strong>
+                        ${
+                            summary.winner_score ??
+                            "—"
+                        }
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =========================================
+                 RECOMMENDATION
+            ========================================== -->
+
+            <div class="tender-recommendation">
+
+                <span class="eyebrow">
+                    FEEMAAS RECOMMENDATION
+                </span>
+
+
+                <h4>
+                    ${
+                        recommendation.type ||
+                        "Recommendation"
+                    }
+                </h4>
+
+
+                <p>
+                    ${
+                        recommendation.message ||
+                        "پیشنهاد سیستم در دسترس نیست."
+                    }
+                </p>
+
+            </div>
+
+
+            <!-- =========================================
+                 RANKING
+            ========================================== -->
+
+            <div class="tender-ranking">
+
+                <div class="tender-section-heading">
+
+                    <span class="eyebrow">
+                        BID RANKING
+                    </span>
+
+                    <h4>
+                        رتبه‌بندی پیشنهادها
+                    </h4>
+
+                </div>
+
+
+                ${
+                    results.length
+                        ? results.map(
+                            renderTenderBid
+                        ).join("")
+                        : `
+                            <div class="tender-empty">
+
+                                هنوز پیشنهادی ثبت نشده است.
+
+                            </div>
+                        `
+                }
+
+            </div>
+
+
+        </div>
+
+    `;
+
+}
+
+
+/*
+============================================================
+ RENDER SINGLE TENDER BID
+============================================================
+*/
+
+function renderTenderBid(
+    bid
+) {
+
+    return `
+
+        <div
+            class="tender-bid
+                ${
+                    bid.rank === 1
+                        ? "tender-bid-winner"
+                        : ""
+                }"
+        >
+
+
+            <div class="tender-bid-rank">
+
+                <span>
+                    رتبه
+                </span>
+
+                <strong>
+                    #${bid.rank}
+                </strong>
+
+            </div>
+
+
+            <div class="tender-bid-main">
+
+                <span class="eyebrow">
+                    WORKSHOP
+                </span>
+
+                <h4>
+                    ${escapeHtml(
+                        bid.workshop_name ||
+                        "کارگاه نامشخص"
+                    )}
+                </h4>
+
+
+                <div class="tender-bid-values">
+
+                    <div>
+
+                        <span>
+                            قیمت
+                        </span>
+
+                        <strong>
+                            ${formatTenderAmount(
+                                bid.amount
+                            )}
+                        </strong>
+
+                        <small>
+                            تومان
+                        </small>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            تولید
+                        </span>
+
+                        <strong>
+                            ${bid.production_days ?? "—"}
+                        </strong>
+
+                        <small>
+                            روز
+                        </small>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            تحویل
+                        </span>
+
+                        <strong>
+                            ${bid.delivery_days ?? "—"}
+                        </strong>
+
+                        <small>
+                            روز
+                        </small>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            گارانتی
+                        </span>
+
+                        <strong>
+                            ${bid.warranty_months ?? "—"}
+                        </strong>
+
+                        <small>
+                            ماه
+                        </small>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            امتیاز
+                        </span>
+
+                        <strong>
+                            ${bid.total_score ?? "—"}
+                        </strong>
+
+                        <small>
+                            / 100
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                ${
+                    bid.technical_notes
+                        ? `
+                            <p class="tender-bid-notes">
+
+                                ${escapeHtml(
+                                    bid.technical_notes
+                                )}
+
+                            </p>
+                        `
+                        : ""
+                }
+
+            </div>
+
+
+        </div>
+
+    `;
+
+}
+
+
+/*
+============================================================
+ FORMAT TENDER AMOUNT
+============================================================
+*/
+
+function formatTenderAmount(
+    amount
+) {
+
+    if (
+        amount === null ||
+        amount === undefined ||
+        amount === ""
+    ) {
+
+        return "—";
+
+    }
+
+
+    const number =
+        Number(amount);
+
+
+    if (
+        Number.isNaN(number)
+    ) {
+
+        return escapeHtml(
+            amount
+        );
+
+    }
+
+
+    return number.toLocaleString(
+        "fa-IR"
+    );
+
+}
 /*
 ============================================================
  CREATE PROJECT DETAIL VIEW
