@@ -1,4 +1,11 @@
 from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+
+from tenders.models import Tender
+from tenders.serializers import TenderSerializer
+
+from evaluation.services import evaluate_tender
 
 from .models import Project, ProjectVisual
 
@@ -42,6 +49,65 @@ class ProjectDetailView(
 
     serializer_class = ProjectFullSerializer
 
+
+# =====================================
+# PROJECT TENDER
+# =====================================
+
+class ProjectTenderView(
+    generics.GenericAPIView
+):
+
+    queryset = Project.objects.all()
+
+    def get(self, request, pk):
+
+        project = self.get_object()
+
+        project_item = (
+            project.items
+            .order_by("id")
+            .first()
+        )
+
+        if not project_item:
+
+            raise NotFound(
+                "No project item exists for this project."
+            )
+
+        tender = (
+            Tender.objects
+            .filter(
+                project_item=project_item
+            )
+            .first()
+        )
+
+        if not tender:
+
+            raise NotFound(
+                "No tender exists for this project."
+            )
+
+        tender_data = TenderSerializer(
+            tender
+        ).data
+
+        evaluation_data = evaluate_tender(
+            tender.id
+        )
+
+        return Response(
+            {
+                "project_id": project.id,
+                "project_title": project.title,
+                "project_item_id": project_item.id,
+                "project_item_name": project_item.name,
+                "tender": tender_data,
+                "evaluation": evaluation_data,
+            }
+        )
 
 # =====================================
 # PROJECT VISUAL LIST + CREATE

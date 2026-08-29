@@ -5,6 +5,7 @@ from .views import (
     ProjectDetailView,
     ProjectVisualListCreateView,
     ProjectVisualDetailView,
+    ProjectTenderView,
 )
 
 
@@ -27,7 +28,11 @@ urlpatterns = [
         ProjectVisualListCreateView.as_view(),
         name="visual-list",
     ),
-
+    path(
+    "<int:pk>/tender/",
+    ProjectTenderView.as_view(),
+    name="project-tender",
+    ),
     path(
         "visuals/<int:pk>/",
         ProjectVisualDetailView.as_view(),
