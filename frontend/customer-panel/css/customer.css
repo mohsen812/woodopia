@@ -207,9 +207,6 @@ body{
         1px solid rgba(255,255,255,.14);
 
 
-    backdrop-filter:
-
-        blur(20px);
 
 
     cursor:pointer;
@@ -229,11 +226,8 @@ body{
 
 .customer-project-card:hover{
 
-
-    transform:
-
-        translateY(-10px)
-        scale(1.02);
+transform:
+translateY(-4px);
 
 
 
@@ -255,15 +249,13 @@ body{
     height:120px;
 
 
-    filter:blur(50px);
+    filter:blur(25px);
 
 
     opacity:.8;
 
 
-    animation:
-
-        glowMove 4s infinite alternate;
+    animation:none;
 
 
 }
@@ -679,7 +671,7 @@ body{
         rgba(255,255,255,.04)
     );
 
-    backdrop-filter:blur(18px);
+    backdrop-filter:blur(8px);
 
     border:1px solid rgba(255,255,255,.15);
 
@@ -726,8 +718,7 @@ body{
         transparent 60%
     );
 
-    animation:
-    cardGlow 5s infinite alternate;
+    animation:none;
 
 }
 
@@ -922,7 +913,7 @@ body{
 
     backdrop-filter:
 
-        blur(12px);
+        blur(4px);
 
 }
 
@@ -958,7 +949,7 @@ body{
 
     box-shadow:
 
-        0 0 50px rgba(0,220,255,0.35);
+        0 20px 40px rgba(0,0,0,0.35);
 
 
 
