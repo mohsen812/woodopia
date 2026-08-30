@@ -5,6 +5,7 @@ from evaluation.services import evaluate_tender
 from .models import (
     Tender,
     TenderParticipant,
+    TenderRound,
     Bid,
 )
 
@@ -62,45 +63,54 @@ class BidCreateView(
 
     serializer_class = BidSerializer
 
+
     def perform_create(self, serializer):
 
-        tender = serializer.validated_data["tender"]
-        workshop = serializer.validated_data["workshop"]
+        tender_round = serializer.validated_data[
+            "tender_round"
+        ]
+
+        workshop = serializer.validated_data[
+            "workshop"
+        ]
+
+
+        tender = tender_round.tender
+
 
         participant_exists = TenderParticipant.objects.filter(
             tender=tender,
             organization=workshop
         ).exists()
 
+
         if not participant_exists:
 
             raise ValidationError(
                 {
-                    "workshop": (
-                        "This workshop is not a participant "
-                        "in this tender."
-                    )
+                    "workshop":
+                    "This workshop is not a participant in this tender."
                 }
             )
 
+
         existing_bid = Bid.objects.filter(
-            tender=tender,
-            workshop=workshop
+            tender_round=tender_round,
+            workshop=workshop,
         ).exists()
+
 
         if existing_bid:
 
             raise ValidationError(
                 {
-                    "workshop": (
-                        "This workshop has already submitted "
-                        "a bid for this tender."
-                    )
+                    "workshop":
+                    "This workshop already submitted a bid for this round."
                 }
             )
 
-        serializer.save()
 
+        serializer.save()
 
 class TenderEvaluationView(
     generics.GenericAPIView
