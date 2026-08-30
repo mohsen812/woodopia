@@ -2,32 +2,99 @@ from rest_framework import serializers
 
 from .models import (
     Tender,
+    TenderRound,
     TenderParticipant,
     Bid,
+    BidItem,
 )
+
+
+class BidItemSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = BidItem
+
+        fields = [
+            "id",
+            "project_item",
+            "quantity",
+            "unit_price",
+            "total_price",
+            "availability",
+            "technical_notes",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+
 
 
 class BidSerializer(serializers.ModelSerializer):
 
     workshop_name = serializers.CharField(
         source="workshop.name",
-        read_only=True
+        read_only=True,
     )
 
+    items = BidItemSerializer(
+        many=True,
+        read_only=True,
+    )
+
+
     class Meta:
+
         model = Bid
 
         fields = [
             "id",
-            "tender",
+            "tender_round",
             "workshop",
             "workshop_name",
-            "amount",
-            "technical_notes",
+            "total_amount",
             "production_days",
             "delivery_days",
             "warranty_months",
+            "technical_notes",
+            "items",
             "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+
+
+
+class TenderRoundSerializer(serializers.ModelSerializer):
+
+    bids = BidSerializer(
+        many=True,
+        read_only=True,
+    )
+
+
+    class Meta:
+
+        model = TenderRound
+
+        fields = [
+            "id",
+            "round_number",
+            "status",
+            "started_at",
+            "closed_at",
+            "created_at",
+            "bids",
         ]
 
         read_only_fields = [
@@ -36,16 +103,19 @@ class BidSerializer(serializers.ModelSerializer):
         ]
 
 
+
 class TenderParticipantSerializer(
     serializers.ModelSerializer
 ):
 
     organization_name = serializers.CharField(
         source="organization.name",
-        read_only=True
+        read_only=True,
     )
 
+
     class Meta:
+
         model = TenderParticipant
 
         fields = [
@@ -62,36 +132,41 @@ class TenderParticipantSerializer(
         ]
 
 
+
 class TenderSerializer(serializers.ModelSerializer):
 
-    bids = BidSerializer(
+    rounds = TenderRoundSerializer(
         many=True,
-        read_only=True
+        read_only=True,
     )
 
     participants = TenderParticipantSerializer(
         many=True,
-        read_only=True
+        read_only=True,
     )
 
+
     class Meta:
+
         model = Tender
 
         fields = [
             "id",
-            "project_item",
+            "project",
             "title",
             "description",
             "status",
             "deadline",
             "created_at",
+            "updated_at",
+            "rounds",
             "participants",
-            "bids",
         ]
 
         read_only_fields = [
             "id",
             "created_at",
+            "updated_at",
+            "rounds",
             "participants",
-            "bids",
         ]
