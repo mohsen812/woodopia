@@ -6,6 +6,7 @@ from .models import (
     TenderParticipant,
     Bid,
     BidItem,
+    PaymentSchedule,
 )
 
 
@@ -34,7 +35,27 @@ class BidItemSerializer(serializers.ModelSerializer):
         ]
 
 
+class PaymentScheduleSerializer(serializers.ModelSerializer):
 
+    class Meta:
+
+        model = PaymentSchedule
+
+        fields = [
+            "id",
+            "stage_order",
+            "title",
+            "percentage",
+            "amount",
+            "description",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+            "stage_order",
+        ]
 class BidSerializer(serializers.ModelSerializer):
 
     workshop_name = serializers.CharField(
@@ -47,6 +68,10 @@ class BidSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    payment_schedules = PaymentScheduleSerializer(
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
 
@@ -63,8 +88,10 @@ class BidSerializer(serializers.ModelSerializer):
             "warranty_months",
             "technical_notes",
             "items",
+            "payment_schedules",
             "created_at",
             "updated_at",
+            
         ]
 
         read_only_fields = [
@@ -75,13 +102,13 @@ class BidSerializer(serializers.ModelSerializer):
 
 
 
+
 class TenderRoundSerializer(serializers.ModelSerializer):
 
     bids = BidSerializer(
         many=True,
         read_only=True,
     )
-
 
     class Meta:
 
@@ -103,6 +130,27 @@ class TenderRoundSerializer(serializers.ModelSerializer):
         ]
 
 
+class TenderRoundCreateSerializer(
+    serializers.ModelSerializer
+):
+
+    class Meta:
+
+        model = TenderRound
+
+        fields = [
+            "id",
+            "round_number",
+            "status",
+            "started_at",
+            "closed_at",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+        ]
 
 class TenderParticipantSerializer(
     serializers.ModelSerializer
@@ -170,3 +218,21 @@ class TenderSerializer(serializers.ModelSerializer):
             "rounds",
             "participants",
         ]
+from django.db.models import Sum
+
+
+def validate_percentage(self, value):
+    bid_id = self.context["view"].kwargs.get("bid_id")
+
+    total = PaymentSchedule.objects.filter(
+        bid_id=bid_id
+    ).aggregate(
+        total=Sum("percentage")
+    )["total"] or 0
+
+    if total + value > 100:
+        raise serializers.ValidationError(
+            "Total payment percentage cannot exceed 100."
+        )
+
+    return value
