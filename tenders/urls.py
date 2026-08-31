@@ -6,6 +6,7 @@ from .views import (
     TenderParticipantListCreateView,
     TenderRoundListCreateView,
     BidCreateView,
+    BidDetailView,
     BidItemCreateView,
     PaymentScheduleListCreateView,
     TenderEvaluationView,
@@ -50,9 +51,15 @@ urlpatterns = [
         name="bid-create"
     ),
     path(
+        "bids/<int:pk>/",
+        BidDetailView.as_view(),
+        name="bid-detail"
+    ),
+
+    path(
         "bids/<int:bid_id>/items/",
         BidItemCreateView.as_view(),
-       name="bid-item-create"
+        name="bid-item-create"
     ),
     path(
         "bids/<int:bid_id>/payment-schedules/",

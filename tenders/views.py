@@ -143,6 +143,20 @@ class BidCreateView(
 
 
         serializer.save()
+class BidDetailView(
+    generics.RetrieveAPIView
+):
+
+    queryset = (
+        Bid.objects
+        .prefetch_related(
+            "items",
+            "payment_schedules",
+        )
+        .all()
+    )
+
+    serializer_class = BidSerializer
 class BidItemCreateView(
     generics.CreateAPIView
 ):
@@ -163,7 +177,6 @@ class BidItemCreateView(
         serializer.save(
             bid=bid
         )
-
 class TenderEvaluationView(
     generics.GenericAPIView
 ):
