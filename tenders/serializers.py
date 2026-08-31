@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from django.db import models
 from .models import (
     Tender,
     TenderRound,
@@ -34,11 +34,9 @@ class BidItemSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-
 class PaymentScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
-
         model = PaymentSchedule
 
         fields = [
@@ -56,6 +54,45 @@ class PaymentScheduleSerializer(serializers.ModelSerializer):
             "created_at",
             "stage_order",
         ]
+
+    def validate_percentage(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Percentage must be greater than zero."
+            )
+
+        return value
+
+    def validate(self, attrs):
+        bid = self.context["view"].kwargs.get("bid_id")
+
+        if bid:
+            from tenders.models import PaymentSchedule
+
+            total_percentage = (
+                PaymentSchedule.objects
+                .filter(bid_id=bid)
+                .aggregate(
+                    total=models.Sum("percentage")
+                )["total"]
+                or 0
+            )
+
+            new_percentage = attrs.get(
+                "percentage",
+                0
+            )
+
+            if total_percentage + new_percentage > 100:
+                raise serializers.ValidationError(
+                    {
+                        "percentage":
+                        "Total payment percentage cannot exceed 100%."
+                    }
+                )
+
+        return attrs
+
 class BidSerializer(serializers.ModelSerializer):
 
     workshop_name = serializers.CharField(
