@@ -6,9 +6,10 @@ from .models import (
     Tender,
     TenderParticipant,
     TenderRound,
+    PaymentSchedule,
     Bid,
     BidItem,
-    PaymentSchedule,
+    
 )
 
 from .serializers import (
@@ -174,8 +175,15 @@ class TenderEvaluationView(
         result = evaluate_tender(pk)
 
         return Response(result)
-class PaymentScheduleCreateView(generics.CreateAPIView):
+class PaymentScheduleListCreateView(generics.ListCreateAPIView):
     serializer_class = PaymentScheduleSerializer
+
+    def get_queryset(self):
+        bid_id = self.kwargs.get("bid_id")
+
+        return PaymentSchedule.objects.filter(
+            bid_id=bid_id
+        )
 
     def perform_create(self, serializer):
         bid_id = self.kwargs.get("bid_id")
