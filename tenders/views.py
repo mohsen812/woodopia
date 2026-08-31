@@ -7,12 +7,17 @@ from .models import (
     TenderParticipant,
     TenderRound,
     Bid,
+    BidItem,
+    PaymentSchedule,
 )
 
 from .serializers import (
     TenderSerializer,
     TenderParticipantSerializer,
     BidSerializer,
+    TenderRoundCreateSerializer,
+    BidItemSerializer,
+    PaymentScheduleSerializer,
 )
 
 
@@ -54,7 +59,33 @@ class TenderParticipantListCreateView(
 
     serializer_class = TenderParticipantSerializer
 
+class TenderRoundListCreateView(
+    generics.ListCreateAPIView
+):
 
+    serializer_class = TenderRoundCreateSerializer
+
+    def get_queryset(self):
+
+        tender_id = self.kwargs["tender_id"]
+
+        return (
+            TenderRound.objects
+            .filter(tender_id=tender_id)
+            .order_by("round_number")
+        )
+
+    def perform_create(self, serializer):
+
+        tender_id = self.kwargs["tender_id"]
+
+        tender = Tender.objects.get(
+            id=tender_id
+        )
+
+        serializer.save(
+            tender=tender
+        )
 class BidCreateView(
     generics.CreateAPIView
 ):
@@ -111,6 +142,26 @@ class BidCreateView(
 
 
         serializer.save()
+class BidItemCreateView(
+    generics.CreateAPIView
+):
+
+    queryset = BidItem.objects.all()
+
+    serializer_class = BidItemSerializer
+
+
+    def perform_create(self, serializer):
+
+        bid_id = self.kwargs["bid_id"]
+
+        bid = Bid.objects.get(
+            id=bid_id
+        )
+
+        serializer.save(
+            bid=bid
+        )
 
 class TenderEvaluationView(
     generics.GenericAPIView
@@ -123,3 +174,24 @@ class TenderEvaluationView(
         result = evaluate_tender(pk)
 
         return Response(result)
+class PaymentScheduleCreateView(generics.CreateAPIView):
+    serializer_class = PaymentScheduleSerializer
+
+    def perform_create(self, serializer):
+        bid_id = self.kwargs.get("bid_id")
+
+        bid = Bid.objects.get(id=bid_id)
+
+        last_stage = bid.payment_schedules.order_by(
+            "-stage_order"
+        ).first()
+
+        next_stage = 1
+
+        if last_stage:
+            next_stage = last_stage.stage_order + 1
+
+        serializer.save(
+            bid=bid,
+            stage_order=next_stage
+        )
