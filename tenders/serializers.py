@@ -53,6 +53,7 @@ class PaymentScheduleSerializer(serializers.ModelSerializer):
             "id",
             "created_at",
             "stage_order",
+            "amount",
         ]
 
     def validate_percentage(self, value):

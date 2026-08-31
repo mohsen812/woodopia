@@ -176,19 +176,25 @@ class TenderEvaluationView(
 
         return Response(result)
 class PaymentScheduleListCreateView(generics.ListCreateAPIView):
+
     serializer_class = PaymentScheduleSerializer
 
     def get_queryset(self):
+
         bid_id = self.kwargs.get("bid_id")
 
         return PaymentSchedule.objects.filter(
             bid_id=bid_id
         )
 
+
     def perform_create(self, serializer):
+
         bid_id = self.kwargs.get("bid_id")
 
-        bid = Bid.objects.get(id=bid_id)
+        bid = Bid.objects.get(
+            id=bid_id
+        )
 
         last_stage = bid.payment_schedules.order_by(
             "-stage_order"
@@ -199,7 +205,14 @@ class PaymentScheduleListCreateView(generics.ListCreateAPIView):
         if last_stage:
             next_stage = last_stage.stage_order + 1
 
+        percentage = serializer.validated_data["percentage"]
+
+        amount = (
+            bid.total_amount * percentage / 100
+        )
+
         serializer.save(
             bid=bid,
-            stage_order=next_stage
+            stage_order=next_stage,
+            amount=amount,
         )
