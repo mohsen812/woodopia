@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from evaluation.services import evaluate_tender
+from evaluation.reports import build_tender_report
 from .models import (
     Tender,
     TenderParticipant,
@@ -188,6 +189,19 @@ class TenderEvaluationView(
         result = evaluate_tender(pk)
 
         return Response(result)
+class TenderReportView(
+    generics.GenericAPIView
+):
+
+    queryset = Tender.objects.all()
+
+    def get(self, request, pk):
+
+        report = build_tender_report(
+            pk
+        )
+
+        return Response(report)
 class PaymentScheduleListCreateView(generics.ListCreateAPIView):
 
     serializer_class = PaymentScheduleSerializer
