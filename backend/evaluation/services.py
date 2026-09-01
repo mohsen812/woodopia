@@ -1,5 +1,4 @@
-
-from tenders.models import Tender
+from tenders.models import Tender, Bid
 
 from .engine import evaluate_bids
 
@@ -8,8 +7,12 @@ def evaluate_tender(tender_id):
 
     tender = Tender.objects.get(id=tender_id)
 
+    bids = Bid.objects.filter(
+        tender_round__tender=tender
+    )
+
     results = evaluate_bids(
-        tender.bids.all()
+        bids
     )
 
     if not results:
@@ -27,7 +30,6 @@ def evaluate_tender(tender_id):
             },
             "results": [],
         }
-
 
     winner = results[0]
 
