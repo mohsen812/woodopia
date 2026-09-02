@@ -912,7 +912,11 @@ class TenderRevealWorkflowTests(TestCase):
             status="closed",
             reveal_at=timezone.now() + timedelta(hours=1),
         )
-
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
 
     def test_cannot_reveal_before_time(self):
 
