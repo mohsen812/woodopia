@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from projects.models import Project, ProjectItem
@@ -395,4 +396,38 @@ class PaymentSchedule(models.Model):
             f"{self.bid.workshop.name} - "
             f"{self.stage_order} - "
             f"{self.percentage}%"
+        )
+
+class TenderAward(models.Model):
+
+    tender = models.OneToOneField(
+        Tender,
+        on_delete=models.CASCADE,
+        related_name="award",
+    )
+
+    bid = models.ForeignKey(
+        Bid,
+        on_delete=models.PROTECT,
+        related_name="awards",
+    )
+
+    awarded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="tender_awards",
+    )
+
+    awarded_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.tender.title} - "
+            f"{self.bid.workshop.name}"
         )
