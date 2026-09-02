@@ -39,6 +39,20 @@ class Tender(models.Model):
         null=True,
         blank=True,
     )
+    closed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    reveal_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    revealed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True
