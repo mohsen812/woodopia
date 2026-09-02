@@ -7,24 +7,41 @@ def build_tender_report(tender_id):
         tender_id
     )
 
-    if not evaluation["results"]:
+    results = evaluation.get(
+        "results",
+        []
+    )
+
+    if not results:
 
         return {
-            "tender_id": evaluation["tender_id"],
-            "tender_title": evaluation["tender_title"],
-           "decision": {
-    "winner": None,
-    "score": None,
-    "confidence": None,
-    "status": "no_bids",
-},
+            "tender_id": evaluation.get(
+                "tender_id"
+            ),
+
+            "tender_title": evaluation.get(
+                "tender_title"
+            ),
+
+            "decision": {
+                "winner": None,
+                "score": None,
+                "confidence": None,
+                "status": "no_bids",
+            },
+
             "ranking": [],
+
             "analysis": {},
-            "recommendation": evaluation["recommendation"],
+
+            "recommendation": evaluation.get(
+                "recommendation",
+                {
+                    "type": "no_bids",
+                    "message": "No workshop bids submitted."
+                }
+            ),
         }
-
-
-    results = evaluation["results"]
 
 
     ranking = []
@@ -34,12 +51,26 @@ def build_tender_report(tender_id):
         ranking.append(
             {
                 "rank": item["rank"],
+
                 "workshop": item["workshop_name"],
+
                 "score": item["total_score"],
-                "price": int(item["amount"]),
-                "production_days": item["production_days"],
-                "delivery_days": item["delivery_days"],
-                "warranty_months": item["warranty_months"],
+
+                "price": int(
+                    item["amount"]
+                ),
+
+                "production_days": item[
+                    "production_days"
+                ],
+
+                "delivery_days": item[
+                    "delivery_days"
+                ],
+
+                "warranty_months": item[
+                    "warranty_months"
+                ],
             }
         )
 
@@ -49,19 +80,37 @@ def build_tender_report(tender_id):
         key=lambda item: item["amount"]
     )
 
+
     fastest_delivery = min(
         results,
-        key=lambda item: item["delivery_days"]
+        key=lambda item: (
+            item["delivery_days"]
+            if item["delivery_days"] is not None
+            else 999999
+        )
     )
 
 
     best_warranty = max(
         results,
-        key=lambda item: item["warranty_months"]
+        key=lambda item: (
+            item["warranty_months"]
+            if item["warranty_months"] is not None
+            else 0
+        )
     )
 
 
     winner = results[0]
+
+
+    score_gap = evaluation.get(
+        "summary",
+        {}
+    ).get(
+        "score_gap",
+        0
+    )
 
 
     return {
@@ -79,9 +128,11 @@ def build_tender_report(tender_id):
 
             "confidence": (
                 "high"
-                if evaluation["summary"]["score_gap"] >= 10
+                if score_gap >= 10
                 else "medium"
             ),
+
+            "status": "evaluated",
 
         },
 
@@ -100,6 +151,15 @@ def build_tender_report(tender_id):
         },
 
 
-        "recommendation": evaluation["recommendation"],
+        "recommendation": evaluation.get(
+            "recommendation",
+            {
+                "type": "balanced_choice",
+                "message": (
+                    "Customer should review "
+                    "price, time and warranty."
+                ),
+            }
+        ),
 
     }
