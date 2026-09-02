@@ -12,8 +12,8 @@ from .views import (
     TenderEvaluationView,
     TenderReportView,
     TenderBidListView,
+    TenderAwardView,
 )
-
 
 urlpatterns = [
 
@@ -50,6 +50,11 @@ urlpatterns = [
         "<int:pk>/report/",
         TenderReportView.as_view(),
         name="tender-report"
+    ),
+    path(
+        "<int:pk>/award/",
+        TenderAwardView.as_view(),
+        name="tender-award",
     ),
     path(
         "<int:tender_id>/visible-bids/",
