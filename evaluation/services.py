@@ -3,26 +3,23 @@ from tenders.models import Tender, TenderRound, Bid
 from .engine import evaluate_bids
 
 
-def evaluate_tender(tender_id):
-
-    tender = Tender.objects.get(id=tender_id)
-
-    bids = Bid.objects.filter(
-        tender_round__tender=tender
-    )
-
-    results = evaluate_bids(
-        bids
-    )
+def build_evaluation_result(
+    results,
+    context
+):
+    """
+    Build common evaluation response structure.
+    """
 
     if not results:
         return {
-            "tender_id": tender.id,
-            "tender_title": tender.title,
+            **context,
             "summary": {
                 "winner": None,
+                "winner_bid_id": None,
                 "winner_score": None,
                 "total_bids": 0,
+                "score_gap": 0,
             },
             "recommendation": {
                 "type": "no_bids",
@@ -31,7 +28,9 @@ def evaluate_tender(tender_id):
             "results": [],
         }
 
+
     winner = results[0]
+
 
     score_gap = 0
 
@@ -69,11 +68,7 @@ def evaluate_tender(tender_id):
 
 
     return {
-
-        "tender_id": tender.id,
-
-        "tender_title": tender.title,
-
+        **context,
 
         "summary": {
 
@@ -103,60 +98,122 @@ def evaluate_tender(tender_id):
 
     }
 
+
+
 def evaluate_round(round_id):
 
     round_obj = TenderRound.objects.get(
         id=round_id
     )
 
+
     bids = Bid.objects.filter(
         tender_round=round_obj
     )
+
 
     results = evaluate_bids(
         bids
     )
 
-    if not results:
-        return {
+
+    return build_evaluation_result(
+        results,
+        {
             "round_id": round_obj.id,
+            "tender_id": round_obj.tender_id,
+        }
+    )
+
+
+
+def get_active_evaluation_round(tender):
+
+    evaluated_round = (
+        tender.rounds
+        .filter(
+            status="evaluated"
+        )
+        .order_by(
+            "-round_number"
+        )
+        .first()
+    )
+
+
+    if evaluated_round:
+        return evaluated_round
+
+
+    closed_round = (
+        tender.rounds
+        .filter(
+            status="closed"
+        )
+        .order_by(
+            "-round_number"
+        )
+        .first()
+    )
+
+
+    return closed_round
+
+
+
+def evaluate_tender(tender_id):
+
+    tender = Tender.objects.get(
+        id=tender_id
+    )
+
+
+    active_round = get_active_evaluation_round(
+        tender
+    )
+
+
+    if not active_round:
+
+        return {
+            "tender_id": tender.id,
+
+            "tender_title": tender.title,
+
+            "summary": {
+                "winner": None,
+                "winner_bid_id": None,
+                "winner_score": None,
+                "total_bids": 0,
+                "score_gap": 0,
+            },
+
+            "recommendation": {
+                "type": "no_round",
+                "message": "No completed tender round available."
+            },
+
             "results": [],
         }
 
 
-    winner = results[0]
-
-    score_gap = 0
-
-    if len(results) > 1:
-        score_gap = round(
-            winner["total_score"]
-            -
-            results[1]["total_score"],
-            2
-        )
+    evaluation = evaluate_round(
+        active_round.id
+    )
 
 
     return {
 
-        "round_id": round_obj.id,
+        "tender_id": tender.id,
 
-        "tender_id": round_obj.tender_id,
+        "tender_title": tender.title,
 
-        "summary": {
+        "round_id": active_round.id,
 
-            "winner": winner["workshop_name"],
+        "summary": evaluation["summary"],
 
-            "winner_bid_id": winner["bid_id"],
+        "recommendation": evaluation["recommendation"],
 
-            "winner_score": winner["total_score"],
-
-            "total_bids": len(results),
-
-            "score_gap": score_gap,
-
-        },
-
-        "results": results,
+        "results": evaluation["results"],
 
     }
