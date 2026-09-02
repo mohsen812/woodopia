@@ -11,6 +11,7 @@ from .views import (
     PaymentScheduleListCreateView,
     TenderEvaluationView,
     TenderReportView,
+    TenderBidListView,
 )
 
 
@@ -50,7 +51,11 @@ urlpatterns = [
         TenderReportView.as_view(),
         name="tender-report"
     ),
-
+    path(
+        "<int:tender_id>/visible-bids/",
+        TenderBidListView.as_view(),
+        name="tender-visible-bids"
+    ),
     path(
         "<int:tender_id>/bids/",
         BidCreateView.as_view(),
