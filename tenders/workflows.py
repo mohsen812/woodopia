@@ -1,6 +1,8 @@
 from django.db import transaction
 from django.utils import timezone
 
+from evaluation.services import evaluate_round
+
 from .models import Tender
 
 
@@ -25,7 +27,35 @@ def reveal_tender(tender_id):
             "Reveal time has not arrived."
         )
 
+    active_round = (
+        tender.rounds
+        .filter(
+            status="closed"
+        )
+        .order_by(
+            "-round_number"
+        )
+        .first()
+    )
+
+    if not active_round:
+        raise ValueError(
+            "No closed round available for evaluation."
+        )
+
+    evaluation = evaluate_round(
+        active_round.id
+    )
+
     with transaction.atomic():
+
+        active_round.status = "evaluated"
+
+        active_round.save(
+            update_fields=[
+                "status"
+            ]
+        )
 
         tender.status = "revealed"
 
