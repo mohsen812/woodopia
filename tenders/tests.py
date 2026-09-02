@@ -1,3 +1,8 @@
+from django.utils import timezone
+from datetime import timedelta
+
+from .visibility import tender_is_revealed
+
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.test import TestCase
@@ -11,7 +16,7 @@ from .models import (
     Bid,
     TenderAward,
 )
-
+from .services import award_tender
 
 class TenderReportAPITests(TestCase):
 
@@ -373,3 +378,138 @@ class TenderAwardModelTests(TestCase):
                     bid=self.bid,
                     awarded_by=self.user,
                 )
+class TenderAwardServiceTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="award_service_user",
+            email="award-service@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Award Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Workshop Award",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Award Project",
+            customer=self.customer,
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Award Tender",
+            status="closed",
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            total_amount=100000000,
+            production_days=10,
+            delivery_days=5,
+            warranty_months=24,
+        )
+
+
+    def test_award_creates_award_and_updates_tender(self):
+
+        award = award_tender(
+            self.tender.id,
+            self.bid.id,
+            self.user,
+        )
+
+        self.assertEqual(
+            award.tender,
+            self.tender,
+        )
+
+        self.assertEqual(
+            award.bid,
+            self.bid,
+        )
+
+        self.tender.refresh_from_db()
+
+        self.assertEqual(
+            self.tender.status,
+            "awarded",
+        )
+class TenderVisibilityTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="visibility_user",
+            email="visibility@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Visibility Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Visibility Project",
+            customer=self.customer,
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Visibility Tender",
+            status="closed",
+        )
+
+
+    def test_tender_not_revealed_before_reveal_time(self):
+
+        self.tender.reveal_at = (
+            timezone.now()
+            +
+            timedelta(hours=2)
+        )
+
+        self.tender.save()
+
+        self.assertFalse(
+            tender_is_revealed(
+                self.tender
+            )
+        )
+
+
+    def test_tender_revealed_after_reveal_time(self):
+
+        self.tender.reveal_at = (
+            timezone.now()
+            -
+            timedelta(hours=1)
+        )
+
+        self.tender.save()
+
+        self.assertTrue(
+            tender_is_revealed(
+                self.tender
+            )
+        )
