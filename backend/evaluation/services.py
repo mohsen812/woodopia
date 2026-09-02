@@ -1,4 +1,4 @@
-from tenders.models import Tender, Bid
+from tenders.models import Tender, TenderRound, Bid
 
 from .engine import evaluate_bids
 
@@ -98,6 +98,64 @@ def evaluate_tender(tender_id):
 
         },
 
+
+        "results": results,
+
+    }
+
+def evaluate_round(round_id):
+
+    round_obj = TenderRound.objects.get(
+        id=round_id
+    )
+
+    bids = Bid.objects.filter(
+        tender_round=round_obj
+    )
+
+    results = evaluate_bids(
+        bids
+    )
+
+    if not results:
+        return {
+            "round_id": round_obj.id,
+            "results": [],
+        }
+
+
+    winner = results[0]
+
+    score_gap = 0
+
+    if len(results) > 1:
+        score_gap = round(
+            winner["total_score"]
+            -
+            results[1]["total_score"],
+            2
+        )
+
+
+    return {
+
+        "round_id": round_obj.id,
+
+        "tender_id": round_obj.tender_id,
+
+        "summary": {
+
+            "winner": winner["workshop_name"],
+
+            "winner_bid_id": winner["bid_id"],
+
+            "winner_score": winner["total_score"],
+
+            "total_bids": len(results),
+
+            "score_gap": score_gap,
+
+        },
 
         "results": results,
 
