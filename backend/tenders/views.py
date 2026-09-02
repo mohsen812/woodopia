@@ -255,3 +255,29 @@ class PaymentScheduleListCreateView(generics.ListCreateAPIView):
             stage_order=next_stage,
             amount=amount,
         )
+class TenderBidListView(
+    generics.ListAPIView
+):
+
+    serializer_class = BidSerializer
+
+    def get_queryset(self):
+
+        from .visibility import get_visible_bids
+
+        tender_id = self.kwargs.get(
+            "tender_id"
+        )
+
+        tender = Tender.objects.get(
+            id=tender_id
+        )
+
+        viewer_type = self.request.query_params.get(
+            "viewer_type"
+        )
+
+        return get_visible_bids(
+            tender,
+            viewer_type,
+        )

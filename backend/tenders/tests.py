@@ -20,6 +20,7 @@ from .models import (
     Bid,
     TenderAward,
 )
+from .services import get_visible_bids
 from .services import award_tender
 
 class TenderReportAPITests(TestCase):
@@ -572,4 +573,315 @@ class TenderRevealLockAPITests(TestCase):
         self.assertEqual(
             data["status"],
             "locked",
+        )
+class TenderBidVisibilityTests(TestCase):
+
+    def setUp(self):
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="visibility_test_user",
+            email="visibility@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Visibility Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop1 = Organization.objects.create(
+            name="Workshop One",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.workshop2 = Organization.objects.create(
+            name="Workshop Two",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Visibility Test Project",
+            description="Bid visibility test.",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Visibility Tender",
+            status="open",
+            reveal_at=timezone.now() + timedelta(hours=1),
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.bid1 = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop1,
+            total_amount=1000000,
+        )
+
+        self.bid2 = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop2,
+            total_amount=900000,
+        )
+
+
+    def test_bids_are_hidden_before_reveal(self):
+
+        with self.assertRaises(ValueError):
+
+            get_visible_bids(
+                self.tender,
+                "customer",
+            )
+
+
+    def test_workshop_can_only_see_own_bid_after_reveal(self):
+
+        self.tender.reveal_at = timezone.now()
+        self.tender.save()
+
+        bids = get_visible_bids(
+            self.tender,
+            "workshop",
+            self.workshop1,
+        )
+
+        self.assertEqual(
+            bids.count(),
+            1,
+        )
+
+        self.assertEqual(
+            bids.first(),
+            self.bid1,
+        )
+class TenderVisibleBidsTests(TestCase):
+
+    def setUp(self):
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="visible_bid_user",
+            email="visible-bid@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Visible Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshops = []
+
+        for index in range(7):
+
+            self.workshops.append(
+                Organization.objects.create(
+                    name=f"Workshop {index}",
+                    organization_type="workshop",
+                    owner=self.user,
+                )
+            )
+
+
+        self.project = Project.objects.create(
+            title="Visible Bid Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Visible Bid Tender",
+            status="open",
+            reveal_at=timezone.now() - timedelta(hours=1),
+        )
+
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+
+        self.bids = []
+
+        for index, workshop in enumerate(self.workshops):
+
+            self.bids.append(
+                Bid.objects.create(
+                    tender_round=self.round,
+                    workshop=workshop,
+                    total_amount=1000000 - (index * 10000),
+                    production_days=10,
+                    delivery_days=5,
+                    warranty_months=12,
+                )
+            )
+
+
+    def test_customer_only_sees_top_three_bids(self):
+
+        bids = get_visible_bids(
+            self.tender,
+            "customer",
+        )
+
+        self.assertEqual(
+            bids.count(),
+            3,
+        )
+
+
+    def test_consultant_sees_all_bids(self):
+
+        bids = get_visible_bids(
+            self.tender,
+            "consultant",
+        )
+
+        self.assertEqual(
+            bids.count(),
+            7,
+        )
+
+
+    def test_workshop_only_sees_own_bid(self):
+
+        bids = get_visible_bids(
+            self.tender,
+            "workshop",
+            self.workshops[0],
+        )
+
+        self.assertEqual(
+            bids.count(),
+            1,
+        )
+
+        self.assertEqual(
+            bids.first().workshop,
+            self.workshops[0],
+        )
+class TenderVisibleBidsAPITests(TestCase):
+
+    def setUp(self):
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="visible_api_user",
+            email="visible-api@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="API Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshops = []
+
+        for index in range(7):
+            self.workshops.append(
+                Organization.objects.create(
+                    name=f"API Workshop {index}",
+                    organization_type="workshop",
+                    owner=self.user,
+                )
+            )
+
+
+        self.project = Project.objects.create(
+            title="Visible API Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Visible API Tender",
+            status="open",
+            reveal_at=timezone.now() - timedelta(hours=1),
+        )
+
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+
+        for index, workshop in enumerate(self.workshops):
+
+            Bid.objects.create(
+                tender_round=self.round,
+                workshop=workshop,
+                total_amount=1000000 - index * 10000,
+                production_days=10,
+                delivery_days=5,
+                warranty_months=12,
+            )
+
+
+        self.client = APIClient()
+
+
+    def test_customer_visible_bids_api_returns_three(self):
+
+        response = self.client.get(
+            "/api/tenders/{}/visible-bids/?viewer_type=customer".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            len(response.json()),
+            3,
+        )
+
+
+    def test_consultant_visible_bids_api_returns_all(self):
+
+        response = self.client.get(
+            "/api/tenders/{}/visible-bids/?viewer_type=consultant".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            len(response.json()),
+            7,
         )
