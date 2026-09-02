@@ -3,7 +3,13 @@ from django.utils import timezone
 
 from evaluation.services import evaluate_round
 
-from .models import Tender
+from .models import (
+
+    Tender,
+
+    TenderRoundEvaluation,
+
+)
 
 
 def reveal_tender(tender_id):
@@ -47,7 +53,32 @@ def reveal_tender(tender_id):
         active_round.id
     )
 
+    winner_bid_id = (
+        evaluation["winner"]["bid_id"]
+        if evaluation.get("winner")
+        else None
+    )
+
     with transaction.atomic():
+
+        winner_bid = None
+
+        if winner_bid_id:
+            from .models import Bid
+
+            winner_bid = Bid.objects.get(
+                id=winner_bid_id
+            )
+
+        TenderRoundEvaluation.objects.create(
+            tender_round=active_round,
+            winner_bid=winner_bid,
+            ranking=evaluation.get(
+                "ranking",
+                []
+            ),
+            summary=evaluation,
+        )
 
         active_round.status = "evaluated"
 
@@ -67,5 +98,7 @@ def reveal_tender(tender_id):
                 "revealed_at",
             ]
         )
+
+
 
     return tender
