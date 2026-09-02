@@ -13,7 +13,7 @@ from projects.models import Project
 
 from datetime import timedelta
 from django.utils import timezone
-
+from .workflows import reveal_tender
 from .models import (
     Tender,
     TenderRound,
@@ -885,3 +885,84 @@ class TenderVisibleBidsAPITests(TestCase):
             len(response.json()),
             7,
         )
+class TenderRevealWorkflowTests(TestCase):
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username="reveal_workflow_user",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Reveal Workflow Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Reveal Workflow Project",
+            customer=self.customer,
+            created_by=self.user,
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Workflow Tender",
+            status="closed",
+            reveal_at=timezone.now() + timedelta(hours=1),
+        )
+
+
+    def test_cannot_reveal_before_time(self):
+
+        with self.assertRaises(ValueError):
+
+            reveal_tender(
+                self.tender.id
+            )
+
+
+    def test_reveal_after_time(self):
+
+        self.tender.reveal_at = (
+            timezone.now()
+            -
+            timedelta(minutes=1)
+        )
+
+        self.tender.save()
+
+        tender = reveal_tender(
+            self.tender.id
+        )
+
+        self.assertEqual(
+            tender.status,
+            "revealed",
+        )
+
+        self.assertIsNotNone(
+            tender.revealed_at
+        )
+
+
+    def test_cannot_reveal_twice(self):
+
+        self.tender.reveal_at = (
+            timezone.now()
+            -
+            timedelta(minutes=1)
+        )
+
+        self.tender.save()
+
+        reveal_tender(
+            self.tender.id
+        )
+
+        with self.assertRaises(ValueError):
+
+            reveal_tender(
+                self.tender.id
+            )
