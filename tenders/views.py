@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from evaluation.services import evaluate_tender
 from evaluation.reports import build_tender_report
+from .visibility import tender_is_revealed
 from .models import (
     Tender,
     TenderParticipant,
@@ -189,7 +190,6 @@ class TenderEvaluationView(
         result = evaluate_tender(pk)
 
         return Response(result)
-
 class TenderReportView(
     generics.GenericAPIView
 ):
@@ -198,7 +198,16 @@ class TenderReportView(
 
     def get(self, request, pk):
 
-        self.get_object()
+        tender = self.get_object()
+
+        if not tender_is_revealed(tender):
+            return Response(
+                {
+                    "status": "locked",
+                    "message": "Tender results are not revealed yet."
+                },
+                status=403
+            )
 
         report = build_tender_report(
             pk
