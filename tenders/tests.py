@@ -10,6 +10,10 @@ from rest_framework.test import APIClient
 
 from organizations.models import Organization
 from projects.models import Project
+
+from datetime import timedelta
+from django.utils import timezone
+
 from .models import (
     Tender,
     TenderRound,
@@ -54,12 +58,12 @@ class TenderReportAPITests(TestCase):
             created_by=self.user,
             status="tender",
         )
-
         self.tender = Tender.objects.create(
             project=self.project,
             title="Tender Report Test Tender",
             description="Test tender report.",
             status="open",
+            reveal_at=timezone.now() - timedelta(minutes=1),
         )
 
         self.round = TenderRound.objects.create(
@@ -512,4 +516,60 @@ class TenderVisibilityTests(TestCase):
             tender_is_revealed(
                 self.tender
             )
+        )
+
+class TenderRevealLockAPITests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="reveal_lock_user",
+            email="reveal-lock@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Reveal Lock Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Reveal Lock Project",
+            description="Reveal lock test project.",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Locked Tender",
+            description="Should not be visible before reveal.",
+            status="open",
+            reveal_at=timezone.now() + timedelta(hours=2),
+        )
+
+        self.client = APIClient()
+
+
+    def test_report_is_locked_before_reveal(self):
+
+        response = self.client.get(
+            "/api/tenders/{}/report/".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            data["status"],
+            "locked",
         )
