@@ -4,7 +4,6 @@ from evaluation.services import evaluate_tender
 
 from .models import Tender, Bid, TenderAward
 
-
 def award_tender(tender_id, bid_id, user):
 
     tender = Tender.objects.get(
@@ -20,58 +19,58 @@ def award_tender(tender_id, bid_id, user):
             "Bid does not belong to this tender."
         )
 
-    if tender.status in {"awarded", "cancelled"}:
+    if tender.status in {
+        "awarded",
+        "cancelled",
+    }:
         raise ValueError(
             "Tender cannot be awarded."
         )
 
-    if tender.status != "closed":
+    if tender.status != "revealed":
         raise ValueError(
-            "Tender is not ready for award."
+            "Tender is not revealed yet."
+        )
+
+    if TenderAward.objects.filter(
+        tender=tender
+    ).exists():
+        raise ValueError(
+            "Tender already has an award."
         )
 
     evaluation = evaluate_tender(
         tender.id
     )
 
-    top_bid_ids = [
+    allowed_bid_ids = [
         item["bid_id"]
         for item in evaluation["results"][:3]
     ]
 
-    if bid.id not in top_bid_ids:
+    if bid.id not in allowed_bid_ids:
         raise ValueError(
-            "Selected bid is not in top 3 ranking."
+            "Selected bid is not available for award."
         )
 
     with transaction.atomic():
 
-
         award = TenderAward.objects.create(
-
             tender=tender,
-
             bid=bid,
-
             awarded_by=user,
-
         )
-
 
         tender.status = "awarded"
 
         tender.save(
-
             update_fields=[
-
                 "status"
-
             ]
-
         )
 
-
     return award
+
 
 from .permissions import get_bid_visibility_role
 from .visibility import tender_is_revealed

@@ -414,7 +414,8 @@ class TenderAwardServiceTests(TestCase):
         self.tender = Tender.objects.create(
             project=self.project,
             title="Award Tender",
-            status="closed",
+            status="revealed",
+            revealed_at=timezone.now(),
         )
 
         self.round = TenderRound.objects.create(
