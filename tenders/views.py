@@ -189,6 +189,7 @@ class TenderEvaluationView(
         result = evaluate_tender(pk)
 
         return Response(result)
+
 class TenderReportView(
     generics.GenericAPIView
 ):
@@ -196,6 +197,8 @@ class TenderReportView(
     queryset = Tender.objects.all()
 
     def get(self, request, pk):
+
+        self.get_object()
 
         report = build_tender_report(
             pk

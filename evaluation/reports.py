@@ -12,10 +12,12 @@ def build_tender_report(tender_id):
         return {
             "tender_id": evaluation["tender_id"],
             "tender_title": evaluation["tender_title"],
-            "decision": {
-                "status": "no_bids",
-                "message": "No workshop bids submitted.",
-            },
+           "decision": {
+    "winner": None,
+    "score": None,
+    "confidence": None,
+    "status": "no_bids",
+},
             "ranking": [],
             "analysis": {},
             "recommendation": evaluation["recommendation"],
