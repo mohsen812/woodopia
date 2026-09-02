@@ -7,6 +7,7 @@ from .models import (
     Bid,
     BidItem,
     PaymentSchedule,
+    TenderAward,
 )
 
 
@@ -274,3 +275,47 @@ def validate_percentage(self, value):
         )
 
     return value
+
+class TenderAwardCreateSerializer(
+    serializers.Serializer
+):
+
+    bid_id = serializers.IntegerField()
+
+class TenderAwardSerializer(
+    serializers.ModelSerializer
+):
+
+    bid_id = serializers.IntegerField(
+        source="bid.id",
+        read_only=True,
+    )
+
+    workshop_name = serializers.CharField(
+        source="bid.workshop.name",
+        read_only=True,
+    )
+
+
+    class Meta:
+
+        model = TenderAward
+
+        fields = [
+            "id",
+            "tender",
+            "bid_id",
+            "workshop_name",
+            "awarded_by",
+            "awarded_at",
+        ]
+
+
+        read_only_fields = [
+            "id",
+            "tender",
+            "bid_id",
+            "workshop_name",
+            "awarded_by",
+            "awarded_at",
+        ]

@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from evaluation.services import evaluate_tender
 from evaluation.reports import build_tender_report
 from .visibility import tender_is_revealed
+from .services import award_tender
 from .models import (
     Tender,
     TenderParticipant,
@@ -21,8 +22,9 @@ from .serializers import (
     TenderRoundCreateSerializer,
     BidItemSerializer,
     PaymentScheduleSerializer,
+    TenderAwardCreateSerializer,
+    TenderAwardSerializer,
 )
-
 
 class TenderListCreateView(
     generics.ListCreateAPIView
@@ -280,4 +282,48 @@ class TenderBidListView(
         return get_visible_bids(
             tender,
             viewer_type,
+        )
+class TenderAwardView(
+    generics.GenericAPIView
+):
+
+    queryset = Tender.objects.all()
+
+    serializer_class = TenderAwardCreateSerializer
+
+
+    def post(self, request, pk):
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        bid_id = serializer.validated_data["bid_id"]
+
+
+        try:
+
+            award = award_tender(
+                tender_id=pk,
+                bid_id=bid_id,
+                user=request.user,
+            )
+
+        except ValueError as e:
+
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=400
+            )
+
+
+        return Response(
+            TenderAwardSerializer(award).data,
+            status=201
         )
