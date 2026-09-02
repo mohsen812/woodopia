@@ -11,6 +11,7 @@ class Tender(models.Model):
         ("draft", "Draft"),
         ("open", "Open"),
         ("closed", "Closed"),
+        ("revealed","Revealed"),
         ("awarded", "Awarded"),
         ("cancelled", "Cancelled"),
     ]
