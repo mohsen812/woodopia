@@ -446,3 +446,37 @@ class TenderAward(models.Model):
             f"{self.tender.title} - "
             f"{self.bid.workshop.name}"
         )
+class TenderRoundEvaluation(models.Model):
+
+    tender_round = models.OneToOneField(
+        TenderRound,
+        on_delete=models.CASCADE,
+        related_name="evaluation",
+    )
+
+    winner_bid = models.ForeignKey(
+        Bid,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="winning_evaluations",
+    )
+
+    ranking = models.JSONField(
+        default=list
+    )
+
+    summary = models.JSONField(
+        default=dict
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    def __str__(self):
+        return (
+            f"{self.tender_round.tender.title} "
+            f"- Evaluation"
+        )
