@@ -202,3 +202,13 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
 
         return project
+
+# =====================================
+# TENDER SELECT WINNER INPUT
+# =====================================
+
+
+class TenderSelectWinnerSerializer(serializers.Serializer):
+
+
+    bid_id = serializers.IntegerField()
