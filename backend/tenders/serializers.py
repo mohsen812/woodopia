@@ -257,24 +257,9 @@ class TenderSerializer(serializers.ModelSerializer):
             "rounds",
             "participants",
         ]
-from django.db.models import Sum
 
 
-def validate_percentage(self, value):
-    bid_id = self.context["view"].kwargs.get("bid_id")
 
-    total = PaymentSchedule.objects.filter(
-        bid_id=bid_id
-    ).aggregate(
-        total=Sum("percentage")
-    )["total"] or 0
-
-    if total + value > 100:
-        raise serializers.ValidationError(
-            "Total payment percentage cannot exceed 100."
-        )
-
-    return value
 
 class TenderAwardCreateSerializer(
     serializers.Serializer
