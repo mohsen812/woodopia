@@ -4,6 +4,7 @@ from .models import (
     Project,
     ProjectZone,
     ProjectVisual,
+    ProjectItem,
 )
 
 
@@ -25,7 +26,6 @@ class ProjectVisualSerializer(serializers.ModelSerializer):
 class ProjectZoneSerializer(serializers.ModelSerializer):
 
     visuals = serializers.SerializerMethodField()
-
 
     def get_visuals(self, obj):
 
@@ -56,7 +56,6 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
         ]
 
 
-
 # =====================================
 # PROJECT READ SERIALIZER
 # =====================================
@@ -73,7 +72,6 @@ class ProjectFullSerializer(serializers.ModelSerializer):
 
         model = Project
 
-
         fields = [
             "id",
             "title",
@@ -85,15 +83,11 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         ]
 
 
-
 # =====================================
 # PROJECT CREATE SERIALIZER
 # =====================================
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
-
-    # Temporary FEEMAAS capacity slot
-    # Will later connect to Workspace Zone Engine
 
     capacity_slot = serializers.IntegerField(
         write_only=True,
@@ -105,7 +99,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Project
-
 
         fields = [
             "id",
@@ -127,9 +120,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         ]
 
 
-
     def create(self, validated_data):
-
 
         capacity_slot = validated_data.pop(
             "capacity_slot",
@@ -145,6 +136,17 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+
+        # -----------------------------
+        # Initial Project Item
+        # -----------------------------
+
+        ProjectItem.objects.create(
+            project=project,
+            name=project.title,
+            description=project.description,
+            quantity=1,
+        )
 
 
         # -----------------------------
@@ -164,7 +166,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             y_position=0
 
         )
-
 
 
         # -----------------------------
@@ -188,7 +189,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             position_x=0,
 
             position_y=0,
-
 
             visual_data={
 
