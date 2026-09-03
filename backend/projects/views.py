@@ -77,7 +77,7 @@ class ProjectTenderView(
         tender = (
             Tender.objects
             .filter(
-                project_item=project_item
+                project=project
             )
             .first()
         )
