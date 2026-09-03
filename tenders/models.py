@@ -54,7 +54,13 @@ class Tender(models.Model):
         null=True,
         blank=True,
     )
-
+    winner_bid = models.ForeignKey(
+        "Bid",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="won_tenders",
+    )
     created_at = models.DateTimeField(
         auto_now_add=True
     )
