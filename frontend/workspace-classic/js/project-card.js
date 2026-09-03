@@ -1284,8 +1284,11 @@ function renderTenderDashboard(
 
                     <strong>
                         ${
-                            tender.bids?.length ??
-                            0
+                            tender.rounds?.reduce(
+                                (total, round) =>
+                                    total + (round.bids?.length ?? 0),
+                                0
+                            ) ?? 0
                         }
                     </strong>
 
