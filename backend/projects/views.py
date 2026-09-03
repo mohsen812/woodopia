@@ -59,7 +59,6 @@ class ProjectTenderView(
 ):
 
     queryset = Project.objects.all()
-
     def get(self, request, pk):
 
         project = self.get_object()
@@ -71,7 +70,6 @@ class ProjectTenderView(
         )
 
         if not project_item:
-
             raise NotFound(
                 "No project item exists for this project."
             )
@@ -85,7 +83,6 @@ class ProjectTenderView(
         )
 
         if not tender:
-
             raise NotFound(
                 "No tender exists for this project."
             )
