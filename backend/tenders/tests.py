@@ -458,6 +458,238 @@ class TenderAwardServiceTests(TestCase):
             self.tender.status,
             "awarded",
         )
+
+class TenderAwardAPITests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="award_api_user",
+            email="award-api@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Award API Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Award API Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Award API Project",
+            customer=self.customer,
+            created_by=self.user,
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Award API Tender",
+            status="revealed",
+            revealed_at=timezone.now(),
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            total_amount=100000000,
+            production_days=10,
+            delivery_days=5,
+            warranty_months=24,
+        )
+
+        self.client = APIClient()
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+    def test_award_endpoint_returns_201(self):
+
+        response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": self.bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+    def test_award_endpoint_updates_tender_status(self):
+
+        response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": self.bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        self.tender.refresh_from_db()
+
+        self.assertEqual(
+            self.tender.status,
+            "awarded",
+        )
+
+    def test_award_endpoint_creates_award(self):
+
+        response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": self.bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        self.assertTrue(
+            TenderAward.objects.filter(
+                tender=self.tender,
+                bid=self.bid,
+            ).exists()
+        )
+    def test_award_endpoint_rejects_unrevealed_tender(self):
+
+        self.tender.status = "open"
+
+        self.tender.save(
+            update_fields=["status"]
+        )
+
+        response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": self.bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.tender.refresh_from_db()
+
+        self.assertNotEqual(
+            self.tender.status,
+            "awarded",
+        )
+
+
+    def test_award_endpoint_rejects_duplicate_award(self):
+
+        first_response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": self.bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            first_response.status_code,
+            201,
+        )
+
+        second_response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": self.bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            second_response.status_code,
+            400,
+        )
+
+
+    def test_award_endpoint_rejects_bid_from_another_tender(self):
+
+        other_project = Project.objects.create(
+            title="Other Award Project",
+            customer=self.customer,
+            created_by=self.user,
+        )
+
+        other_tender = Tender.objects.create(
+            project=other_project,
+            title="Other Award Tender",
+            status="revealed",
+            revealed_at=timezone.now(),
+        )
+
+        other_round = TenderRound.objects.create(
+            tender=other_tender,
+            round_number=1,
+            status="closed",
+        )
+
+        other_bid = Bid.objects.create(
+            tender_round=other_round,
+            workshop=self.workshop,
+            total_amount=90000000,
+            production_days=8,
+            delivery_days=4,
+            warranty_months=24,
+        )
+
+        response = self.client.post(
+            "/api/tenders/{}/award/".format(
+                self.tender.id
+            ),
+            {
+                "bid_id": other_bid.id
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+
 class TenderVisibilityTests(TestCase):
 
     def setUp(self):
