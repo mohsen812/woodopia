@@ -13,8 +13,8 @@ from .serializers import (
     ProjectFullSerializer,
     ProjectCreateSerializer,
     ProjectVisualSerializer,
+    TenderSelectWinnerSerializer,
 )
-
 
 # =====================================
 # PROJECT LIST + CREATE
@@ -108,12 +108,13 @@ class ProjectTenderView(
 # =====================================
 # PROJECT TENDER SELECT WINNER
 # =====================================
-
 class ProjectTenderSelectWinnerView(
     generics.GenericAPIView
 ):
 
     queryset = Project.objects.all()
+
+    serializer_class = TenderSelectWinnerSerializer
 
 
     def post(self, request, pk):
@@ -136,18 +137,18 @@ class ProjectTenderSelectWinnerView(
             )
 
 
-        bid_id = request.data.get(
-            "bid_id"
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
         )
 
 
-        if not bid_id:
-            return Response(
-                {
-                    "error": "bid_id is required"
-                },
-                status=400
-            )
+        bid_id = serializer.validated_data[
+            "bid_id"
+        ]
 
 
         try:
@@ -179,9 +180,14 @@ class ProjectTenderSelectWinnerView(
         return Response(
             {
                 "message": "Tender awarded successfully",
+                "project_id": project.id,
                 "tender_id": tender.id,
                 "winner_bid_id": bid.id,
-                "winner_workshop": bid.workshop.name,
+                "winner_workshop": (
+                    bid.workshop.name
+                    if bid.workshop
+                    else None
+                ),
                 "status": tender.status
             }
         )
