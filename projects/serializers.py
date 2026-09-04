@@ -5,6 +5,7 @@ from .models import (
     ProjectZone,
     ProjectVisual,
     ProjectItem,
+    ProjectAttachment,
 )
 
 
@@ -18,7 +19,46 @@ class ProjectVisualSerializer(serializers.ModelSerializer):
         model = ProjectVisual
         fields = "__all__"
 
+# =====================================
+# PROJECT ATTACHMENT SERIALIZER
+# =====================================
 
+class ProjectAttachmentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectAttachment
+        fields = [
+            "id",
+            "file",
+            "file_type",
+            "title",
+            "description",
+            "version",
+            "created_at",
+            "uploaded_by",
+        ]
+        read_only_fields = [
+            "id",
+            "version",
+            "created_at",
+        ]
+class ProjectAttachmentCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectAttachment
+
+        fields = [
+            "id",
+            "file",
+            "file_type",
+            "title",
+            "description",
+            "uploaded_by",
+        ]
+
+        read_only_fields = [
+            "id",
+        ]
 # =====================================
 # PROJECT ZONE SERIALIZER
 # =====================================
@@ -59,10 +99,14 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
 # =====================================
 # PROJECT READ SERIALIZER
 # =====================================
-
 class ProjectFullSerializer(serializers.ModelSerializer):
 
     zones = ProjectZoneSerializer(
+        many=True,
+        read_only=True
+    )
+
+    attachments = ProjectAttachmentSerializer(
         many=True,
         read_only=True
     )
@@ -72,16 +116,31 @@ class ProjectFullSerializer(serializers.ModelSerializer):
 
         model = Project
 
-        fields = [
-            "id",
-            "title",
-            "description",
-            "status",
-            "created_at",
-            "updated_at",
-            "zones",
-        ]
+fields = [
 
+            "id",
+
+            "title",
+
+            "description",
+
+            "estimated_budget",
+
+            "required_delivery_days",
+
+            "location",
+
+            "status",
+
+            "created_at",
+
+            "updated_at",
+
+            "zones",
+
+            "attachments",
+
+        ]
 
 # =====================================
 # PROJECT CREATE SERIALIZER
@@ -107,9 +166,12 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "customer",
             "created_by",
             "status",
+
+            "estimated_budget",
+            "required_delivery_days",
+            "location",
+
             "capacity_slot",
-            "created_at",
-            "updated_at",
         ]
 
 
@@ -212,3 +274,4 @@ class TenderSelectWinnerSerializer(serializers.Serializer):
 
 
     bid_id = serializers.IntegerField()
+

@@ -7,13 +7,19 @@ from tenders.serializers import TenderSerializer
 
 from evaluation.services import evaluate_tender
 
-from .models import Project, ProjectVisual
+from .models import (
+    Project,
+    ProjectVisual,
+    ProjectAttachment,
+)
 
 from .serializers import (
     ProjectFullSerializer,
     ProjectCreateSerializer,
     ProjectVisualSerializer,
     TenderSelectWinnerSerializer,
+    ProjectAttachmentSerializer,
+    ProjectAttachmentCreateSerializer,
 )
 
 # =====================================
@@ -49,7 +55,35 @@ class ProjectDetailView(
 
     serializer_class = ProjectFullSerializer
 
+# =====================================
+# PROJECT ATTACHMENTS
+# =====================================
 
+class ProjectAttachmentListCreateView(
+    generics.ListCreateAPIView
+):
+
+    serializer_class = ProjectAttachmentSerializer
+
+    def get_queryset(self):
+
+        project = Project.objects.get(
+            id=self.kwargs["pk"]
+        )
+
+        return ProjectAttachment.objects.filter(
+            project=project
+        ).order_by("-created_at")
+
+    def perform_create(self, serializer):
+
+        project = Project.objects.get(
+            id=self.kwargs["pk"]
+        )
+
+        serializer.save(
+            project=project
+        )
 # =====================================
 # PROJECT TENDER
 # =====================================
@@ -215,3 +249,24 @@ class ProjectVisualDetailView(
     queryset = ProjectVisual.objects.all()
 
     serializer_class = ProjectVisualSerializer
+
+# =====================================
+# PROJECT ATTACHMENT CREATE
+# =====================================
+
+class ProjectAttachmentCreateView(
+    generics.CreateAPIView
+):
+
+    serializer_class = ProjectAttachmentCreateSerializer
+
+
+    def perform_create(self, serializer):
+
+        project = Project.objects.get(
+            id=self.kwargs["pk"]
+        )
+
+        serializer.save(
+            project=project
+        )
