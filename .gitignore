@@ -9,3 +9,4 @@ db.sqlite3
 *_backup_*.py
 *_step_*.py
 python
+media/
