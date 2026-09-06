@@ -19,9 +19,13 @@ from .models import (
     TenderRound,
     Bid,
     TenderAward,
+    CustomerTenderSelection,
 )
 from .services import get_visible_bids
-from .services import award_tender
+from .services import (
+    award_tender,
+    select_tender_bid,
+)
 
 class TenderReportAPITests(TestCase):
 
@@ -458,7 +462,217 @@ class TenderAwardServiceTests(TestCase):
             self.tender.status,
             "awarded",
         )
+class CustomerTenderSelectionServiceTests(TestCase):
 
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="selection_service_user",
+            email="selection-service@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Selection Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop_alpha = Organization.objects.create(
+            name="Workshop Alpha",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.workshop_beta = Organization.objects.create(
+            name="Workshop Beta",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.workshop_gamma = Organization.objects.create(
+            name="Workshop Gamma",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.workshop_delta = Organization.objects.create(
+            name="Workshop Delta",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Selection Project",
+            customer=self.customer,
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Selection Tender",
+            status="revealed",
+            revealed_at=timezone.now(),
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.bid_alpha = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop_alpha,
+            total_amount=100000000,
+            production_days=10,
+            delivery_days=5,
+            warranty_months=24,
+        )
+
+        self.bid_beta = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop_beta,
+            total_amount=110000000,
+            production_days=12,
+            delivery_days=6,
+            warranty_months=18,
+        )
+
+        self.bid_gamma = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop_gamma,
+            total_amount=120000000,
+            production_days=14,
+            delivery_days=7,
+            warranty_months=12,
+        )
+
+        self.bid_delta = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop_delta,
+            total_amount=130000000,
+            production_days=20,
+            delivery_days=10,
+            warranty_months=6,
+        )
+
+
+    def test_customer_can_select_top_3_bid(self):
+
+        selection = select_tender_bid(
+            self.tender.id,
+            self.bid_alpha.id,
+            self.user,
+        )
+
+        self.assertEqual(
+            selection.tender,
+            self.tender,
+        )
+
+        self.assertEqual(
+            selection.bid,
+            self.bid_alpha,
+        )
+
+        self.assertEqual(
+            selection.selected_by,
+            self.user,
+        )
+
+        self.assertEqual(
+            selection.status,
+            "selected",
+        )
+
+
+    def test_customer_selection_does_not_award_tender(self):
+
+        select_tender_bid(
+            self.tender.id,
+            self.bid_alpha.id,
+            self.user,
+        )
+
+        self.tender.refresh_from_db()
+
+        self.assertEqual(
+            self.tender.status,
+            "revealed",
+        )
+
+        self.assertIsNone(
+            self.tender.winner_bid,
+        )
+
+        self.assertFalse(
+            TenderAward.objects.filter(
+                tender=self.tender
+            ).exists()
+        )
+
+
+    def test_customer_cannot_select_bid_outside_top_3(self):
+
+        with self.assertRaisesMessage(
+            ValueError,
+            "Selected bid is not in top 3.",
+        ):
+            select_tender_bid(
+                self.tender.id,
+                self.bid_delta.id,
+                self.user,
+            )
+
+
+    def test_customer_selection_can_be_changed(self):
+
+        first_selection = select_tender_bid(
+            self.tender.id,
+            self.bid_alpha.id,
+            self.user,
+        )
+
+        second_selection = select_tender_bid(
+            self.tender.id,
+            self.bid_beta.id,
+            self.user,
+        )
+
+        self.assertEqual(
+            first_selection.id,
+            second_selection.id,
+        )
+
+        self.assertEqual(
+            second_selection.bid,
+            self.bid_beta,
+        )
+
+        self.assertEqual(
+            CustomerTenderSelection.objects.count(),
+            1,
+        )
+    def test_non_customer_user_cannot_select_tender_bid(self):
+
+        User = get_user_model()
+
+        other_user = User.objects.create_user(
+            username="other_selection_user",
+            email="other-selection@test.local",
+            password="test-password",
+        )
+
+        with self.assertRaisesMessage(
+          ValueError,
+          "User is not authorized to select this tender.",
+        ):
+            select_tender_bid(
+                self.tender.id,
+                self.bid_alpha.id,
+                other_user,
+            )
 class TenderAwardAPITests(TestCase):
 
     def setUp(self):
