@@ -2,8 +2,10 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
-from tenders.models import Tender, Bid
+from tenders.models import Tender
+
 from tenders.serializers import TenderSerializer
+from tenders.services import select_tender_bid
 
 from evaluation.services import evaluate_tender
 
@@ -139,92 +141,7 @@ class ProjectTenderView(
                 "evaluation": evaluation_data,
             }
         )
-# =====================================
-# PROJECT TENDER SELECT WINNER
-# =====================================
-class ProjectTenderSelectWinnerView(
-    generics.GenericAPIView
-):
 
-    queryset = Project.objects.all()
-
-    serializer_class = TenderSelectWinnerSerializer
-
-
-    def post(self, request, pk):
-
-        project = self.get_object()
-
-
-        tender = (
-            Tender.objects
-            .filter(
-                project=project
-            )
-            .first()
-        )
-
-
-        if not tender:
-            raise NotFound(
-                "No tender exists for this project."
-            )
-
-
-        serializer = self.get_serializer(
-            data=request.data
-        )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
-
-
-        bid_id = serializer.validated_data[
-            "bid_id"
-        ]
-
-
-        try:
-
-            bid = Bid.objects.get(
-                id=bid_id,
-                tender_round__tender=tender
-            )
-
-        except Bid.DoesNotExist:
-
-            raise NotFound(
-                "Bid does not belong to this tender."
-            )
-
-
-        tender.winner_bid = bid
-
-        tender.status = "awarded"
-
-        tender.save(
-            update_fields=[
-                "winner_bid",
-                "status"
-            ]
-        )
-
-
-        return Response(
-            {
-                "message": "Tender awarded successfully",
-                "project_id": project.id,
-                "tender_id": tender.id,
-                "winner_bid_id": bid.id,
-                "winner_workshop": (
-                    bid.workshop.name
-                    if bid.workshop
-                    else None
-                ),
-                "status": tender.status
-            }
-        )
 # =====================================
 # PROJECT VISUAL LIST + CREATE
 # =====================================
@@ -249,7 +166,72 @@ class ProjectVisualDetailView(
     queryset = ProjectVisual.objects.all()
 
     serializer_class = ProjectVisualSerializer
+# =====================================
+# PROJECT TENDER SELECT WINNER
+# =====================================
+class ProjectTenderSelectWinnerView(
+    generics.GenericAPIView
+):
+    queryset = Project.objects.all()
+    serializer_class = TenderSelectWinnerSerializer
 
+    def post(self, request, pk):
+        project = self.get_object()
+
+        tender = Tender.objects.filter(
+            project=project
+        ).first()
+
+        if not tender:
+            raise NotFound(
+                "No tender exists for this project."
+            )
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        bid_id = serializer.validated_data[
+            "bid_id"
+        ]
+
+        try:
+            selection = select_tender_bid(
+                tender_id=tender.id,
+                bid_id=bid_id,
+                user=request.user,
+            )
+
+        except ValueError as exc:
+            return Response(
+                {
+                    "error": str(exc)
+                },
+                status=400,
+            )
+
+        return Response(
+            {
+                "message": (
+                    "Tender bid selected successfully."
+                ),
+                "project_id": project.id,
+                "tender_id": tender.id,
+                "selection_id": selection.id,
+                "selected_bid_id": selection.bid_id,
+                "selected_workshop": (
+                    selection.bid.workshop.name
+                    if selection.bid.workshop
+                    else None
+                ),
+                "status": selection.status,
+            },
+            status=200,
+        )
 # =====================================
 # PROJECT ATTACHMENT CREATE
 # =====================================

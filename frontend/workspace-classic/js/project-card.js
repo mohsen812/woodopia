@@ -1111,7 +1111,8 @@ async function loadTenderDashboard(projectId) {
 
         renderTenderDashboard(
             container,
-            data
+            data,
+            projectId
         );
 
 
@@ -1157,7 +1158,8 @@ async function loadTenderDashboard(projectId) {
 
 function renderTenderDashboard(
     container,
-    data
+    data,
+    projectId
 ) {
 
     const tender =
@@ -1381,7 +1383,10 @@ function renderTenderDashboard(
                 ${
                     results.length
                         ? results.map(
-                            renderTenderBid
+                            bid => renderTenderBid(
+                                bid,
+                                tender
+                            )
                         ).join("")
                         : `
                             <div class="tender-empty">
@@ -1398,7 +1403,65 @@ function renderTenderDashboard(
         </div>
 
     `;
+    container
+        .querySelectorAll(
+            ".tender-award-button"
+        )
+        .forEach(
+            button => {
 
+                button.addEventListener(
+                    "click",
+                    async function() {
+
+                        const bidId =
+                            button.dataset.bidId;
+
+
+                      try {
+
+    if (
+        !confirm(
+            "آیا این پیشنهاد به عنوان برنده انتخاب شود؟"
+        )
+    ) {
+        return;
+    }
+
+    await apiPost(
+        `/tenders/${tender.id}/award/`,
+        {
+            bid_id: Number(bidId)
+        }
+    );
+
+    alert(
+        "برنده با موفقیت انتخاب شد."
+    );
+
+    await loadTenderDashboard(
+        projectId
+    );
+
+} catch(error) {
+
+    console.error(
+        "FEEMAAS: Award failed",
+        error
+    );
+
+    alert(
+        error.message ||
+        "خطا در انتخاب برنده."
+    );
+
+}
+
+                    }
+                );
+
+            }
+        );
 }
 
 
@@ -1409,7 +1472,8 @@ function renderTenderDashboard(
 */
 
 function renderTenderBid(
-    bid
+    bid,
+    tender
 ) {
 
     return `
@@ -1552,6 +1616,20 @@ function renderTenderBid(
                                 )}
 
                             </p>
+                        `
+                        : ""
+                }
+                ${
+                    tender.status === "revealed" &&
+                    bid.rank <= 3
+                        ? `
+                            <button
+                                type="button"
+                                class="tender-award-button"
+                                data-bid-id="${bid.id}"
+                            >
+                                انتخاب به‌عنوان برنده
+                            </button>
                         `
                         : ""
                 }
