@@ -116,7 +116,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
 
         model = Project
 
-fields = [
+        fields = [
 
             "id",
 

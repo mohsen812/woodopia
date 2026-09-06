@@ -267,6 +267,12 @@ class TenderAwardCreateSerializer(
 
     bid_id = serializers.IntegerField()
 
+class TenderSelectBidSerializer(
+    serializers.Serializer
+):
+
+    bid_id = serializers.IntegerField()
+
 class TenderAwardSerializer(
     serializers.ModelSerializer
 ):

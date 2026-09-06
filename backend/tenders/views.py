@@ -4,7 +4,11 @@ from rest_framework.exceptions import ValidationError
 from evaluation.services import evaluate_tender
 from evaluation.reports import build_tender_report
 from .visibility import tender_is_revealed
-from .services import award_tender
+from .services import (
+    award_tender,
+    select_tender_bid,
+)
+
 from .models import (
     Tender,
     TenderParticipant,
@@ -24,6 +28,7 @@ from .serializers import (
     PaymentScheduleSerializer,
     TenderAwardCreateSerializer,
     TenderAwardSerializer,
+    TenderSelectBidSerializer,
 )
 
 class TenderListCreateView(
@@ -282,6 +287,81 @@ class TenderBidListView(
         return get_visible_bids(
             tender,
             viewer_type,
+        )
+class TenderSelectBidView(
+    generics.GenericAPIView
+):
+
+    queryset = Tender.objects.all()
+
+    serializer_class = TenderSelectBidSerializer
+
+    def post(
+        self,
+        request,
+        tender_id
+    ):
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        bid_id = serializer.validated_data[
+            "bid_id"
+        ]
+
+        try:
+
+            selection = select_tender_bid(
+                tender_id=tender_id,
+                bid_id=bid_id,
+                user=request.user,
+            )
+
+        except ValueError as e:
+
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=400
+            )
+
+        return Response(
+            {
+                "message":
+                    "Tender bid selected successfully.",
+
+                "selection_id":
+                    selection.id,
+
+                "tender_id":
+                    selection.tender_id,
+
+                "bid_id":
+                    selection.bid_id,
+
+                "status":
+                    selection.status,
+
+                "selected_workshop":
+                    (
+                        selection.bid.workshop.name
+                        if selection.bid.workshop
+                        else None
+                    ),
+
+                "selected_by":
+                    selection.selected_by_id,
+
+                "selected_at":
+                    selection.selected_at,
+            },
+            status=201
         )
 class TenderAwardView(
     generics.GenericAPIView
