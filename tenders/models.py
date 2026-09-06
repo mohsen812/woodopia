@@ -452,6 +452,55 @@ class TenderAward(models.Model):
             f"{self.tender.title} - "
             f"{self.bid.workshop.name}"
         )
+class CustomerTenderSelection(models.Model):
+
+    STATUS_CHOICES = [
+        ("selected", "Selected"),
+        ("consultant_verified", "Consultant Verified"),
+        ("identity_revealed", "Identity Revealed"),
+        ("payment_pending", "Payment Pending"),
+        ("payment_confirmed", "Payment Confirmed"),
+        ("finalized", "Finalized"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    tender = models.OneToOneField(
+        Tender,
+        on_delete=models.CASCADE,
+        related_name="customer_selection",
+    )
+
+    bid = models.ForeignKey(
+        Bid,
+        on_delete=models.PROTECT,
+        related_name="customer_selections",
+    )
+
+    selected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="tender_selections",
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="selected",
+    )
+
+    selected_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return (
+            f"{self.tender.title} - "
+            f"{self.bid.workshop.name}"
+        )
 class TenderRoundEvaluation(models.Model):
 
     tender_round = models.OneToOneField(
