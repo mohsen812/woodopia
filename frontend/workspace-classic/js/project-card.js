@@ -1414,29 +1414,55 @@ function renderTenderDashboard(
                     "click",
                     async function() {
 
-                        const bidId =
-                            button.dataset.bidId;
+                        console.log(
+                            "CLICKED BUTTON DATA:",
+                            button.outerHTML,
+                            button.dataset.bidId
+                      );
+
+                      console.log(
+                          "CLICKED BUTTON DATA:",
+                          button.outerHTML,
+                          button.dataset.bidId
+                      );
+
+
+                      const bidId =
+                         button.dataset.bidId;
 
 
                       try {
 
     if (
         !confirm(
-            "آیا این پیشنهاد به عنوان برنده انتخاب شود؟"
+            "آیا این کارگاه را برای اجرای پروژه انتخاب می‌کنید؟"
         )
     ) {
         return;
     }
+console.log(
+    "TENDER SELECT REQUEST",
+    {
+        tender_id: tender.id,
+        bid_id: bidId
+    }
+);
+console.log(
+    "SELECT BID:",
+    bidId,
+    "TENDER:",
+    tender.id
+);
 
-    await apiPost(
-        `/tenders/${tender.id}/award/`,
-        {
-            bid_id: Number(bidId)
-        }
-    );
+await apiPost(
+    `/tenders/${tender.id}/select/`,
+    {
+        bid_id: Number(bidId)
+    }
+);
 
     alert(
-        "برنده با موفقیت انتخاب شد."
+        "کارگاه منتخب با موفقیت ثبت شد و برای ادامه فرآیند ارسال می‌شود."
     );
 
     await loadTenderDashboard(
@@ -1476,9 +1502,13 @@ function renderTenderBid(
     tender
 ) {
 
-    return `
+    console.log(
+        "RENDER BID:",
+        bid
+    );
 
-        <div
+    return `
+<div
             class="tender-bid
                 ${
                     bid.rank === 1
@@ -1620,15 +1650,17 @@ function renderTenderBid(
                         : ""
                 }
                 ${
-                    tender.status === "revealed" &&
-                    bid.rank <= 3
+                              bid.rank <= 3 &&
+                              (
+                              tender.status === "revealed" ||
+                              tender.status === "awarded"
+                              )
                         ? `
                             <button
-                                type="button"
                                 class="tender-award-button"
-                                data-bid-id="${bid.id}"
+                                data-bid-id="${bid.bid_id}"
                             >
-                                انتخاب به‌عنوان برنده
+                               انتخاب این کارگاه 
                             </button>
                         `
                         : ""
