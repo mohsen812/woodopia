@@ -18,11 +18,15 @@ urlpatterns = [
     path(
     "api/projects/",
     include("projects.urls")
-),
-path(
+    ),
+    path(
     "api/tenders/",
     include("tenders.urls")
-),
+    ),
+    path(
+    "api/workspace/",
+    include("workspace.urls")
+    ),
 ]
 
 urlpatterns += static(
