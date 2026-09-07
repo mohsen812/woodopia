@@ -1,50 +1,25 @@
+from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
-from organizations.models import Membership
+from .services import get_workspace_identity
+
+
+def workspace_page(request):
+
+    return render(
+        request,
+        "workspace-classic/index.html"
+    )
 
 
 @login_required
-def workspace_me(request):
+def identity(request):
 
-    memberships = (
-        Membership.objects
-        .filter(
-            user=request.user,
-            status="active"
-        )
-        .select_related(
-            "organization",
-            "role_fk"
-        )
+    data = get_workspace_identity(
+        request.user
     )
 
-    organizations = []
-
-    for membership in memberships:
-
-        organizations.append(
-            {
-                "id": membership.organization.id,
-                "name": membership.organization.name,
-                "type": membership.organization.organization_type,
-                "role": (
-                    membership.role_fk.name
-                    if membership.role_fk
-                    else membership.role
-                )
-            }
-        )
-
-
     return JsonResponse(
-        {
-            "user": {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-            },
-
-            "organizations": organizations
-        }
+        data
     )

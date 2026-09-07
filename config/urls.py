@@ -27,6 +27,10 @@ urlpatterns = [
     "api/workspace/",
     include("workspace.urls")
     ),
+    path(
+    "workspace/",
+    include("workspace.urls")
+    ),
 ]
 
 urlpatterns += static(

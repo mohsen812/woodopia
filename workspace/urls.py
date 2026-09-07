@@ -1,14 +1,19 @@
 from django.urls import path
-
 from . import views
 
 
 urlpatterns = [
 
     path(
-        "me/",
-        views.workspace_me,
-        name="workspace_me"
+        "",
+        views.workspace_page,
+        name="workspace"
+    ),
+
+    path(
+        "identity/",
+        views.identity,
+        name="workspace_identity"
     ),
 
 ]

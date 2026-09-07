@@ -5,6 +5,86 @@
 ============================================================
 */
 
+/*
+============================================================
+ WORKSPACE IDENTITY
+============================================================
+*/
+
+async function loadWorkspaceIdentity() {
+
+    try {
+
+        const identity =
+            await apiGet(
+                "/workspace/identity/"
+            );
+
+
+        console.log(
+            "FEEMAAS Identity:",
+            identity
+        );
+
+
+        const nameElement =
+            document.querySelector(
+                ".user-info strong"
+            );
+
+
+        const roleElement =
+            document.querySelector(
+                ".user-info span"
+            );
+
+
+        const avatarElement =
+            document.querySelector(
+                ".user-avatar"
+            );
+
+
+        if (nameElement) {
+
+            nameElement.innerText =
+                identity.user.username;
+
+        }
+
+
+        if (
+            roleElement &&
+            identity.primary_workspace
+        ) {
+
+            roleElement.innerText =
+                identity.primary_workspace.role;
+
+        }
+
+
+        if (avatarElement) {
+
+            avatarElement.innerText =
+                identity.user.username
+                .charAt(0)
+                .toUpperCase();
+
+        }
+
+
+    }
+    catch(error){
+
+        console.error(
+            "FEEMAAS Identity Error:",
+            error
+        );
+
+    }
+
+}
 
 /*
 ============================================================
@@ -523,7 +603,7 @@ function initializeWorkspace() {
 
     setupModal();
 
-
+    loadWorkspaceIdentity();
     /*
     ========================================================
      PROJECTS
