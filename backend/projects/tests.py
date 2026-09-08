@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from organizations.models import (
@@ -13,6 +14,7 @@ from .models import (
     ProjectItem,
     ProjectZone,
     ProjectVisual,
+    ProjectAttachment,
 )
 
 
@@ -538,3 +540,375 @@ class ProjectCreateTests(TestCase):
             project_ids,
         )
         
+
+
+    def test_customer_can_see_own_project_detail(self):
+
+        project = Project.objects.create(
+            title="Own Detail Project",
+            description="Customer own project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/".format(project.id)
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.data["id"],
+            project.id,
+        )
+
+
+    def test_customer_cannot_see_other_customer_project_detail(self):
+
+        second_customer_user = User.objects.create_user(
+            username="detail_other_customer",
+            email="detail_other@example.com",
+            password="testpass123",
+        )
+
+        second_customer = Organization.objects.create(
+            name="Detail Other Customer",
+            organization_type="customer",
+            status="active",
+            owner=second_customer_user,
+        )
+
+        Membership.objects.create(
+            user=second_customer_user,
+            organization=second_customer,
+            status="active",
+        )
+
+        other_project = Project.objects.create(
+            title="Other Customer Detail Project",
+            description="Should not be visible",
+            customer=second_customer,
+            created_by=second_customer_user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/".format(other_project.id)
+        )
+
+        self.assertEqual(
+            response.status_code,
+            404,
+        )
+
+
+    def test_workshop_cannot_see_customer_project_detail(self):
+
+        project = Project.objects.create(
+            title="Workshop Hidden Project",
+            description="Customer project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        workshop_user = User.objects.create_user(
+            username="detail_workshop",
+            email="detail_workshop@example.com",
+            password="testpass123",
+        )
+
+        Membership.objects.create(
+            user=workshop_user,
+            organization=self.workshop,
+            status="active",
+        )
+
+        self.client.force_authenticate(
+            user=workshop_user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/".format(project.id)
+        )
+
+        self.assertEqual(
+            response.status_code,
+            404,
+        )
+
+
+    def test_user_without_customer_workspace_cannot_see_project_detail(self):
+
+        project = Project.objects.create(
+            title="No Workspace Project",
+            description="Customer project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.other_user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/".format(project.id)
+        )
+
+        self.assertEqual(
+            response.status_code,
+            404,
+        )
+
+
+    def test_customer_can_list_own_project_attachments(self):
+
+        project = Project.objects.create(
+            title="Own Attachment Project",
+            description="Customer own project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        ProjectAttachment.objects.create(
+            project=project,
+            uploaded_by=self.user,
+            file="projects/test.txt",
+            file_type="document",
+            title="Test Document",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/attachments/".format(project.id)
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            len(response.data),
+            1,
+        )
+
+
+    def test_customer_cannot_list_other_customer_attachments(self):
+
+        second_customer_user = User.objects.create_user(
+            username="attachment_other_customer",
+            email="attachment_other@example.com",
+            password="testpass123",
+        )
+
+        second_customer = Organization.objects.create(
+            name="Attachment Other Customer",
+            organization_type="customer",
+            status="active",
+            owner=second_customer_user,
+        )
+
+        Membership.objects.create(
+            user=second_customer_user,
+            organization=second_customer,
+            status="active",
+        )
+
+        other_project = Project.objects.create(
+            title="Other Attachment Project",
+            customer=second_customer,
+            created_by=second_customer_user,
+            status="draft",
+        )
+
+        ProjectAttachment.objects.create(
+            project=other_project,
+            uploaded_by=second_customer_user,
+            file="projects/other.txt",
+            file_type="document",
+            title="Other Document",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/attachments/".format(
+                other_project.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            404,
+        )
+
+
+    def test_workshop_cannot_list_customer_attachments(self):
+
+        project = Project.objects.create(
+            title="Workshop Hidden Attachment Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        ProjectAttachment.objects.create(
+            project=project,
+            uploaded_by=self.user,
+            file="projects/customer.txt",
+            file_type="document",
+            title="Customer Document",
+        )
+
+        workshop_user = User.objects.create_user(
+            username="attachment_workshop",
+            email="attachment_workshop@example.com",
+            password="testpass123",
+        )
+
+        Membership.objects.create(
+            user=workshop_user,
+            organization=self.workshop,
+            status="active",
+        )
+
+        self.client.force_authenticate(
+            user=workshop_user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/attachments/".format(
+                project.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            404,
+        )
+
+
+    def test_customer_can_upload_attachment_to_own_project(self):
+
+        project = Project.objects.create(
+            title="Own Upload Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+        
+        uploaded_file = SimpleUploadedFile(
+            "upload.txt",
+            b"test file content",
+            content_type="text/plain",
+        )
+        
+        response = self.client.post(
+            "/api/projects/{}/attachments/".format(
+                project.id
+            ),
+            {
+                "file": uploaded_file,
+                "file_type": "document",
+                "title": "Uploaded Document",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        attachment = ProjectAttachment.objects.get(
+            project=project
+        )
+
+        self.assertEqual(
+            attachment.project,
+            project,
+        )
+
+
+    def test_customer_cannot_upload_attachment_to_other_project(self):
+
+        second_customer_user = User.objects.create_user(
+            username="attachment_upload_other",
+            email="attachment_upload_other@example.com",
+            password="testpass123",
+        )
+
+        second_customer = Organization.objects.create(
+            name="Attachment Upload Other Customer",
+            organization_type="customer",
+            status="active",
+            owner=second_customer_user,
+        )
+
+        Membership.objects.create(
+            user=second_customer_user,
+            organization=second_customer,
+            status="active",
+        )
+
+        other_project = Project.objects.create(
+            title="Protected Upload Project",
+            customer=second_customer,
+            created_by=second_customer_user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+        uploaded_file = SimpleUploadedFile(
+            "hacked.txt",
+            b"should not be uploaded",
+            content_type="text/plain",
+        )
+        response = self.client.post(
+            "/api/projects/{}/attachments/".format(
+                other_project.id
+            ),
+            {
+                "file": uploaded_file,
+                "file_type": "document",
+                "title": "Should Not Upload",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            404,
+        )
+
+        self.assertFalse(
+            ProjectAttachment.objects.filter(
+                project=other_project
+            ).exists()
+        )

@@ -1,6 +1,9 @@
+from rest_framework.permissions import IsAuthenticated
+
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
+from django.shortcuts import get_object_or_404
 
 from tenders.models import Tender
 
@@ -27,7 +30,6 @@ from .serializers import (
 # =====================================
 # PROJECT LIST + CREATE
 # =====================================
-
 class ProjectListCreateView(
     generics.ListCreateAPIView
 ):
@@ -36,6 +38,23 @@ class ProjectListCreateView(
         "-created_at"
     )
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_queryset(self):
+
+        user = self.request.user
+
+        return Project.objects.filter(
+            customer__members__user=user,
+            customer__members__status="active",
+            customer__organization_type="customer",
+            customer__status="active",
+        ).distinct().order_by(
+            "-created_at"
+        )
+
     def get_serializer_class(self):
 
         if self.request.method == "POST":
@@ -43,7 +62,6 @@ class ProjectListCreateView(
             return ProjectCreateSerializer
 
         return ProjectFullSerializer
-
 
 # =====================================
 # PROJECT DETAIL
@@ -55,7 +73,22 @@ class ProjectDetailView(
 
     queryset = Project.objects.all()
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
     serializer_class = ProjectFullSerializer
+
+    def get_queryset(self):
+
+        user = self.request.user
+
+        return Project.objects.filter(
+            customer__members__user=user,
+            customer__members__status="active",
+            customer__organization_type="customer",
+            customer__status="active",
+        ).distinct()
 
 # =====================================
 # PROJECT ATTACHMENTS
@@ -67,11 +100,31 @@ class ProjectAttachmentListCreateView(
 
     serializer_class = ProjectAttachmentSerializer
 
-    def get_queryset(self):
+    permission_classes = [
+        IsAuthenticated
+    ]
 
-        project = Project.objects.get(
+    def get_project_queryset(self):
+
+        user = self.request.user
+
+        return Project.objects.filter(
+            customer__members__user=user,
+            customer__members__status="active",
+            customer__organization_type="customer",
+            customer__status="active",
+        ).distinct()
+
+    def get_project(self):
+
+        return get_object_or_404(
+            self.get_project_queryset(),
             id=self.kwargs["pk"]
         )
+
+    def get_queryset(self):
+
+        project = self.get_project()
 
         return ProjectAttachment.objects.filter(
             project=project
@@ -79,14 +132,14 @@ class ProjectAttachmentListCreateView(
 
     def perform_create(self, serializer):
 
-        project = Project.objects.get(
-            id=self.kwargs["pk"]
-        )
+        project = self.get_project()
 
         serializer.save(
-            project=project
+            project=project,
+            uploaded_by=self.request.user
         )
-# =====================================
+
+
 # PROJECT TENDER
 # =====================================
 
@@ -231,24 +284,4 @@ class ProjectTenderSelectWinnerView(
                 "status": selection.status,
             },
             status=200,
-        )
-# =====================================
-# PROJECT ATTACHMENT CREATE
-# =====================================
-
-class ProjectAttachmentCreateView(
-    generics.CreateAPIView
-):
-
-    serializer_class = ProjectAttachmentCreateSerializer
-
-
-    def perform_create(self, serializer):
-
-        project = Project.objects.get(
-            id=self.kwargs["pk"]
-        )
-
-        serializer.save(
-            project=project
         )
