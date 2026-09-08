@@ -7,7 +7,7 @@ from .views import (
     ProjectVisualDetailView,
     ProjectTenderView,
     ProjectTenderSelectWinnerView,
-    ProjectAttachmentCreateView,
+    ProjectAttachmentListCreateView,
 )
 
 
@@ -55,7 +55,7 @@ urlpatterns = [
     ),
     path(
         "<int:pk>/attachments/",
-        ProjectAttachmentCreateView.as_view(),
+        ProjectAttachmentListCreateView.as_view(),
         name="project-attachment-create",
     ),
 
