@@ -371,3 +371,170 @@ class ProjectCreateTests(TestCase):
             Project.objects.count(),
             0,
         )
+
+    def test_customer_sees_own_projects_only(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        own_project = Project.objects.create(
+            title="Own Project",
+            description="Customer own project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        response = self.client.get(
+            "/api/projects/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        project_ids = [
+            project["id"]
+            for project in response.data
+        ]
+
+        self.assertIn(
+            own_project.id,
+            project_ids,
+        )
+
+
+    def test_customer_cannot_see_other_customer_projects(self):
+
+        second_customer_user = User.objects.create_user(
+            username="second_customer",
+            email="second_customer@example.com",
+            password="testpass123",
+        )
+
+        second_customer = Organization.objects.create(
+            name="Second Customer",
+            organization_type="customer",
+            status="active",
+            owner=second_customer_user,
+        )
+
+        Membership.objects.create(
+            user=second_customer_user,
+            organization=second_customer,
+            status="active",
+        )
+
+        other_project = Project.objects.create(
+            title="Other Customer Project",
+            description="Should not be visible",
+            customer=second_customer,
+            created_by=second_customer_user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/projects/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        project_ids = [
+            project["id"]
+            for project in response.data
+        ]
+
+        self.assertNotIn(
+            other_project.id,
+            project_ids,
+        )
+
+
+    def test_workshop_cannot_see_customer_projects(self):
+
+        customer_project = Project.objects.create(
+            title="Customer Project",
+            description="Private customer project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        workshop_user = User.objects.create_user(
+            username="workshop_viewer",
+            email="workshop_viewer@example.com",
+            password="testpass123",
+        )
+
+        Membership.objects.create(
+            user=workshop_user,
+            organization=self.workshop,
+            status="active",
+        )
+
+        self.client.force_authenticate(
+            user=workshop_user
+        )
+
+        response = self.client.get(
+            "/api/projects/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        project_ids = [
+            project["id"]
+            for project in response.data
+        ]
+
+        self.assertNotIn(
+            customer_project.id,
+            project_ids,
+        )
+
+
+    def test_user_without_customer_workspace_sees_no_projects(self):
+
+        customer_project = Project.objects.create(
+            title="Customer Project",
+            description="Private customer project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.other_user
+        )
+
+        response = self.client.get(
+            "/api/projects/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        project_ids = [
+            project["id"]
+            for project in response.data
+        ]
+
+        self.assertNotIn(
+            customer_project.id,
+            project_ids,
+        )
+        
