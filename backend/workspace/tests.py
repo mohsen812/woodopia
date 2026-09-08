@@ -1,4 +1,6 @@
 from django.test import TestCase
+from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
 
 from organizations.models import (
@@ -6,6 +8,8 @@ from organizations.models import (
     OrganizationRole,
     Membership,
 )
+
+from projects.models import Project
 
 from .services import (
     get_user_workspaces,
@@ -162,7 +166,7 @@ class WorkspaceIdentityServiceTests(TestCase):
             identity["workspaces"],
             [],
         )
-class WorkspaceIdentityAPITests(TestCase):
+class WorkspaceIdentityAPITests(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
@@ -176,6 +180,7 @@ class WorkspaceIdentityAPITests(TestCase):
             organization_type="customer",
             owner=self.user,
         )
+        self.customer = self.organization
 
         self.role = OrganizationRole.objects.create(
             name="owner",
