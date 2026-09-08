@@ -163,22 +163,14 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "description",
-            "customer",
-            "created_by",
-            "status",
-
             "estimated_budget",
             "required_delivery_days",
             "location",
-
             "capacity_slot",
         ]
 
-
         read_only_fields = [
             "id",
-            "created_at",
-            "updated_at",
         ]
 
 
@@ -189,12 +181,47 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             1
         )
 
+        request = self.context.get("request")
 
-        # -----------------------------
-        # Create Project
-        # -----------------------------
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError(
+                "Authentication is required to create a project."
+            )
+
+        from organizations.models import Membership
+
+        customer_memberships = (
+            Membership.objects
+            .filter(
+                user=request.user,
+                status="active",
+                organization__organization_type="customer",
+                organization__status="active",
+            )
+            .select_related("organization")
+        )
+
+        customer_memberships = list(
+            customer_memberships
+        )
+
+        if not customer_memberships:
+            raise serializers.ValidationError(
+                "No active customer workspace is available."
+            )
+
+        if len(customer_memberships) > 1:
+            raise serializers.ValidationError(
+                "Multiple active customer workspaces found. "
+                "Please select a workspace before creating a project."
+            )
+
+        customer = customer_memberships[0].organization
 
         project = Project.objects.create(
+            customer=customer,
+            created_by=request.user,
+            status="draft",
             **validated_data
         )
 
@@ -264,6 +291,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
 
         return project
+
 
 # =====================================
 # TENDER SELECT WINNER INPUT
