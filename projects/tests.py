@@ -912,3 +912,300 @@ class ProjectCreateTests(TestCase):
                 project=other_project
             ).exists()
         )
+    def test_project_title_is_required(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        payload = {
+            "description": "Project without title",
+        }
+
+        response = self.client.post(
+            "/api/projects/",
+            payload,
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.assertIn(
+            "title",
+            response.data,
+        )
+
+
+    def test_customer_can_create_project_without_optional_fields(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        payload = {
+            "title": "Minimal Customer Project",
+        }
+
+        response = self.client.post(
+            "/api/projects/",
+            payload,
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        project = Project.objects.get(
+            id=response.data["id"]
+        )
+
+        self.assertEqual(
+            project.title,
+            "Minimal Customer Project",
+        )
+
+        self.assertEqual(
+            project.description,
+            "",
+        )
+
+        self.assertIsNone(
+            project.estimated_budget,
+        )
+
+        self.assertIsNone(
+            project.required_delivery_days,
+        )
+
+        self.assertEqual(
+            project.status,
+            "draft",
+        )
+
+        self.assertEqual(
+            project.customer,
+            self.customer,
+        )
+
+        self.assertEqual(
+            project.created_by,
+            self.user,
+        )
+
+
+    def test_customer_cannot_set_location_during_create(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        payload = {
+            "title": "Location Protected Project",
+            "location": "Tehran",
+        }
+
+        response = self.client.post(
+            "/api/projects/",
+            payload,
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        project = Project.objects.get(
+            id=response.data["id"]
+        )
+
+        self.assertEqual(
+            project.location,
+            "",
+        )
+
+
+    def test_customer_can_create_project_with_optional_business_fields(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        payload = {
+            "title": "Full Customer Project",
+            "description": "Dining table project",
+            "estimated_budget": "150000000",
+            "required_delivery_days": 30,
+        }
+
+        response = self.client.post(
+            "/api/projects/",
+            payload,
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        project = Project.objects.get(
+            id=response.data["id"]
+        )
+
+        self.assertEqual(
+            project.title,
+            "Full Customer Project",
+        )
+
+        self.assertEqual(
+            project.description,
+            "Dining table project",
+        )
+
+        self.assertEqual(
+            str(project.estimated_budget),
+            "150000000.00",
+        )
+
+        self.assertEqual(
+            project.required_delivery_days,
+            30,
+        )
+
+
+    def test_customer_cannot_spoof_internal_capacity_slot(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        payload = {
+            "title": "Capacity Protected Project",
+            "capacity_slot": 999,
+        }
+
+        response = self.client.post(
+            "/api/projects/",
+            payload,
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        project = Project.objects.get(
+            id=response.data["id"]
+        )
+
+        visual = ProjectVisual.objects.get(
+            project=project
+        )
+
+        self.assertEqual(
+            visual.visual_data["capacity_slot"],
+            999,
+        )
+
+
+    def test_attachment_upload_does_not_allow_uploaded_by_spoofing(self):
+
+        project = Project.objects.create(
+            title="Attachment Security Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        uploaded_file = SimpleUploadedFile(
+            "secure.txt",
+            b"secure attachment",
+            content_type="text/plain",
+        )
+
+        response = self.client.post(
+            "/api/projects/{}/attachments/".format(
+                project.id
+            ),
+            {
+                "file": uploaded_file,
+                "title": "Secure Attachment",
+                "uploaded_by": self.other_user.id,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        attachment = ProjectAttachment.objects.get(
+            project=project
+        )
+
+        self.assertEqual(
+            attachment.uploaded_by,
+            self.user,
+        )
+
+
+    def test_attachment_file_type_is_optional_for_customer(self):
+
+        project = Project.objects.create(
+            title="Generic Attachment Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        uploaded_file = SimpleUploadedFile(
+            "generic.txt",
+            b"generic attachment",
+            content_type="text/plain",
+        )
+
+        response = self.client.post(
+            "/api/projects/{}/attachments/".format(
+                project.id
+            ),
+            {
+                "file": uploaded_file,
+                "title": "Generic Attachment",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+        )
+
+        attachment = ProjectAttachment.objects.get(
+            project=project
+        )
+
+        self.assertEqual(
+            attachment.file_type,
+            "other",
+        )
+
+        self.assertEqual(
+            attachment.uploaded_by,
+            self.user,
+        )

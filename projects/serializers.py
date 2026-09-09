@@ -19,6 +19,7 @@ class ProjectVisualSerializer(serializers.ModelSerializer):
         model = ProjectVisual
         fields = "__all__"
 
+
 # =====================================
 # PROJECT ATTACHMENT SERIALIZER
 # =====================================
@@ -27,6 +28,7 @@ class ProjectAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectAttachment
+
         fields = [
             "id",
             "file",
@@ -37,11 +39,15 @@ class ProjectAttachmentSerializer(serializers.ModelSerializer):
             "created_at",
             "uploaded_by",
         ]
+
         read_only_fields = [
             "id",
             "version",
             "created_at",
+            "uploaded_by",
         ]
+
+
 class ProjectAttachmentCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -58,7 +64,10 @@ class ProjectAttachmentCreateSerializer(serializers.ModelSerializer):
 
         read_only_fields = [
             "id",
+            "uploaded_by",
         ]
+
+
 # =====================================
 # PROJECT ZONE SERIALIZER
 # =====================================
@@ -77,7 +86,6 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
             visuals,
             many=True
         ).data
-
 
     class Meta:
 
@@ -99,6 +107,7 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
 # =====================================
 # PROJECT READ SERIALIZER
 # =====================================
+
 class ProjectFullSerializer(serializers.ModelSerializer):
 
     zones = ProjectZoneSerializer(
@@ -111,36 +120,24 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-
     class Meta:
 
         model = Project
 
         fields = [
-
             "id",
-
             "title",
-
             "description",
-
             "estimated_budget",
-
             "required_delivery_days",
-
             "location",
-
             "status",
-
             "created_at",
-
             "updated_at",
-
             "zones",
-
             "attachments",
-
         ]
+
 
 # =====================================
 # PROJECT CREATE SERIALIZER
@@ -148,12 +145,13 @@ class ProjectFullSerializer(serializers.ModelSerializer):
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
 
+    # Internal workspace/visual-engine value.
+    # Customer UI does not expose this field.
     capacity_slot = serializers.IntegerField(
         write_only=True,
         required=False,
         default=1
     )
-
 
     class Meta:
 
@@ -165,7 +163,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "description",
             "estimated_budget",
             "required_delivery_days",
-            "location",
             "capacity_slot",
         ]
 
@@ -173,9 +170,10 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "id",
         ]
 
-
     def create(self, validated_data):
 
+        # capacity_slot belongs to the internal visual engine.
+        # It is not part of the Customer Create Project UI.
         capacity_slot = validated_data.pop(
             "capacity_slot",
             1
@@ -218,6 +216,10 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
         customer = customer_memberships[0].organization
 
+        # ---------------------------------
+        # Create Project
+        # ---------------------------------
+
         project = Project.objects.create(
             customer=customer,
             created_by=request.user,
@@ -225,10 +227,9 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
-
-        # -----------------------------
+        # ---------------------------------
         # Initial Project Item
-        # -----------------------------
+        # ---------------------------------
 
         ProjectItem.objects.create(
             project=project,
@@ -237,58 +238,36 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             quantity=1,
         )
 
-
-        # -----------------------------
+        # ---------------------------------
         # Initial Customer Zone
-        # -----------------------------
+        # ---------------------------------
 
         zone = ProjectZone.objects.create(
-
             project=project,
-
             name="Customer Zone",
-
             code="CUSTOMER",
-
             x_position=0,
-
             y_position=0
-
         )
 
-
-        # -----------------------------
+        # ---------------------------------
         # Initial Project Visual
-        # -----------------------------
+        # ---------------------------------
 
         ProjectVisual.objects.create(
-
             project=project,
-
             current_zone=zone,
-
             name="Initial Project Shape",
-
             shape_type="triangle",
-
             color="#8B4513",
-
             size=100,
-
             position_x=0,
-
             position_y=0,
-
             visual_data={
-
                 "capacity_slot": capacity_slot,
-
                 "engine_version": "phase_2"
-
             }
-
         )
-
 
         return project
 
@@ -297,9 +276,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 # TENDER SELECT WINNER INPUT
 # =====================================
 
-
 class TenderSelectWinnerSerializer(serializers.Serializer):
 
-
     bid_id = serializers.IntegerField()
-
