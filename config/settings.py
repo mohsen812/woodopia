@@ -131,7 +131,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    BASE_DIR.parent / "frontend",
+    BASE_DIR / "frontend",
 
 ]
 MEDIA_URL = '/media/'
@@ -140,7 +140,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/workspace/"
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

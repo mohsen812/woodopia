@@ -399,3 +399,90 @@ body {
     cursor:pointer;
 
 }
+/* --------------------------------------------------
+   CUSTOMER LAYOUT
+-------------------------------------------------- */
+
+.customer-layout {
+    display: flex;
+    flex-direction: row;
+    min-height: calc(100vh - 72px);
+}
+
+
+.customer-sidebar {
+
+    width: 250px;
+
+    background: #111827;
+
+    color: white;
+
+    padding: 28px 20px;
+
+}
+
+
+.sidebar-title {
+
+    font-size: 18px;
+    font-weight: 700;
+
+    margin-bottom: 30px;
+
+}
+
+
+
+.sidebar-menu {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+}
+
+
+
+.sidebar-menu a {
+
+    color: #d1d5db;
+
+    text-decoration: none;
+
+    padding: 12px 14px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+}
+
+
+
+.sidebar-menu a:hover,
+.sidebar-menu .active {
+
+    background: #374151;
+
+    color: white;
+
+}
+
+
+
+.customer-layout .customer-main {
+
+    flex: 1;
+
+    width: calc(100% - 250px);
+
+    margin: 0;
+
+    padding: 42px;
+
+}

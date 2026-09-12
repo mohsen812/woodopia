@@ -50,7 +50,83 @@
 </header>
 
 
+<div class="customer-layout">
 
+    <aside class="customer-sidebar">
+
+        <div class="sidebar-title">
+            پنل مشتری
+        </div>
+
+<nav class="sidebar-menu">
+
+    <a
+        href="#"
+        class="active"
+        data-sidebar-target="dashboard"
+    >
+        🏠 داشبورد
+    </a>
+
+
+    <a
+        href="#"
+        data-sidebar-target="projects"
+    >
+        📁 پروژه‌های من
+    </a>
+
+
+    <a
+        href="#"
+        id="createProjectSidebarBtn"
+        data-sidebar-action="create-project"
+    >
+        ➕ ایجاد پروژه
+    </a>
+
+
+    <a
+        href="#"
+        data-sidebar-target="tenders"
+    >
+        📋 مناقصه‌ها
+    </a>
+
+
+    <a
+        href="#"
+        data-sidebar-target="contracts"
+    >
+        📄 قراردادها
+    </a>
+
+
+    <a
+        href="#"
+        data-sidebar-target="payments"
+    >
+        💳 پرداخت‌ها
+    </a>
+
+
+    <a
+        href="#"
+        data-sidebar-target="files"
+    >
+        📎 فایل‌ها
+    </a>
+
+
+    <a
+        href="#"
+        data-sidebar-target="settings"
+    >
+        ⚙ تنظیمات
+    </a>
+
+</nav>
+    </aside>
 <main class="customer-main">
 
 
@@ -205,7 +281,7 @@
 
 
 </main>
-
+</div>
 <section id="projectModal" class="project-modal hidden">
 
     <div class="project-modal-overlay"></div>
@@ -422,7 +498,7 @@
 
 </section>
 <script src="/static/customer/js/customer.js"></script>
-
+<script src="/static/customer/js/sidebar.js"></script>
 
 </body>
 
