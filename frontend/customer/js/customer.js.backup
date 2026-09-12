@@ -1,0 +1,1188 @@
+﻿(function () {
+    "use strict";
+
+
+    const IDENTITY_URL =
+        "/api/workspace/identity/";
+
+    const PROJECTS_URL =
+        "/projects/";
+
+
+    const usernameElement =
+        document.getElementById(
+            "customerUsername"
+        );
+
+
+    const projectCountElement =
+        document.getElementById(
+            "projectCount"
+        );
+
+
+    const projectsListElement =
+        document.getElementById(
+            "projectsList"
+        );
+
+
+    const logoutButton =
+        document.getElementById(
+            "logoutBtn"
+        );
+
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeCustomerPanel
+    );
+
+
+
+    async function initializeCustomerPanel() {
+
+        try {
+
+            const identity =
+                await loadIdentity();
+
+
+            if (!identity) {
+                return;
+            }
+
+
+            renderIdentity(
+                identity
+            );
+
+
+            await loadProjects();
+
+
+
+        } catch(error) {
+
+
+            console.error(
+                "Customer panel error:",
+                error
+            );
+
+
+            showError(
+                "خطا در بارگذاری پنل مشتری"
+            );
+
+        }
+
+    }
+
+
+
+
+    /*
+    --------------------------------------------------
+    IDENTITY
+    --------------------------------------------------
+    */
+
+
+    async function loadIdentity() {
+
+
+        const response =
+            await fetch(
+                IDENTITY_URL,
+                {
+                    credentials:
+                        "same-origin",
+
+                    headers:{
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+
+        if(response.status === 401){
+
+            redirectToLogin();
+
+            return null;
+        }
+
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Identity failed"
+            );
+        }
+
+
+
+        return await response.json();
+
+    }
+
+
+
+
+
+    function renderIdentity(identity){
+
+
+        if(!usernameElement){
+            return;
+        }
+
+
+
+        const user =
+            identity.user || {};
+
+
+
+        usernameElement.textContent =
+            user.username ||
+            user.email ||
+            "کاربر";
+
+    }
+
+
+
+
+
+
+    /*
+    --------------------------------------------------
+    PROJECTS
+    --------------------------------------------------
+    */
+
+
+    async function loadProjects(){
+
+
+        const response =
+            await fetch(
+                PROJECTS_URL,
+                {
+                    credentials:
+                        "same-origin",
+
+                    headers:{
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+
+        if(response.status === 401){
+
+            redirectToLogin();
+
+            return;
+
+        }
+
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Projects failed"
+            );
+
+        }
+
+
+
+        const data =
+            await response.json();
+
+
+
+        const projects =
+            normalizeProjects(
+                data
+            );
+
+
+
+        renderProjects(
+            projects
+        );
+
+    }
+
+
+
+
+
+    function normalizeProjects(data){
+
+
+        if(Array.isArray(data)){
+
+            return data;
+
+        }
+
+
+        if(
+            data &&
+            Array.isArray(data.results)
+        ){
+
+            return data.results;
+
+        }
+
+
+        if(
+            data &&
+            Array.isArray(data.projects)
+        ){
+
+            return data.projects;
+
+        }
+
+
+        return [];
+
+    }
+
+
+
+
+
+
+    function renderProjects(projects){
+
+
+
+        if(projectCountElement){
+
+            projectCountElement.textContent =
+                toPersianNumber(
+                    projects.length
+                );
+
+        }
+
+
+
+
+
+        if(!projectsListElement){
+
+            return;
+
+        }
+
+
+
+
+
+        if(projects.length === 0){
+
+
+            projectsListElement.innerHTML = `
+
+                <div class="empty-state">
+
+                    هنوز پروژه‌ای ثبت نشده است.
+
+                </div>
+
+            `;
+
+
+            return;
+
+        }
+
+
+
+
+
+
+        projectsListElement.innerHTML =
+
+            projects
+                .map(
+                    createProjectCard
+                )
+                .join("");
+
+
+
+        bindProjectEvents();
+
+
+    }
+
+
+
+
+
+
+
+    function createProjectCard(project){
+
+
+
+        return `
+
+        <article
+            class="project-card"
+            data-project-id="${project.id}"
+        >
+
+
+            <h3>
+
+                ${escapeHtml(
+                    project.title ||
+                    "پروژه بدون عنوان"
+                )}
+
+            </h3>
+
+
+
+            <p>
+
+                ${escapeHtml(
+                    project.description ||
+                    "بدون توضیحات"
+                )}
+
+            </p>
+
+
+
+            <p>
+
+                وضعیت:
+                
+                ${escapeHtml(
+                    project.status ||
+                    "نامشخص"
+                )}
+
+            </p>
+
+
+
+            <button
+                class="open-project-btn"
+                data-project-id="${project.id}"
+            >
+
+                مشاهده پروژه
+
+            </button>
+
+
+
+        </article>
+
+        `;
+
+    }
+
+
+
+
+
+
+
+    function bindProjectEvents(){
+
+
+
+        const buttons =
+            document.querySelectorAll(
+                ".open-project-btn"
+            );
+
+
+
+        buttons.forEach(
+            button => {
+
+
+                button.addEventListener(
+                    "click",
+                    function(){
+
+
+
+                        const projectId =
+                            this.dataset.projectId;
+
+
+
+                        openProjectModal(projectId);
+
+
+
+                    }
+                );
+
+
+            }
+        );
+
+
+    }
+
+/* --------------------------------------------------
+   PROJECT MODAL
+-------------------------------------------------- */
+
+
+const projectModal =
+    document.getElementById(
+        "projectModal"
+    );
+
+
+const closeProjectModalButton =
+    document.getElementById(
+        "closeProjectModal"
+    );
+
+
+const modalProjectTitle =
+    document.getElementById(
+        "modalProjectTitle"
+    );
+
+
+const modalProjectStatus =
+    document.getElementById(
+        "modalProjectStatus"
+    );
+
+
+const modalProjectContent =
+    document.getElementById(
+        "modalProjectContent"
+    );
+
+
+
+async function openProjectModal(projectId){
+
+    if(!projectModal){
+        return;
+    }
+
+
+    projectModal.classList.remove(
+        "hidden"
+    );
+
+
+    if(modalProjectContent){
+
+        modalProjectContent.innerHTML =
+            "در حال بارگذاری اطلاعات پروژه...";
+
+    }
+
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                `/projects/${projectId}/`,
+                {
+                    method:"GET",
+                    credentials:"same-origin",
+                    headers:{
+                        "Accept":"application/json"
+                    }
+                }
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Project detail failed"
+            );
+
+        }
+
+
+        const project =
+            await response.json();
+
+        currentProject = project
+
+        renderProjectModal(
+            project
+        );
+
+
+
+    } catch(error){
+
+
+        console.error(
+            error
+        );
+
+
+        if(modalProjectContent){
+
+            modalProjectContent.innerHTML =
+                "خطا در دریافت اطلاعات پروژه";
+
+        }
+
+    }
+
+}
+
+
+
+
+function renderProjectModal(project){
+
+
+    if(modalProjectTitle){
+
+        modalProjectTitle.textContent =
+            project.title ||
+            "پروژه بدون عنوان";
+
+    }
+
+
+
+    if(modalProjectStatus){
+
+        modalProjectStatus.textContent =
+            project.status ||
+            "-";
+
+    }
+
+
+
+    if(modalProjectContent){
+
+
+        modalProjectContent.innerHTML = `
+
+            <div class="project-summary">
+
+
+                <h3>
+                    خلاصه پروژه
+                </h3>
+
+
+                <p>
+                    ${escapeHtml(
+                        project.description ||
+                        "بدون توضیحات"
+                    )}
+                </p>
+
+
+
+                <p>
+                    تعداد فایل‌ها:
+                    ${
+                        project.attachments
+                        ?
+                        toPersianNumber(
+                            project.attachments.length
+                        )
+                        :
+                        "۰"
+                    }
+                </p>
+
+
+            </div>
+
+        `;
+
+
+    }
+
+
+}
+
+
+
+
+
+if(closeProjectModalButton){
+
+
+    closeProjectModalButton.addEventListener(
+        "click",
+        closeProjectModal
+    );
+
+
+}
+
+
+
+function closeProjectModal(){
+
+
+    if(projectModal){
+
+        projectModal.classList.add(
+            "hidden"
+        );
+
+    }
+
+}
+
+
+
+
+    /*
+    --------------------------------------------------
+    LOGOUT
+    --------------------------------------------------
+    */
+
+
+    if(logoutButton){
+
+
+        logoutButton.addEventListener(
+            "click",
+            handleLogout
+        );
+
+
+    }
+
+
+
+
+    function handleLogout(){
+
+
+        window.location.href =
+            "/accounts/logout/";
+
+    }
+
+
+
+
+
+
+
+    /*
+    --------------------------------------------------
+    HELPERS
+    --------------------------------------------------
+    */
+
+
+    function redirectToLogin(){
+
+
+        window.location.href =
+            "/accounts/login/?next=/customer/";
+
+    }
+
+
+
+
+
+
+    function showError(message){
+
+
+        if(projectsListElement){
+
+
+            projectsListElement.innerHTML = `
+
+                <div class="empty-state">
+
+                    ${message}
+
+                </div>
+
+            `;
+
+
+        }
+
+
+    }
+
+
+
+
+
+
+    function escapeHtml(value){
+
+
+        return String(value)
+
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+
+            .replace(
+                /</g,
+                "&lt;"
+            )
+
+            .replace(
+                />/g,
+                "&gt;"
+            )
+
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+
+    }
+
+
+
+
+
+
+    function toPersianNumber(number){
+
+
+        return String(number)
+
+            .replace(
+                /\d/g,
+                d =>
+                    "۰۱۲۳۴۵۶۷۸۹"[d]
+            );
+
+    }
+
+
+
+
+    /* --------------------------------------------------
+       PROJECT TABS
+    -------------------------------------------------- */
+
+    let currentProject = null;
+
+    const projectTabs =
+        document.querySelectorAll(
+            ".project-tab"
+        );
+
+
+    projectTabs.forEach(tab => {
+
+        tab.addEventListener(
+            "click",
+            function () {
+
+                projectTabs.forEach(t =>
+                    t.classList.remove(
+                        "active"
+                    )
+                );
+
+
+                this.classList.add(
+                    "active"
+                );
+
+
+                renderProjectTab(
+                    this.dataset.tab
+                );
+
+            }
+        );
+
+    });
+
+
+    function renderProjectTab(tab) {
+
+        if (!modalProjectContent) {
+            return;
+        }
+
+
+        if (!currentProject) {
+
+            modalProjectContent.innerHTML = `
+                <div class="empty-state">
+                    اطلاعات پروژه در دسترس نیست.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        switch (tab) {
+
+            case "summary":
+
+                renderProjectSummary();
+                break;
+
+
+            case "files":
+
+                renderProjectFiles();
+                break;
+
+
+            case "messages":
+
+                modalProjectContent.innerHTML = `
+                    <div class="project-tab-placeholder">
+                        <h3>گفتگو</h3>
+                        <p>
+                            گفتگوی پروژه در مرحله بعدی
+                            به این بخش متصل می‌شود.
+                        </p>
+                    </div>
+                `;
+
+                break;
+
+
+            case "timeline":
+
+                modalProjectContent.innerHTML = `
+                    <div class="project-tab-placeholder">
+                        <h3>Timeline</h3>
+
+                        <p>
+                            ایجاد پروژه:
+                            ${escapeHtml(
+                                currentProject.created_at ||
+                                "-"
+                            )}
+                        </p>
+
+                        <p>
+                            آخرین تغییر:
+                            ${escapeHtml(
+                                currentProject.updated_at ||
+                                "-"
+                            )}
+                        </p>
+                    </div>
+                `;
+
+                break;
+
+
+            case "tender":
+
+                modalProjectContent.innerHTML = `
+                    <div class="project-tab-placeholder">
+                        <h3>مناقصه</h3>
+                        <p>
+                            اتصال به مناقصه پروژه
+                            در مرحله بعد انجام می‌شود.
+                        </p>
+                    </div>
+                `;
+
+                break;
+
+
+            case "contract":
+
+                modalProjectContent.innerHTML = `
+                    <div class="project-tab-placeholder">
+                        <h3>قرارداد</h3>
+                        <p>
+                            قرارداد پس از انتخاب کارگاه
+                            در این بخش نمایش داده می‌شود.
+                        </p>
+                    </div>
+                `;
+
+                break;
+
+
+            case "payments":
+
+                modalProjectContent.innerHTML = `
+                    <div class="project-tab-placeholder">
+                        <h3>پرداخت‌ها</h3>
+                        <p>
+                            مراحل پرداخت پروژه
+                            در این بخش نمایش داده خواهد شد.
+                        </p>
+                    </div>
+                `;
+
+                break;
+
+
+            default:
+
+                renderProjectSummary();
+
+        }
+
+    }
+
+
+    function renderProjectSummary() {
+
+        modalProjectContent.innerHTML = `
+
+            <div class="project-summary">
+
+                <h3>
+                    خلاصه پروژه
+                </h3>
+
+                <p>
+                    ${escapeHtml(
+                        currentProject.description ||
+                        "بدون توضیحات"
+                    )}
+                </p>
+
+                <div class="project-summary-grid">
+
+                    <div>
+                        <strong>وضعیت</strong>
+                        <span>
+                            ${escapeHtml(
+                                currentProject.status ||
+                                "-"
+                            )}
+                        </span>
+                    </div>
+
+                    <div>
+                        <strong>بودجه</strong>
+                        <span>
+                            ${
+                                currentProject.estimated_budget
+                                ?
+                                escapeHtml(
+                                    String(
+                                        currentProject.estimated_budget
+                                    )
+                                )
+                                :
+                                "ثبت نشده"
+                            }
+                        </span>
+                    </div>
+
+                    <div>
+                        <strong>زمان تحویل</strong>
+                        <span>
+                            ${
+                                currentProject.required_delivery_days
+                                ?
+                                toPersianNumber(
+                                    currentProject.required_delivery_days
+                                ) + " روز"
+                                :
+                                "ثبت نشده"
+                            }
+                        </span>
+                    </div>
+
+                    <div>
+                        <strong>تعداد فایل</strong>
+                        <span>
+                            ${toPersianNumber(
+                                (
+                                    currentProject.attachments ||
+                                    []
+                                ).length
+                            )}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    function renderProjectFiles() {
+
+        const attachments =
+            currentProject.attachments || [];
+
+
+        if (!attachments.length) {
+
+            modalProjectContent.innerHTML = `
+
+                <div class="empty-state">
+
+                    <h3>
+                        فایل‌های پروژه
+                    </h3>
+
+                    <p>
+                        هنوز فایلی برای این پروژه
+                        ثبت نشده است.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+        }
+
+
+        const filesHtml =
+            attachments.map(file => {
+
+                const title =
+                    escapeHtml(
+                        file.title ||
+                        "فایل پروژه"
+                    );
+
+
+                const description =
+                    escapeHtml(
+                        file.description ||
+                        ""
+                    );
+
+
+                const url =
+                    escapeHtml(
+                        file.file ||
+                        "#"
+                    );
+
+
+                return `
+
+                    <article class="project-file-card">
+
+                        <div class="project-file-info">
+
+                            <h4>
+                                ${title}
+                            </h4>
+
+                            ${
+                                description
+                                ?
+                                `<p>${description}</p>`
+                                :
+                                ""
+                            }
+
+                            <small>
+                                نسخه
+                                ${toPersianNumber(
+                                    file.version ||
+                                    1
+                                )}
+                            </small>
+
+                        </div>
+
+                        <a
+                            href="${url}"
+                            target="_blank"
+                            rel="noopener"
+                            class="project-file-link"
+                        >
+                            مشاهده فایل
+                        </a>
+
+                    </article>
+
+                `;
+
+            }).join("");
+
+
+        modalProjectContent.innerHTML = `
+
+            <div class="project-files">
+
+                <div class="project-section-title">
+
+                    <div>
+
+                        <h3>
+                            فایل‌های پروژه
+                        </h3>
+
+                        <p>
+                            ${toPersianNumber(
+                                attachments.length
+                            )}
+                            فایل ثبت شده
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="project-files-list">
+
+                    ${filesHtml}
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+})();

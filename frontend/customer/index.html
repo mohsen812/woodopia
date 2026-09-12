@@ -1,0 +1,429 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        پنل مشتری | FEEMAAS
+    </title>
+
+    <link rel="stylesheet" href="/static/customer/css/customer.css">
+</head>
+
+
+<body>
+
+
+<header class="customer-header">
+
+    <div class="brand">
+
+        <span class="brand-mark">
+            F
+        </span>
+
+        <span>
+            FEEMAAS
+        </span>
+
+    </div>
+
+
+    <div class="customer-user">
+
+        <span id="customerUsername">
+            در حال بارگذاری...
+        </span>
+
+
+        <button 
+            id="logoutBtn"
+            type="button">
+            خروج
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<main class="customer-main">
+
+
+    <section class="welcome-section">
+
+        <h1>
+            پنل مشتری
+        </h1>
+
+
+        <p>
+            پروژه‌های خود را ثبت کنید، روند ساخت را مدیریت کنید و تا قرارداد با کارگاه پیش بروید.
+        </p>
+
+    </section>
+
+
+
+
+
+    <section class="dashboard-grid">
+
+
+        <div class="dashboard-card">
+
+            <h2>
+                پروژه‌های من
+            </h2>
+
+
+            <div id="projectCount">
+                ۰
+            </div>
+
+
+            <p>
+                پروژه فعال
+            </p>
+
+        </div>
+
+
+
+
+
+        <div class="dashboard-card">
+
+            <h2>
+                مناقصه‌ها
+            </h2>
+
+
+            <div id="tenderCount">
+                ۰
+            </div>
+
+
+            <p>
+                مناقصه فعال
+            </p>
+
+        </div>
+
+
+
+
+
+        <div class="dashboard-card">
+
+            <h2>
+                قراردادها
+            </h2>
+
+
+            <div id="contractCount">
+                ۰
+            </div>
+
+
+            <p>
+                قرارداد فعال
+            </p>
+
+        </div>
+
+
+
+    </section>
+
+
+
+
+
+
+    <section class="projects-section">
+
+
+        <div class="section-header">
+
+
+            <div>
+
+                <h2>
+                    پروژه‌های من
+                </h2>
+
+
+                <p>
+                    سفارش‌های ثبت‌شده و وضعیت اجرای پروژه‌ها
+                </p>
+
+            </div>
+
+
+
+
+            <button
+                id="createProjectBtn"
+                class="primary-btn"
+                type="button">
+
+                + ایجاد پروژه جدید
+
+            </button>
+
+
+        </div>
+
+
+
+
+
+
+        <div
+            id="projectsList"
+            class="projects-list">
+
+
+            <div class="empty-state">
+
+                در حال بارگذاری پروژه‌ها...
+
+            </div>
+
+
+        </div>
+
+
+
+    </section>
+
+
+
+</main>
+
+<section id="projectModal" class="project-modal hidden">
+
+    <div class="project-modal-overlay"></div>
+
+    <div class="project-modal-box">
+
+        <button
+            id="closeProjectModal"
+            class="close-modal-btn"
+            type="button"
+        >
+            ×
+        </button>
+
+
+        <header class="project-modal-header">
+
+            <h2 id="modalProjectTitle">
+                پروژه
+            </h2>
+
+            <span id="modalProjectStatus">
+                -
+            </span>
+
+        </header>
+
+
+
+
+        <nav class="project-tabs">
+
+
+<button
+    type="button"
+    class="project-tab active"
+    data-tab="summary"
+>
+    خلاصه
+</button>
+
+<button
+    type="button"
+    class="project-tab"
+    data-tab="files"
+>
+    فایل‌ها
+</button>
+
+<button
+    type="button"
+    class="project-tab"
+    data-tab="messages"
+>
+    گفتگو
+</button>
+
+<button
+    type="button"
+    class="project-tab"
+    data-tab="timeline"
+>
+    Timeline
+</button>
+
+<button
+    type="button"
+    class="project-tab"
+    data-tab="tender"
+>
+    مناقصه
+</button>
+
+<button
+    type="button"
+    class="project-tab"
+    data-tab="contract"
+>
+    قرارداد
+</button>
+
+<button
+    type="button"
+    class="project-tab"
+    data-tab="payments"
+>
+    پرداخت‌ها
+</button>
+
+
+</nav>
+
+
+
+
+        <div id="modalProjectContent">
+
+            در حال بارگذاری...
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<section id="createProjectModal" class="project-modal hidden">
+
+    <div class="project-modal-overlay"></div>
+
+
+    <div class="project-modal-box">
+
+
+        <button
+            id="closeCreateProjectModal"
+            class="close-modal-btn"
+            type="button"
+        >
+            ×
+        </button>
+
+
+        <header class="project-modal-header">
+
+            <h2>
+                ایجاد پروژه جدید
+            </h2>
+
+        </header>
+
+
+
+        <form id="createProjectForm">
+
+
+            <label>
+                عنوان پروژه
+            </label>
+
+            <input
+                id="projectTitleInput"
+                name="title" 
+                type="text"
+                required
+            >
+
+
+
+            <label>
+                توضیحات
+            </label>
+
+            <textarea
+                id="projectDescriptionInput"
+                name="description"
+            ></textarea>
+
+
+
+            <label>
+                بودجه تقریبی
+            </label>
+
+            <input
+                id="projectBudgetInput"
+                name="estimated_budget" 
+                type="number"
+            >
+
+
+
+            <label>
+                زمان تحویل (روز)
+            </label>
+
+            <input
+                id="projectDaysInput"
+                name="required_delivery_days"
+                type="number"
+                value="30"
+            >
+
+<label>
+    فایل‌ها و نقشه‌های پروژه
+</label>
+
+<input
+    id="projectFilesInput"
+    name="attachments"  
+    type="file"
+    multiple
+    accept=".jpg,.jpeg,.png,.pdf,.dwg,.doc,.docx"
+>
+
+
+<div id="projectFilesPreview" class="project-files-preview">
+
+</div>
+
+            <button
+                class="primary-btn"
+                type="submit"
+            >
+                ثبت پروژه
+            </button>
+
+
+        </form>
+
+
+    </div>
+
+</section>
+<script src="/static/customer/js/customer.js"></script>
+
+
+</body>
+
+</html>
