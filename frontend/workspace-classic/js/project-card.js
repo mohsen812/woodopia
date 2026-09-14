@@ -1048,6 +1048,17 @@ if (
 
     /*
     --------------------------------------------------------
+    LOAD PROJECT ATTACHMENTS
+    --------------------------------------------------------
+    */
+
+    loadProjectAttachments(
+        project.id
+    );
+
+
+    /*
+    --------------------------------------------------------
     SCROLL TOP
     --------------------------------------------------------
     */
@@ -1058,7 +1069,97 @@ if (
     });
 
 }
+/*
+============================================================
+ LOAD PROJECT ATTACHMENTS
+============================================================
+*/
 
+async function loadProjectAttachments(projectId) {
+
+    try {
+
+        const attachments =
+            await apiGet(
+                `/projects/${projectId}/attachments/`
+            );
+
+
+        const panel =
+            document.querySelector(
+                '[data-project-tab-content="files"] .project-tab-panel'
+            );
+
+
+        if (!panel) {
+
+            console.warn(
+                "FEEMAAS: Files panel not found."
+            );
+
+            return;
+
+        }
+
+
+        panel.innerHTML = `
+
+            <span class="eyebrow">
+                FILES & DESIGN
+            </span>
+
+
+            <h3>
+                فایل‌ها و طراحی
+            </h3>
+
+
+            ${
+                attachments.length
+
+                ?
+
+                attachments.map(
+                    file => `
+
+                    <div class="project-file-item">
+
+                        <a
+                            href="${file.file}"
+                            target="_blank"
+                        >
+                            ${file.file.split("/").pop()}
+                        </a>
+
+                    </div>
+
+                    `
+                ).join("")
+
+                :
+
+                `
+                <p>
+                    فایلی برای این پروژه ثبت نشده است.
+                </p>
+                `
+
+            }
+
+        `;
+
+
+    }
+    catch(error) {
+
+        console.error(
+            "FEEMAAS: Load attachments failed",
+            error
+        );
+
+    }
+
+}
 /*
 ============================================================
  LOAD TENDER DASHBOARD

@@ -12,10 +12,12 @@
 
     <title>FEEMAAS Dashboard</title>
 
-    <link
-        rel="stylesheet"
-        href="css/workspace.css"
-    >
+ {% load static %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'workspace-classic/css/workspace.css' %}"
+>
 
 </head>
 
@@ -407,33 +409,17 @@
 
             <div class="page-heading">
 
-               <div>   
-                   <span class="eyebrow">
-                      PROJECTS
-                   </span>
+                <span class="eyebrow">
+                    PROJECTS
+                </span>
 
-                   <h2>
-                       پروژه‌های من
-                   </h2>
+                <h2>
+                    پروژه‌های من
+                </h2>
 
-                   <p>
-                       پروژه‌هایی که در آن‌ها نقش دارید.
-                   </p>
-                </div>
-
-                <button
-
-                    class="project-action primary"
-
-                    id="create-project-button"
-
-                    type="button"
-
-                >
-
-                    + ایجاد پروژه
-
-                </button>
+                <p>
+                    پروژه‌هایی که در آن‌ها نقش دارید.
+                </p>
 
             </div>
 
@@ -586,11 +572,68 @@
 
 <section id="profile-view" class="workspace-view hidden">
 
-...
+    <div class="page-heading">
+
+        <span class="eyebrow">
+            ACCOUNT
+        </span>
+
+        <h2>
+            حساب من
+        </h2>
+
+        <p>
+            مدیریت حساب و نشست کاربری
+        </p>
+
+    </div>
+
+
+    <div class="project-detail-card">
+
+        <div class="project-detail-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    USER
+                </span>
+
+                <h3>
+                    کاربر فعلی Workspace
+                </h3>
+
+            </div>
+
+
+            <span class="project-status">
+                فعال
+            </span>
+
+        </div>
+
+
+        <div class="project-detail-description">
+
+            <p>
+                از این بخش می‌توانید نشست خود را مدیریت کنید.
+            </p>
+
+
+            <a
+                href="/users/logout/"
+                class="primary-button"
+            >
+                خروج از حساب
+            </a>
+
+
+        </div>
+
+    </div>
+
 
 </section>
-
-
 </main>
   
 
@@ -638,12 +681,11 @@
 
 
 
-<script src="js/api.js"></script>
+<script src="{% static 'workspace-classic/js/api.js' %}"></script>
 
-<script src="js/project-card.js"></script>
+<script src="{% static 'workspace-classic/js/project-card.js' %}"></script>
 
-<script src="js/workspace.js"></script>
-
+<script src="{% static 'workspace-classic/js/workspace.js' %}"></script>
 </body>
 
 </html>

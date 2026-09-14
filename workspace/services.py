@@ -44,10 +44,25 @@ def get_user_workspaces(user):
 
 
 def get_workspace_identity(user):
-    """
-    Return current workspace identity.
-    Used by FEEMAAS workspace shell.
-    """
+
+    if user.is_superuser or user.is_staff:
+
+        return {
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+
+            "primary_workspace": {
+                "type": "admin",
+                "name": "FEEMAAS Administration",
+                "role": "administrator"
+            },
+
+            "workspaces": []
+        }
+
 
     workspaces = get_user_workspaces(user)
 
