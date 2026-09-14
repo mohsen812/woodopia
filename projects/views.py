@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework import generics
@@ -26,7 +28,36 @@ from .serializers import (
     ProjectAttachmentSerializer,
     ProjectAttachmentCreateSerializer,
 )
+def get_visible_projects(user):
+    """
+    Return projects visible to the current user.
 
+    Staff/superuser:
+        - projects created by the user
+        - active customer projects
+
+    Regular users:
+        - projects belonging to active customer organizations
+          where the user has an active membership.
+    """
+
+    if user.is_superuser or user.is_staff:
+
+        return Project.objects.filter(
+            Q(created_by=user)
+            |
+            Q(
+                customer__organization_type="customer",
+                customer__status="active",
+            )
+        ).distinct()
+
+    return Project.objects.filter(
+        customer__members__user=user,
+        customer__members__status="active",
+        customer__organization_type="customer",
+        customer__status="active",
+    ).distinct()
 # =====================================
 # PROJECT LIST + CREATE
 # =====================================
@@ -44,14 +75,9 @@ class ProjectListCreateView(
 
     def get_queryset(self):
 
-        user = self.request.user
-
-        return Project.objects.filter(
-            customer__members__user=user,
-            customer__members__status="active",
-            customer__organization_type="customer",
-            customer__status="active",
-        ).distinct().order_by(
+        return get_visible_projects(
+            self.request.user
+        ).order_by(
             "-created_at"
         )
 
@@ -81,14 +107,9 @@ class ProjectDetailView(
 
     def get_queryset(self):
 
-        user = self.request.user
-
-        return Project.objects.filter(
-            customer__members__user=user,
-            customer__members__status="active",
-            customer__organization_type="customer",
-            customer__status="active",
-        ).distinct()
+        return get_visible_projects(
+            self.request.user
+        )
 
 # =====================================
 # PROJECT ATTACHMENTS
@@ -106,15 +127,9 @@ class ProjectAttachmentListCreateView(
 
     def get_project_queryset(self):
 
-        user = self.request.user
-
-        return Project.objects.filter(
-            customer__members__user=user,
-            customer__members__status="active",
-            customer__organization_type="customer",
-            customer__status="active",
-        ).distinct()
-
+        return get_visible_projects(
+            self.request.user
+        )
     def get_project(self):
 
         return get_object_or_404(
@@ -147,7 +162,16 @@ class ProjectTenderView(
     generics.GenericAPIView
 ):
 
-    queryset = Project.objects.all()
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_queryset(self):
+
+        return get_visible_projects(
+            self.request.user
+        )
+
     def get(self, request, pk):
 
         project = self.get_object()
@@ -225,8 +249,17 @@ class ProjectVisualDetailView(
 class ProjectTenderSelectWinnerView(
     generics.GenericAPIView
 ):
-    queryset = Project.objects.all()
+    permission_classes = [
+        IsAuthenticated
+    ]
+
     serializer_class = TenderSelectWinnerSerializer
+
+    def get_queryset(self):
+
+        return get_visible_projects(
+            self.request.user
+        )
 
     def post(self, request, pk):
         project = self.get_object()
