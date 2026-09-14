@@ -2528,3 +2528,241 @@ select:focus {
     }
 
 }
+
+/*
+============================================================
+ FEEMAAS CUSTOMER CREATE PROJECT MODAL
+============================================================
+*/
+
+.workspace-create-project-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    direction: rtl;
+}
+
+.workspace-create-project-hidden {
+    display: none !important;
+}
+
+.workspace-create-project-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+}
+
+.workspace-create-project-box {
+    position: relative;
+    z-index: 2;
+    width: min(680px, calc(100vw - 32px));
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: #151515;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    padding: 30px;
+    box-sizing: border-box;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+}
+
+.workspace-create-project-close {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.workspace-create-project-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.workspace-create-project-header {
+    margin-bottom: 24px;
+    padding-left: 35px;
+}
+
+.workspace-create-project-header h2 {
+    margin: 0 0 8px;
+    color: #fff;
+    font-size: 25px;
+}
+
+.workspace-create-project-header p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.workspace-create-project-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.workspace-create-project-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.workspace-create-project-field label {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.workspace-create-project-field input,
+.workspace-create-project-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.055);
+    color: #fff;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.workspace-create-project-field input:focus,
+.workspace-create-project-field textarea:focus {
+    border-color: rgba(255, 190, 70, 0.7);
+    background: rgba(255, 255, 255, 0.075);
+}
+
+.workspace-create-project-field textarea {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.8;
+}
+
+.workspace-create-project-field input::placeholder,
+.workspace-create-project-field textarea::placeholder {
+    color: rgba(255, 255, 255, 0.34);
+}
+
+.workspace-create-project-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.workspace-project-files-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 4px;
+}
+
+.workspace-project-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.workspace-project-file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 13px;
+}
+
+.workspace-project-file-size {
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 12px;
+    direction: ltr;
+}
+
+.workspace-create-project-error {
+    min-height: 20px;
+    color: #ff7777;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.workspace-create-project-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.workspace-create-project-submit,
+.workspace-create-project-cancel {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 22px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.workspace-create-project-submit {
+    background: #d9a441;
+    color: #111;
+    font-weight: 700;
+}
+
+.workspace-create-project-submit:hover {
+    filter: brightness(1.08);
+}
+
+.workspace-create-project-submit:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.workspace-create-project-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.workspace-create-project-cancel:hover {
+    background: rgba(255, 255, 255, 0.13);
+}
+
+@media (max-width: 600px) {
+
+    .workspace-create-project-box {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+        padding: 22px;
+        border-radius: 14px;
+    }
+
+    .workspace-create-project-row {
+        grid-template-columns: 1fr;
+    }
+
+    .workspace-create-project-actions {
+        flex-direction: column;
+    }
+
+    .workspace-create-project-submit,
+    .workspace-create-project-cancel {
+        width: 100%;
+    }
+
+}
