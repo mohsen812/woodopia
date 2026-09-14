@@ -834,7 +834,7 @@
             ) {
 
                 openProjectDetail(
-                    project.id
+                    project
                 );
 
             }
