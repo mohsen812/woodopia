@@ -1,0 +1,388 @@
+﻿{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        FEEMAAS Consultant Workspace
+    </title>
+
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="stylesheet"
+          href="{% static 'workspace/consultant/css/consultant.css' %}">
+
+
+</head>
+
+
+<body>
+
+
+<div class="consultant-layout">
+
+
+    <!-- =========================
+         RIGHT SIDEBAR
+    ========================== -->
+
+    <aside class="consultant-sidebar">
+
+
+        <div class="brand-box">
+
+
+            <div class="brand-title">
+                FEEMAAS
+            </div>
+
+
+            <div class="brand-role">
+                پنل مشاور
+            </div>
+
+
+        </div>
+
+
+
+        <nav class="consultant-menu">
+
+
+            <a href="#"
+               class="menu-item active">
+
+                🏠
+                داشبورد
+
+            </a>
+
+
+
+            <a href="#"
+               class="menu-item">
+
+                📂
+                صف پروژه‌ها
+
+            </a>
+
+
+
+            <a href="#"
+               class="menu-item">
+
+                🧩
+                پروژه‌های من
+
+            </a>
+
+
+
+            <a href="#"
+               class="menu-item">
+
+                📋
+                بررسی سفارش‌ها
+
+            </a>
+
+
+
+            <a href="#"
+               class="menu-item">
+
+                🔨
+                مناقصه‌ها
+
+            </a>
+
+
+
+            <a href="#"
+               class="menu-item">
+
+                📊
+                گزارش‌ها
+
+            </a>
+
+
+
+            <a href="#"
+               class="menu-item">
+
+                ⚙️
+                تنظیمات
+
+            </a>
+
+
+        </nav>
+
+
+
+
+        <div class="sidebar-footer">
+
+
+            <div>
+                مشاور فعال
+            </div>
+
+
+            <div class="consultant-status">
+
+                ● آنلاین
+
+            </div>
+
+
+        </div>
+
+
+    </aside>
+
+
+
+
+
+
+    <!-- =========================
+         MAIN AREA
+    ========================== -->
+
+
+    <main class="consultant-main">
+
+
+
+
+        <header class="consultant-header">
+
+
+            <div>
+
+
+                <h1>
+                    Workspace مشاور
+                </h1>
+
+
+                <p>
+                    مدیریت پروژه‌ها، بررسی سفارش‌ها و ارتباط با مشتری
+                </p>
+
+
+            </div>
+
+
+
+
+
+            <div class="user-box">
+
+
+                <span>
+
+                    {{ request.user.username }}
+
+                </span>
+
+
+
+                <a href="/accounts/logout/">
+
+                    خروج
+
+                </a>
+
+
+            </div>
+
+
+        </header>
+
+
+
+
+
+
+        <!-- =========================
+             DASHBOARD CARDS
+        ========================== -->
+
+
+        <section class="dashboard-grid">
+
+
+
+            <div class="glass-card">
+
+
+                <h3>
+                    پروژه‌های منتظر بررسی
+                </h3>
+
+
+                <div
+                    class="number"
+                    id="queue-count"
+                >
+                    0
+                </div>
+
+
+            </div>
+
+
+
+
+
+
+            <div class="glass-card">
+
+
+                <h3>
+                    پروژه‌های فعال من
+                </h3>
+
+
+                <div
+                    class="number"
+                    id="my-projects-count"
+                >
+                    0
+                </div>
+
+
+            </div>
+
+
+
+
+
+
+            <div class="glass-card">
+
+
+                <h3>
+                    مناقصه‌های جاری
+                </h3>
+
+
+                <div
+                    class="number"
+                    id="tenders-count"
+                >
+                    0
+                </div>
+
+
+            </div>
+
+
+
+
+        </section>
+
+
+
+
+
+
+
+
+        <!-- =========================
+             CONSULTANT CENTER
+        ========================== -->
+
+
+        <section class="workspace-panel">
+
+
+            <div class="panel-header">
+
+
+                <h2>
+                    مرکز مدیریت مشاور
+                </h2>
+
+
+                <span>
+                    FEEMAAS Consultant Control
+                </span>
+
+
+            </div>
+
+
+
+
+
+            <div class="empty-state">
+
+
+                <div class="empty-icon">
+
+                    🧭
+
+                </div>
+
+
+
+                <h3>
+
+                    محیط مشاوره آماده است
+
+                </h3>
+
+
+
+                <p>
+
+                    پروژه‌های تخصیص داده شده،
+                    درخواست‌های جدید و فعالیت‌های مشاور
+                    در این بخش نمایش داده خواهند شد.
+
+                </p>
+
+
+
+            </div>
+
+
+
+
+        </section>
+
+
+
+
+
+    </main>
+
+
+
+
+
+</div>
+
+
+
+
+
+<script src="{% static 'workspace/consultant/js/consultant.js' %}">
+</script>
+
+
+</body>
+
+</html>

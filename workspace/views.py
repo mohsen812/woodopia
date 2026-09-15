@@ -22,11 +22,26 @@ def workspace_page(request):
         else None
     )
 
-    if workspace_type == "customer":
+    workspace_role = (
+        primary_workspace.get("role")
+        if primary_workspace
+        else None
+    )
+
+
+    if workspace_role == "consultant":
+
+        template = (
+            "workspace/consultant/index.html"
+        )
+
+
+    elif workspace_type == "customer":
 
         template = (
             "workspace/customer/index.html"
         )
+
 
     elif workspace_type == "workshop":
 
@@ -34,19 +49,19 @@ def workspace_page(request):
             "workspace/workshop/index.html"
         )
 
+
     else:
 
-        # UI اختصاصی این نقش هنوز ساخته نشده.
-        # فعلاً از Customer Workspace به عنوان
-        # fallback موقت استفاده می‌کنیم.
         template = (
             "workspace/customer/index.html"
         )
+
 
     return render(
         request,
         template
     )
+
 
 
 @login_required

@@ -163,7 +163,60 @@ class ProjectItem(models.Model):
         return self.name
 
 
+class ProjectAssignment(models.Model):
 
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="assignments"
+    )
+
+    membership = models.ForeignKey(
+        "organizations.Membership",
+        on_delete=models.CASCADE,
+        related_name="project_assignments"
+    )
+
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_assignments"
+    )
+
+    status = models.CharField(
+        max_length=50,
+        default="active"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+
+    class Meta:
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "project",
+                    "membership",
+                ],
+                name="unique_project_membership_assignment"
+            )
+        ]
+
+
+    def __str__(self):
+
+        return (
+            f"{self.project.title} - "
+            f"{self.membership.user.username}"
+        )
 class SubProjectType(models.Model):
 
     name = models.CharField(

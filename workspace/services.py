@@ -23,6 +23,21 @@ def get_user_workspaces(user):
 
     for membership in memberships:
 
+        role = (
+            membership.role_fk.name
+            if membership.role_fk
+            else membership.role
+        )
+
+        workspace = (
+            role
+            if role in [
+                "consultant",
+                "designer",
+            ]
+            else membership.organization.organization_type
+        )
+
         workspaces.append(
             {
                 "organization_id": membership.organization.id,
@@ -31,11 +46,9 @@ def get_user_workspaces(user):
 
                 "type": membership.organization.organization_type,
 
-                "role": (
-                    membership.role_fk.name
-                    if membership.role_fk
-                    else membership.role
-                )
+                "role": role,
+
+                "workspace": workspace,
             }
         )
 

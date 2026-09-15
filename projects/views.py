@@ -1,5 +1,10 @@
 from django.db.models import Q
 
+from .services import (
+    get_consultant_projects,
+    claim_project,
+    get_consultant_dashboard_counts,
+)
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework import generics
@@ -18,7 +23,10 @@ from .models import (
     Project,
     ProjectVisual,
     ProjectAttachment,
+    ProjectAssignment,
 )
+
+from .services import send_project_to_consultant
 
 from .serializers import (
     ProjectFullSerializer,
@@ -58,6 +66,149 @@ def get_visible_projects(user):
         customer__organization_type="customer",
         customer__status="active",
     ).distinct()
+class ConsultantDashboardView(
+    generics.GenericAPIView
+):
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        membership = (
+            Membership.objects
+            .filter(
+                user=request.user,
+                status="active",
+                role_fk__name="consultant",
+            )
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {
+                    "error": (
+                        "User does not have "
+                        "an active consultant membership."
+                    )
+                },
+                status=403,
+            )
+
+        counts = get_consultant_dashboard_counts(
+            membership
+        )
+
+        return Response(counts)
+# =====================================
+# CONSULTANT QUEUE
+# =====================================
+
+from organizations.models import Membership
+
+from .services import (
+    get_consultant_queue,
+    claim_project,
+)
+
+
+class ConsultantQueueView(
+    generics.ListAPIView
+):
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    serializer_class = ProjectFullSerializer
+
+    def get_queryset(self):
+
+        membership = (
+            Membership.objects
+            .filter(
+                user=self.request.user,
+                status="active",
+                role_fk__name="consultant",
+            )
+            .first()
+        )
+
+        if not membership:
+            return Project.objects.none()
+
+        return get_consultant_queue()
+
+
+# =====================================
+# CONSULTANT CLAIM
+# =====================================
+
+class ConsultantClaimView(
+    generics.GenericAPIView
+):
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request, pk):
+
+        membership = (
+            Membership.objects
+            .filter(
+                user=request.user,
+                status="active",
+                role_fk__name="consultant",
+            )
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {
+                    "error": (
+                        "User does not have "
+                        "an active consultant membership."
+                    )
+                },
+                status=403,
+            )
+
+        project = get_object_or_404(
+            Project.objects.all(),
+            id=pk,
+        )
+
+        try:
+
+            assignment = claim_project(
+                project=project,
+                membership=membership,
+            )
+
+        except ValueError as exc:
+
+            return Response(
+                {
+                    "error": str(exc)
+                },
+                status=400,
+            )
+
+        return Response(
+            {
+                "message": (
+                    "Project claimed successfully."
+                ),
+                "project_id": project.id,
+                "project_title": project.title,
+                "assignment_id": assignment.id,
+                "consultant": (
+                    membership.user.username
+                ),
+            },
+            status=200,
+        )
 # =====================================
 # PROJECT LIST + CREATE
 # =====================================
@@ -318,3 +469,96 @@ class ProjectTenderSelectWinnerView(
             },
             status=200,
         )
+
+        # =====================================
+# SEND PROJECT TO CONSULTANT
+# =====================================
+
+class SendProjectToConsultantView(
+    generics.GenericAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_queryset(self):
+
+        return get_visible_projects(
+            self.request.user
+        )
+
+    def post(self, request, pk):
+
+        project = get_object_or_404(
+            self.get_queryset(),
+            id=pk
+        )
+
+        try:
+
+            send_project_to_consultant(
+                project
+            )
+
+        except ValueError as exc:
+
+            return Response(
+                {
+                    "error": str(exc)
+                },
+                status=400,
+            )
+
+
+        return Response(
+            {
+                "message":
+                    "Project sent to consultant queue.",
+                "project_id":
+                    project.id,
+                "status":
+                    project.status,
+            }
+        )
+
+# =====================================
+# CONSULTANT MY PROJECTS
+# =====================================
+
+class ConsultantMyProjectsView(
+    generics.ListAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    serializer_class = ProjectFullSerializer
+
+
+    def get_queryset(self):
+
+        membership = (
+            ProjectAssignment.objects
+            .filter(
+                membership__user=self.request.user,
+                membership__status="active",
+                status="active",
+            )
+            .values_list(
+                "membership",
+                flat=True
+            )
+            .first()
+        )
+
+
+        if not membership:
+            return Project.objects.none()
+
+
+        return get_consultant_projects(
+            membership
+        )
+    

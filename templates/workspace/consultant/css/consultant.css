@@ -1,0 +1,387 @@
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+
+    font-family:
+        Tahoma,
+        Arial,
+        sans-serif;
+
+    background:
+        linear-gradient(
+            135deg,
+            #08111f,
+            #102840
+        );
+
+    color: #e8f3ff;
+
+}
+
+
+
+.consultant-layout {
+
+    display: flex;
+
+    min-height: 100vh;
+
+}
+
+
+/* =====================
+   RIGHT SIDEBAR
+===================== */
+
+
+.consultant-sidebar {
+
+    width: 280px;
+
+    order: 2;
+
+    padding: 25px;
+
+    background:
+        rgba(255,255,255,0.08);
+
+    backdrop-filter:
+        blur(18px);
+
+    border-left:
+        1px solid rgba(255,255,255,.15);
+
+}
+
+
+
+.brand-box {
+
+    margin-bottom: 40px;
+
+}
+
+
+.brand-title {
+
+    font-size: 32px;
+
+    font-weight: bold;
+
+    letter-spacing: 3px;
+
+}
+
+
+.brand-role {
+
+    opacity: .7;
+
+    margin-top: 8px;
+
+}
+
+
+
+
+.consultant-menu {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+
+
+.menu-item {
+
+
+    text-decoration:none;
+
+    color:white;
+
+    padding:15px;
+
+    border-radius:14px;
+
+
+    background:
+        rgba(255,255,255,.05);
+
+
+    transition:.3s;
+
+}
+
+
+
+.menu-item:hover,
+.menu-item.active {
+
+
+    background:
+        rgba(0,220,255,.25);
+
+
+    transform:
+        translateX(-5px);
+
+}
+
+
+
+
+
+.sidebar-footer {
+
+    margin-top:60px;
+
+    opacity:.8;
+
+}
+
+
+
+.consultant-status {
+
+    margin-top:10px;
+
+    color:#5dff9b;
+
+}
+
+
+
+
+
+/* =====================
+ MAIN
+===================== */
+
+
+.consultant-main {
+
+
+    flex:1;
+
+    padding:35px;
+
+    order:1;
+
+}
+
+
+
+
+.consultant-header {
+
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:35px;
+
+
+}
+
+
+
+.consultant-header h1 {
+
+
+    font-size:36px;
+
+    margin:0;
+
+}
+
+
+.consultant-header p {
+
+    opacity:.7;
+
+}
+
+
+
+
+.user-box {
+
+
+    display:flex;
+
+    gap:20px;
+
+    align-items:center;
+
+
+}
+
+
+
+.user-box a {
+
+
+    color:white;
+
+    text-decoration:none;
+
+    padding:10px 20px;
+
+    border-radius:12px;
+
+    background:
+        rgba(255,255,255,.1);
+
+}
+
+
+
+
+
+/* =====================
+ CARDS
+===================== */
+
+
+.dashboard-grid {
+
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:25px;
+
+}
+
+
+
+.glass-card {
+
+
+    padding:25px;
+
+
+    border-radius:25px;
+
+
+    background:
+        rgba(255,255,255,.10);
+
+
+    backdrop-filter:
+        blur(15px);
+
+
+    border:
+        1px solid rgba(255,255,255,.15);
+
+
+}
+
+
+
+.glass-card h3 {
+
+
+    margin-top:0;
+
+    opacity:.8;
+
+}
+
+
+
+.number {
+
+
+    font-size:42px;
+
+    font-weight:bold;
+
+    margin-top:20px;
+
+}
+
+
+
+
+
+/* =====================
+ WORK AREA
+===================== */
+
+
+.workspace-panel {
+
+
+    margin-top:35px;
+
+
+    padding:30px;
+
+
+    border-radius:30px;
+
+
+    background:
+        rgba(255,255,255,.08);
+
+
+    backdrop-filter:
+        blur(20px);
+
+
+}
+
+
+
+.panel-header {
+
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:40px;
+
+
+}
+
+
+
+.empty-state {
+
+
+    text-align:center;
+
+    padding:50px;
+
+
+    opacity:.8;
+
+}
+
+
+
+.empty-icon {
+
+
+    font-size:70px;
+
+    margin-bottom:20px;
+
+}
