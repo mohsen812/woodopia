@@ -107,7 +107,17 @@ class ProjectZoneSerializer(serializers.ModelSerializer):
 # =====================================
 # PROJECT READ SERIALIZER
 # =====================================
+class ProjectItemSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = ProjectItem
+        fields = [
+            "id",
+            "name",
+            "description",
+            "quantity",
+            "status",
+        ]
 class ProjectFullSerializer(serializers.ModelSerializer):
 
     zones = ProjectZoneSerializer(
@@ -119,7 +129,15 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
-
+    items = ProjectItemSerializer(
+        many=True,
+        read_only=True
+    )
+    customer_name = serializers.CharField(
+        source="customer.name",
+        read_only=True
+    )
+    
     class Meta:
 
         model = Project
@@ -134,6 +152,8 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
             "updated_at",
+            "customer_name",
+            "items",
             "zones",
             "attachments",
         ]
