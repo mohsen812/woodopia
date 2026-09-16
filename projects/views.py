@@ -243,7 +243,6 @@ class ProjectListCreateView(
 # =====================================
 # PROJECT DETAIL
 # =====================================
-
 class ProjectDetailView(
     generics.RetrieveAPIView
 ):
@@ -258,10 +257,34 @@ class ProjectDetailView(
 
     def get_queryset(self):
 
-        return get_visible_projects(
-            self.request.user
+        user = self.request.user
+
+        # Staff / Superuser:
+        # keep existing project visibility rules.
+        if user.is_superuser or user.is_staff:
+            return get_visible_projects(user)
+
+        # Consultant:
+        # only projects assigned to the consultant
+        # through an active ProjectAssignment.
+        consultant_projects = ProjectAssignment.objects.filter(
+            membership__user=user,
+            membership__status="active",
+            membership__role_fk__name="consultant",
+            status="active",
+        ).values_list(
+            "project_id",
+            flat=True,
         )
 
+        if consultant_projects.exists():
+            return Project.objects.filter(
+                id__in=consultant_projects
+            )
+
+        # Customer / other regular users:
+        # keep existing visibility rules.
+        return get_visible_projects(user)
 # =====================================
 # PROJECT ATTACHMENTS
 # =====================================
@@ -540,15 +563,11 @@ class ConsultantMyProjectsView(
     def get_queryset(self):
 
         membership = (
-            ProjectAssignment.objects
+            Membership.objects
             .filter(
-                membership__user=self.request.user,
-                membership__status="active",
+                user=self.request.user,
                 status="active",
-            )
-            .values_list(
-                "membership",
-                flat=True
+                role_fk__name="consultant",
             )
             .first()
         )

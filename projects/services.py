@@ -46,6 +46,7 @@ def send_project_to_consultant(project):
     )
 
     return project
+@transaction.atomic
 def claim_project(project, membership):
     """
     Assign a project to a consultant.

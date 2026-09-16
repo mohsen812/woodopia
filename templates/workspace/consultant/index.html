@@ -5,20 +5,18 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <title>
-        FEEMAAS Consultant Workspace
-    </title>
+<title>
+FEEMAAS Consultant
+</title>
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-
-    <link rel="stylesheet"
-          href="{% static 'workspace/consultant/css/consultant.css' %}">
-
+<link rel="stylesheet"
+href="{% static 'workspace/consultant/css/consultant.css' %}">
 
 </head>
 
@@ -26,354 +24,440 @@
 <body>
 
 
-<div class="consultant-layout">
+<div class="consultant-shell">
 
 
-    <!-- =========================
-         RIGHT SIDEBAR
-    ========================== -->
+<!-- SIDEBAR -->
 
-    <aside class="consultant-sidebar">
+<aside class="consultant-sidebar">
 
 
-        <div class="brand-box">
+<div class="brand-box">
 
+<div class="brand-logo">
+FEEMAAS
+</div>
 
-            <div class="brand-title">
-                FEEMAAS
-            </div>
+<div class="brand-role">
+Consultant Workspace
+</div>
 
+</div>
 
-            <div class="brand-role">
-                پنل مشاور
-            </div>
 
 
-        </div>
+<nav class="consultant-menu">
 
 
+<a class="menu-item active">
+🏠 داشبورد
+</a>
 
-        <nav class="consultant-menu">
 
+<a class="menu-item">
+📂 پروژه‌ها
+</a>
 
-            <a href="#"
-               class="menu-item active">
 
-                🏠
-                داشبورد
+<a class="menu-item">
+🔨 مناقصه‌ها
+</a>
 
-            </a>
 
+<a class="menu-item">
+📊 گزارش‌ها
+</a>
 
 
-            <a href="#"
-               class="menu-item">
+<a class="menu-item">
+💬 گفتگوها
+</a>
 
-                📂
-                صف پروژه‌ها
 
-            </a>
+<a class="menu-item">
+⚙ تنظیمات
+</a>
 
 
+</nav>
 
-            <a href="#"
-               class="menu-item">
 
-                🧩
-                پروژه‌های من
 
-            </a>
+<div class="sidebar-footer">
 
 
+<div>
+مشاور فعال
+</div>
 
-            <a href="#"
-               class="menu-item">
 
-                📋
-                بررسی سفارش‌ها
+<div class="online-badge">
+● آنلاین
+</div>
 
-            </a>
 
+</div>
 
 
-            <a href="#"
-               class="menu-item">
+</aside>
 
-                🔨
-                مناقصه‌ها
 
-            </a>
 
 
 
-            <a href="#"
-               class="menu-item">
+<!-- MAIN -->
 
-                📊
-                گزارش‌ها
 
-            </a>
+<main class="consultant-main">
 
 
+<header class="top-header">
 
-            <a href="#"
-               class="menu-item">
 
-                ⚙️
-                تنظیمات
+<div>
 
-            </a>
+<h1>
+Workspace مشاور
+</h1>
 
 
-        </nav>
+<p>
+مدیریت پروژه، مناقصه و ارتباط با مشتری
+</p>
 
 
+</div>
 
 
-        <div class="sidebar-footer">
 
+<div class="user-box">
 
-            <div>
-                مشاور فعال
-            </div>
+<span>
+{{request.user.username}}
+</span>
 
 
-            <div class="consultant-status">
+<a href="/accounts/logout/">
+خروج
+</a>
 
-                ● آنلاین
 
-            </div>
+</div>
 
 
-        </div>
+</header>
 
 
-    </aside>
 
 
 
+<section class="stats-grid">
 
 
+<div class="stat-card">
 
-    <!-- =========================
-         MAIN AREA
-    ========================== -->
+<span>
+پروژه‌های جدید
+</span>
 
+<strong id="queue-count">
+0
+</strong>
 
-    <main class="consultant-main">
+</div>
 
 
 
+<div class="stat-card">
 
-        <header class="consultant-header">
+<span>
+پروژه‌های من
+</span>
 
+<strong id="my-projects-count">
+0
+</strong>
 
-            <div>
+</div>
 
 
-                <h1>
-                    Workspace مشاور
-                </h1>
 
 
-                <p>
-                    مدیریت پروژه‌ها، بررسی سفارش‌ها و ارتباط با مشتری
-                </p>
+<div class="stat-card">
 
+<span>
+مناقصه‌های فعال
+</span>
 
-            </div>
+<strong id="tenders-count">
+0
+</strong>
 
+</div>
 
 
 
+</section>
 
-            <div class="user-box">
 
 
-                <span>
 
-                    {{ request.user.username }}
 
-                </span>
+<section class="workspace-grid">
 
 
 
-                <a href="/accounts/logout/">
+<div class="workspace-card">
 
-                    خروج
 
-                </a>
+<header>
 
+<h2>
+پروژه‌های من
+</h2>
 
-            </div>
 
+<span>
+My Projects
+</span>
 
-        </header>
 
+</header>
 
 
 
+<div
+id="consultant-my-projects-list"
+class="project-list"
+>
 
 
-        <!-- =========================
-             DASHBOARD CARDS
-        ========================== -->
+<div class="loading-box">
+در حال دریافت پروژه‌ها...
+</div>
 
 
-        <section class="dashboard-grid">
+</div>
 
 
 
-            <div class="glass-card">
+</div>
 
 
-                <h3>
-                    پروژه‌های منتظر بررسی
-                </h3>
 
 
-                <div
-                    class="number"
-                    id="queue-count"
-                >
-                    0
-                </div>
 
+<div class="workspace-card">
 
-            </div>
 
+<header>
 
+<h2>
+صف پروژه‌ها
+</h2>
 
 
+<span>
+Consultant Queue
+</span>
 
 
-            <div class="glass-card">
+</header>
 
 
-                <h3>
-                    پروژه‌های فعال من
-                </h3>
 
 
-                <div
-                    class="number"
-                    id="my-projects-count"
-                >
-                    0
-                </div>
+<div
+id="consultant-queue-list"
+class="project-list"
+>
 
 
-            </div>
+<div class="loading-box">
+در حال بررسی صف...
+</div>
 
 
+</div>
 
 
 
+</div>
 
-            <div class="glass-card">
 
 
-                <h3>
-                    مناقصه‌های جاری
-                </h3>
 
+</section>
 
-                <div
-                    class="number"
-                    id="tenders-count"
-                >
-                    0
-                </div>
 
 
-            </div>
 
+</main>
 
 
 
-        </section>
+</div>
 
 
 
 
 
 
+<!-- PROJECT MODAL -->
 
 
-        <!-- =========================
-             CONSULTANT CENTER
-        ========================== -->
+<div
+id="consultant-project-modal"
+class="consultant-project-modal hidden"
+>
 
 
-        <section class="workspace-panel">
 
+<div
+id="consultant-project-backdrop"
+class="consultant-project-backdrop">
+</div>
 
-            <div class="panel-header">
 
 
-                <h2>
-                    مرکز مدیریت مشاور
-                </h2>
 
+<div class="consultant-project-box">
 
-                <span>
-                    FEEMAAS Consultant Control
-                </span>
 
 
-            </div>
+<button
+id="close-consultant-project-modal"
+class="consultant-project-close">
 
+×
 
+</button>
 
 
 
-            <div class="empty-state">
 
+<div class="consultant-project-header">
 
-                <div class="empty-icon">
 
-                    🧭
+<div>
 
-                </div>
 
+<div class="consultant-project-label">
+PROJECT CONTROL
+</div>
 
 
-                <h3>
+<h2 id="consultant-project-title">
+پروژه
+</h2>
 
-                    محیط مشاوره آماده است
 
-                </h3>
+</div>
 
 
 
-                <p>
 
-                    پروژه‌های تخصیص داده شده،
-                    درخواست‌های جدید و فعالیت‌های مشاور
-                    در این بخش نمایش داده خواهند شد.
+<div
+id="consultant-project-status"
+class="consultant-project-status">
+-
+</div>
 
-                </p>
 
 
+</div>
 
-            </div>
 
 
 
 
-        </section>
 
 
+<nav class="consultant-project-tabs">
 
 
+<button
+class="consultant-project-tab active"
+data-project-tab="summary">
 
-    </main>
+خلاصه
 
+</button>
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="files">
+
+فایل‌ها
+
+</button>
+
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="messages">
+
+گفتگو
+
+</button>
+
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="timeline">
+
+روند
+
+</button>
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="tender">
+
+مناقصه
+
+</button>
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="report">
+
+گزارش
+
+</button>
+
+
+</nav>
+
+
+
+
+
+<div
+id="consultant-project-content"
+class="consultant-project-content">
+
+
+</div>
 
 
 
 
 </div>
+
+
+</div>
+
 
 
 
