@@ -8,8 +8,71 @@ from .models import (
     BidItem,
     PaymentSchedule,
     TenderAward,
+    ConsultantSpecification,
+    SpecificationAttachment,
+
 )
 
+class ConsultantSpecificationSerializer(
+    serializers.ModelSerializer
+):
+
+    class Meta:
+
+        model = ConsultantSpecification
+
+        fields = [
+            "id",
+            "project_item",
+            "row_number",
+            "title",
+            "dimensions",
+            "material",
+            "image",
+            "description",
+            "quantity",
+            "technical_details",
+            "is_required",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "row_number",
+            "created_at",
+            "updated_at",
+        ]
+class SpecificationAttachmentSerializer(
+    serializers.ModelSerializer
+):
+
+    uploaded_by_name = serializers.CharField(
+        source="uploaded_by.username",
+        read_only=True,
+    )
+
+    class Meta:
+
+        model = SpecificationAttachment
+
+        fields = [
+            "id",
+            "specification",
+            "file",
+            "uploaded_by",
+            "uploaded_by_name",
+            "title",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "specification",
+            "uploaded_by",
+            "uploaded_by_name",
+            "created_at",
+        ]
 
 class BidItemSerializer(serializers.ModelSerializer):
 
@@ -130,7 +193,7 @@ class BidSerializer(serializers.ModelSerializer):
             "payment_schedules",
             "created_at",
             "updated_at",
-            
+
         ]
 
         read_only_fields = [

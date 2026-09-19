@@ -13,7 +13,9 @@ from .views import (
     ConsultantQueueView,
     ConsultantClaimView,
     ConsultantMyProjectsView,
-    
+    ConsultantStandardizationView,
+
+
 )
 
 
@@ -52,7 +54,15 @@ urlpatterns = [
         ConsultantClaimView.as_view(),
         name="consultant-claim",
     ),
+    # =====================================
+    # CONSULTANT STANDARDIZATION
+    # =====================================
 
+    path(
+        "<int:pk>/standardization/",
+        ConsultantStandardizationView.as_view(),
+        name="consultant-standardization",
+    ),
     # =====================================
     # PROJECT TENDER
     # =====================================
@@ -68,7 +78,7 @@ urlpatterns = [
         ProjectTenderSelectWinnerView.as_view(),
         name="project-tender-select-winner",
     ),
-    
+
     path(
         "<int:pk>/send-to-consultant/",
         SendProjectToConsultantView.as_view(),

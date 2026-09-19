@@ -299,3 +299,53 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 class TenderSelectWinnerSerializer(serializers.Serializer):
 
     bid_id = serializers.IntegerField()
+
+
+# =====================================
+# CONSULTANT STANDARDIZATION
+# =====================================
+
+class ConsultantStandardizationSerializer(
+    serializers.Serializer
+):
+
+    project_item_id = serializers.IntegerField(
+        required=False
+    )
+
+    name = serializers.CharField(
+        max_length=255
+    )
+
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )
+
+    quantity = serializers.IntegerField(
+        min_value=1,
+        default=1
+    )
+
+    title = serializers.CharField(
+        max_length=255
+    )
+
+    dimensions = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )
+
+    material = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )
+
+    technical_details = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )
+
+    is_required = serializers.BooleanField(
+        default=True
+    )

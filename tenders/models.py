@@ -87,8 +87,29 @@ class ConsultantSpecification(models.Model):
         related_name="consultant_specifications",
     )
 
+    row_number = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
     title = models.CharField(
         max_length=255
+    )
+
+    dimensions = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    material = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    image = models.ImageField(
+        upload_to="tender/specifications/",
+        null=True,
+        blank=True,
     )
 
     description = models.TextField(
@@ -126,14 +147,71 @@ class ConsultantSpecification(models.Model):
                 name="unique_tender_consultant_specification",
             )
         ]
+    def save(self, *args, **kwargs):
+
+        if not self.row_number:
+
+            last_row = (
+                ConsultantSpecification.objects
+                .filter(
+                    tender=self.tender,
+                    row_number__isnull=False,
+                )
+                .order_by(
+                    "-row_number"
+                )
+                .first()
+            )
+
+            self.row_number = (
+                last_row.row_number + 1
+                if last_row
+                else 1
+            )
+
+        super().save(
+            *args,
+            **kwargs
+        )
 
     def __str__(self):
+
+
         return (
             f"{self.tender.title} - "
             f"{self.title}"
         )
 
+class SpecificationAttachment(models.Model):
 
+    specification = models.ForeignKey(
+        ConsultantSpecification,
+        on_delete=models.CASCADE,
+        related_name="attachments",
+    )
+
+    file = models.FileField(
+        upload_to="tender/specifications/files/",
+    )
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    title = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return self.title or self.file.name
 class TenderParticipant(models.Model):
 
     tender = models.ForeignKey(
@@ -343,7 +421,28 @@ class BidItem(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+    def save(self, *args, **kwargs):
 
+        self.total_price = (
+            self.quantity *
+            self.unit_price
+        )
+
+        super().save(*args, **kwargs)
+
+        self.bid.total_amount = (
+            self.bid.items
+            .aggregate(
+                total=models.Sum("total_price")
+            )["total"]
+            or 0
+        )
+
+        self.bid.save(
+            update_fields=[
+                "total_amount"
+            ]
+        )
     class Meta:
 
         constraints = [

@@ -1,8 +1,18 @@
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+
+from django.shortcuts import get_object_or_404
+
+from projects.models import Project
+
 from evaluation.services import evaluate_tender
 from evaluation.reports import build_tender_report
+
+from projects.views import get_visible_projects
+
 from .visibility import tender_is_revealed
 from .services import (
     award_tender,
@@ -16,7 +26,8 @@ from .models import (
     PaymentSchedule,
     Bid,
     BidItem,
-    
+    ConsultantSpecification,
+    SpecificationAttachment,
 )
 
 from .serializers import (
@@ -29,6 +40,10 @@ from .serializers import (
     TenderAwardCreateSerializer,
     TenderAwardSerializer,
     TenderSelectBidSerializer,
+    ConsultantSpecificationSerializer,
+    SpecificationAttachmentSerializer,
+
+
 )
 
 class TenderListCreateView(
@@ -95,6 +110,177 @@ class TenderRoundListCreateView(
 
         serializer.save(
             tender=tender
+        )
+
+class ConsultantSpecificationListCreateView(
+    generics.ListCreateAPIView
+):
+
+    serializer_class = ConsultantSpecificationSerializer
+
+
+    def get_queryset(self):
+
+        tender_id = self.kwargs["tender_id"]
+
+        return (
+            ConsultantSpecification.objects
+            .filter(
+                tender_id=tender_id
+            )
+            .order_by(
+                "row_number"
+            )
+        )
+
+
+    def perform_create(
+        self,
+        serializer
+    ):
+
+        tender_id = self.kwargs["tender_id"]
+
+        tender = Tender.objects.get(
+            id=tender_id
+        )
+
+        last_row = (
+            ConsultantSpecification.objects
+            .filter(
+                tender=tender
+            )
+            .order_by(
+                "-row_number"
+            )
+            .first()
+        )
+
+
+        next_row = 1
+
+        if last_row:
+            next_row = last_row.row_number + 1
+
+
+        serializer.save(
+            tender=tender,
+            row_number=next_row,
+        )
+class SpecificationAttachmentListCreateView(
+    generics.ListCreateAPIView
+):
+
+    serializer_class = SpecificationAttachmentSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_specification(self):
+
+        specification = get_object_or_404(
+            ConsultantSpecification.objects.select_related(
+                "tender__project"
+            ),
+            id=self.kwargs["specification_id"],
+        )
+
+        user = self.request.user
+
+        if user.is_superuser or user.is_staff:
+            return specification
+
+        consultant_project = Project.objects.filter(
+            id=specification.tender.project_id,
+            assignments__membership__user=user,
+            assignments__membership__status="active",
+            assignments__membership__role_fk__name="consultant",
+            assignments__status="active",
+        ).exists()
+
+        if consultant_project:
+            return specification
+
+        raise NotFound(
+            "Specification not found."
+        )
+
+    def get_queryset(self):
+
+        specification = self.get_specification()
+
+        return (
+            SpecificationAttachment.objects
+            .filter(
+                specification=specification
+            )
+            .select_related(
+                "uploaded_by"
+            )
+            .order_by(
+                "created_at"
+            )
+        )
+
+    def perform_create(self, serializer):
+
+        specification = self.get_specification()
+
+        serializer.save(
+            specification=specification,
+            uploaded_by=self.request.user,
+        )
+
+
+class SpecificationAttachmentDeleteView(
+    generics.DestroyAPIView
+):
+
+    serializer_class = SpecificationAttachmentSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_specification(self):
+
+        specification = get_object_or_404(
+            ConsultantSpecification.objects.select_related(
+                "tender__project"
+            ),
+            id=self.kwargs["specification_id"],
+        )
+
+        user = self.request.user
+
+        if user.is_superuser or user.is_staff:
+            return specification
+
+        consultant_project = Project.objects.filter(
+            id=specification.tender.project_id,
+            assignments__membership__user=user,
+            assignments__membership__status="active",
+            assignments__membership__role_fk__name="consultant",
+            assignments__status="active",
+        ).exists()
+
+        if consultant_project:
+            return specification
+
+        raise NotFound(
+            "Specification not found."
+        )
+
+    def get_queryset(self):
+
+        specification = self.get_specification()
+
+        return (
+            SpecificationAttachment.objects
+            .filter(
+                specification=specification
+            )
         )
 class BidCreateView(
     generics.CreateAPIView

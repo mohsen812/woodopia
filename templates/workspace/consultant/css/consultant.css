@@ -385,3 +385,313 @@ body {
     margin-bottom:20px;
 
 }
+/* =========================================================
+   PROJECT JOURNEY
+   MVP-10.3 NEON PROGRESS RAIL
+========================================================= */
+
+
+.consultant-project-journey {
+
+    margin:20px 0;
+
+    padding:10px 0;
+
+}
+
+
+
+.project-journey-title {
+
+    display:none;
+
+}
+
+
+
+.project-journey-track {
+
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    direction:rtl;
+
+    width:100%;
+
+}
+
+
+
+.project-journey-stage {
+
+
+    position:relative;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+
+    min-width:90px;
+
+
+}
+
+
+
+.project-journey-node {
+
+
+    width:14px;
+
+    height:14px;
+
+
+    border-radius:50%;
+
+
+    background:#101820;
+
+
+    border:2px solid #344550;
+
+
+    z-index:2;
+
+
+    transition:.3s;
+
+
+}
+
+
+
+.project-journey-label {
+
+
+    margin-top:8px;
+
+
+    font-size:11px;
+
+
+    color:#667783;
+
+
+    white-space:nowrap;
+
+
+}
+
+
+
+.project-journey-line {
+
+
+    height:2px;
+
+
+    flex:1;
+
+
+    max-width:70px;
+
+
+    min-width:30px;
+
+
+    background:#26343d;
+
+
+    margin:0 -5px;
+
+
+}
+
+
+
+
+
+
+/* DONE */
+
+.project-journey-stage.completed
+.project-journey-node {
+
+
+    background:#00d9ff;
+
+
+    border-color:#00d9ff;
+
+
+    box-shadow:
+
+        0 0 10px #00d9ff;
+
+}
+
+
+
+.project-journey-stage.completed
+.project-journey-label {
+
+
+    color:#8feaff;
+
+}
+
+
+
+
+.project-journey-line.completed {
+
+
+    background:#00d9ff;
+
+
+    box-shadow:
+
+        0 0 8px rgba(0,217,255,.8);
+
+}
+
+
+
+
+
+
+
+/* CURRENT */
+
+
+.project-journey-stage.current
+.project-journey-node {
+
+
+    background:#ffffff;
+
+
+    border-color:#00d9ff;
+
+
+    box-shadow:
+
+        0 0 10px #00d9ff,
+
+        0 0 25px rgba(0,217,255,.8);
+
+
+    animation:
+        journeyPulse
+        2s infinite;
+
+}
+
+
+
+.project-journey-stage.current
+.project-journey-label {
+
+
+    color:white;
+
+
+    font-weight:700;
+
+}
+
+
+
+
+
+/* FUTURE */
+
+
+.project-journey-stage.pending
+.project-journey-node {
+
+
+    background:#101820;
+
+
+    border-color:#344550;
+
+}
+
+
+
+.project-journey-stage.pending
+.project-journey-label {
+
+
+    color:#4c5c66;
+
+}
+
+
+
+
+
+@keyframes journeyPulse {
+
+
+    0% {
+
+
+        box-shadow:
+
+        0 0 5px #00d9ff;
+
+
+    }
+
+
+    50% {
+
+
+        box-shadow:
+
+        0 0 20px #00d9ff;
+
+
+    }
+
+
+    100% {
+
+
+        box-shadow:
+
+        0 0 5px #00d9ff;
+
+
+    }
+
+}
+
+
+
+
+
+@media(max-width:700px){
+
+
+    .project-journey-track {
+
+        overflow-x:auto;
+
+        justify-content:flex-start;
+
+    }
+
+
+}
