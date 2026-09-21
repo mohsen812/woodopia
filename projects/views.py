@@ -807,6 +807,9 @@ class CustomerStandardizationView(
 
             "tender_status":
                 tender.status,
+            
+            "standardization_status":
+                tender.standardization_status,
 
             "items":
                 items,
@@ -871,6 +874,81 @@ class CustomerSpecificationReviewView(
                     specification.customer_review_status
             }
         )
+
+class CustomerStandardizationReviewView(
+    generics.GenericAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def post(self, request, pk):
+
+        project = get_object_or_404(
+            Project,
+            id=pk
+        )
+
+        tender = (
+            Tender.objects
+            .filter(
+                project=project
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+
+        if not tender:
+            return Response(
+                {
+                    "error":
+                    "Tender not found"
+                },
+                status=404
+            )
+
+
+        status_value = request.data.get(
+            "status"
+        )
+
+
+        if status_value not in [
+            "approved",
+            "revision_requested",
+        ]:
+            return Response(
+                {
+                    "error":
+                    "Invalid status"
+                },
+                status=400
+            )
+
+
+        tender.standardization_status = (
+            status_value
+        )
+
+        tender.save()
+
+
+        return Response(
+            {
+                "project_id":
+                    project.id,
+
+                "tender_id":
+                    tender.id,
+
+                "standardization_status":
+                    tender.standardization_status,
+            }
+        )
+
     
 # =====================================
 # PROJECT ATTACHMENTS

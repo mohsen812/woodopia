@@ -1434,6 +1434,9 @@ async function loadProjectStandardization(projectId){
             data
         );
 
+       const standardizationStatus =
+           data.standardization_status;
+
 
         const panel =
             document.getElementById(
@@ -1730,19 +1733,44 @@ ${
 
 <div class="standardization-actions">
 
+${
+    standardizationStatus === "approved"
 
-<button class="standardization-global-approve">
-✓ تایید کل استانداردسازی
-</button>
+    ?
+
+    `
+    <div class="standardization-status-approved">
+        🟢 استانداردسازی تایید شده است
+    </div>
+    `
+
+    :
+
+    standardizationStatus === "revision_requested"
+
+    ?
+
+    `
+    <div class="standardization-status-revision">
+        🟠 نیاز به اصلاح دارد
+    </div>
+    `
+
+    :
+
+    `
+    <button class="standardization-global-approve">
+        ✓ تایید کل استانداردسازی
+    </button>
 
 
-<button class="standardization-global-revise">
-↻ درخواست اصلاح کلی
-</button>
-
+    <button class="standardization-global-revise">
+        ↻ درخواست اصلاح کلی
+    </button>
+    `
+}
 
 </div>
-
 
 
 `;
@@ -1900,6 +1928,108 @@ catch(error){
 
             }
         );
+
+    }
+);
+
+
+panel.querySelector(
+    ".standardization-global-approve"
+)
+.addEventListener(
+    "click",
+    async function(){
+
+        try {
+
+            const response =
+                await apiPost(
+                    `/projects/${projectId}/standardization/review/`,
+                    {
+                        status: "approved"
+                    }
+                );
+
+
+            console.log(
+                "GLOBAL STANDARDIZATION APPROVED:",
+                response
+            );
+
+
+            this.innerHTML =
+                "✓ تایید کل شد";
+
+
+            this.disabled = true;
+
+
+            panel.querySelector(
+                ".standardization-global-revise"
+            ).disabled = true;
+
+
+        }
+        catch(error){
+
+            console.error(
+                "GLOBAL APPROVE ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+
+panel.querySelector(
+    ".standardization-global-revise"
+)
+.addEventListener(
+    "click",
+    async function(){
+
+        try {
+
+            const response =
+                await apiPost(
+                    `/projects/${projectId}/standardization/review/`,
+                    {
+                        status:
+                            "revision_requested"
+                    }
+                );
+
+
+            console.log(
+                "GLOBAL REVISION REQUESTED:",
+                response
+            );
+
+
+            this.innerHTML =
+                "↻ اصلاح کلی درخواست شد";
+
+
+            this.disabled = true;
+
+
+            panel.querySelector(
+                ".standardization-global-approve"
+            ).disabled = true;
+
+
+        }
+        catch(error){
+
+            console.error(
+                "GLOBAL REVISE ERROR:",
+                error
+            );
+
+        }
 
     }
 );

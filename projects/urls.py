@@ -17,6 +17,8 @@ from .views import (
     CustomerStandardizationView,
     SendStandardizationToCustomerView,    
     CustomerSpecificationReviewView,
+    CustomerStandardizationReviewView,
+   
 
 
 )
@@ -80,7 +82,13 @@ urlpatterns = [
         SendStandardizationToCustomerView.as_view(),
         name="send-standardization-to-customer",
     ),
-    
+    path(
+        "<int:pk>/standardization/review/",
+        CustomerStandardizationReviewView.as_view(),
+        name="customer-standardization-review",
+    ),
+
+  
     # =====================================
     # PROJECT TENDER
     # =====================================
