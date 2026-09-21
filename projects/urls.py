@@ -14,6 +14,9 @@ from .views import (
     ConsultantClaimView,
     ConsultantMyProjectsView,
     ConsultantStandardizationView,
+    CustomerStandardizationView,
+    SendStandardizationToCustomerView,    
+    CustomerSpecificationReviewView,
 
 
 )
@@ -63,6 +66,21 @@ urlpatterns = [
         ConsultantStandardizationView.as_view(),
         name="consultant-standardization",
     ),
+    # =====================================
+    # CUSTOMER STANDARDIZATION
+    # =====================================
+
+    path(
+        "<int:pk>/standardization/view/",
+        CustomerStandardizationView.as_view(),
+        name="customer-standardization-view",
+    ),
+    path(
+        "<int:pk>/standardization/send/",
+        SendStandardizationToCustomerView.as_view(),
+        name="send-standardization-to-customer",
+    ),
+    
     # =====================================
     # PROJECT TENDER
     # =====================================
@@ -118,6 +136,12 @@ urlpatterns = [
         "<int:pk>/attachments/",
         ProjectAttachmentListCreateView.as_view(),
         name="project-attachment-create",
+    ),
+
+    path(
+    "<int:pk>/standardization/review/",
+    CustomerSpecificationReviewView.as_view(),
+    name="customer-standardization-review",
     ),
 
 ]

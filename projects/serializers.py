@@ -8,6 +8,8 @@ from .models import (
     ProjectAttachment,
 )
 
+from tenders.models import SpecificationAttachment
+
 
 # =====================================
 # PROJECT VISUAL SERIALIZER
@@ -67,7 +69,33 @@ class ProjectAttachmentCreateSerializer(serializers.ModelSerializer):
             "uploaded_by",
         ]
 
+class SpecificationAttachmentProjectSerializer(
+    serializers.ModelSerializer
+):
 
+    uploaded_by_name = serializers.CharField(
+        source="uploaded_by.username",
+        read_only=True,
+    )
+
+    specification_title = serializers.CharField(
+        source="specification.title",
+        read_only=True,
+    )
+
+
+    class Meta:
+
+        model = SpecificationAttachment
+
+        fields = [
+            "id",
+            "file",
+            "title",
+            "specification_title",
+            "uploaded_by_name",
+            "created_at",
+        ]
 # =====================================
 # PROJECT ZONE SERIALIZER
 # =====================================
@@ -118,6 +146,32 @@ class ProjectItemSerializer(serializers.ModelSerializer):
             "quantity",
             "status",
         ]
+class SpecificationAttachmentProjectSerializer(
+    serializers.ModelSerializer
+):
+
+    uploaded_by_name = serializers.CharField(
+        source="uploaded_by.username",
+        read_only=True,
+    )
+
+    specification_title = serializers.CharField(
+        source="specification.title",
+        read_only=True,
+    )
+
+    class Meta:
+
+        model = SpecificationAttachment
+
+        fields = [
+            "id",
+            "file",
+            "title",
+            "uploaded_by_name",
+            "specification_title",
+            "created_at",
+        ]    
 class ProjectFullSerializer(serializers.ModelSerializer):
 
     zones = ProjectZoneSerializer(
@@ -129,6 +183,8 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
+    specification_attachments = serializers.SerializerMethodField()
+    
     items = ProjectItemSerializer(
         many=True,
         read_only=True
@@ -137,6 +193,17 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         source="customer.name",
         read_only=True
     )
+    def get_specification_attachments(
+        self,
+        obj
+    ):
+
+        return SpecificationAttachmentProjectSerializer(
+            SpecificationAttachment.objects.filter(
+                specification__tender__project=obj
+            ),
+            many=True
+        ).data
     
     class Meta:
 
@@ -156,6 +223,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "items",
             "zones",
             "attachments",
+            "specification_attachments",
         ]
 
 

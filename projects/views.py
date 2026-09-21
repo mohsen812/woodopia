@@ -28,6 +28,8 @@ from .models import (
     ProjectItem,
 )
 
+from tenders.models import ConsultantSpecification
+
 from .services import send_project_to_consultant
 
 from .serializers import (
@@ -318,12 +320,20 @@ class ConsultantStandardizationView(
                 id=project_id,
             )
 
+
         return get_object_or_404(
             Project.objects.filter(
-                assignments__membership__user=user,
-                assignments__membership__status="active",
-                assignments__membership__role_fk__name="consultant",
-                assignments__status="active",
+                Q(
+                    assignments__membership__user=user,
+                    assignments__membership__status="active",
+                    assignments__membership__role_fk__name="consultant",
+                    assignments__status="active",
+                )
+                |
+                Q(
+                    customer__members__user=user,
+                    customer__members__status="active",
+                )
             ).distinct(),
             id=project_id,
         )
@@ -366,10 +376,16 @@ class ConsultantStandardizationView(
 
         specifications = (
             tender.specifications
-            .select_related("project_item")
-            .order_by("row_number")
+            .select_related(
+                "project_item"
+            )
+        .prefetch_related(
+            "attachments"
+            )
+        .order_by(
+            "row_number"
+            )
         )
-
         data = []
 
         for specification in specifications:
@@ -379,6 +395,11 @@ class ConsultantStandardizationView(
             data.append({
                 "project_item_id": item.id,
                 "specification_id": specification.id,
+                
+                "customer_review_status": (
+                    specification.customer_review_status
+                ),
+                
                 "name": item.name,
                 "description": item.description,
                 "quantity": item.quantity,
@@ -554,6 +575,303 @@ class ConsultantStandardizationView(
             },
             status=status.HTTP_201_CREATED,
         )
+
+class SendStandardizationToCustomerView(
+    generics.GenericAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def post(self, request, pk):
+
+        project = get_object_or_404(
+            Project,
+            id=pk
+        )
+
+
+        tender = (
+            Tender.objects
+            .filter(
+                project=project
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+
+        if not tender:
+
+            return Response(
+                {
+                    "error":
+                    "Tender not found"
+                },
+                status=404
+            )
+
+
+        specifications = (
+            ConsultantSpecification.objects
+            .filter(
+                tender=tender
+            )
+        )
+
+
+        for specification in specifications:
+
+            if (
+                specification.customer_review_status
+                == "revise"
+            ):
+
+                specification.customer_review_status = (
+                    "pending"
+                )
+
+                specification.customer_review_note = ""
+
+                specification.save()
+
+
+        tender.standardization_status = (
+            "pending_customer"
+        )
+
+
+        tender.save()
+
+
+        return Response(
+            {
+                "message":
+                "Standardization sent to customer",
+
+                "project_id":
+                project.id,
+
+                "tender_id":
+                tender.id,
+
+                "status":
+                tender.standardization_status,
+            }
+        )
+    
+# =====================================
+# CUSTOMER STANDARDIZATION VIEW
+# =====================================
+
+class CustomerStandardizationView(
+    generics.GenericAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_project(self):
+
+        project_id = self.kwargs["pk"]
+
+        user = self.request.user
+
+        if user.is_superuser or user.is_staff:
+
+            return get_object_or_404(
+                Project.objects.all(),
+                id=project_id,
+            )
+
+        return get_object_or_404(
+            Project.objects.filter(
+                customer__members__user=user,
+                customer__members__status="active",
+                customer__organization_type="customer",
+                customer__status="active",
+            ).distinct(),
+            id=project_id,
+        )
+
+
+    def get_or_create_draft_tender(
+        self,
+        project
+    ):
+
+        tender = (
+            Tender.objects
+            .filter(
+                project=project,
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+        if tender:
+            return tender
+
+        return Tender.objects.create(
+            project=project,
+            title=(
+                f"{project.title} - "
+                "استانداردسازی"
+            ),
+            description=project.description or "",
+            status="draft",
+        )
+
+
+    def get(self, request, pk):
+
+        project = self.get_project()
+
+        tender = self.get_or_create_draft_tender(
+            project
+        )
+
+        specifications = (
+            tender.specifications
+            .select_related(
+                "project_item"
+            )
+            .order_by(
+                "row_number"
+            )
+        )
+
+        items = []
+
+        for specification in specifications:
+
+            item = specification.project_item
+
+            items.append({
+
+                "id":
+                    specification.id,
+
+                "row_number":
+                    specification.row_number,
+
+                "name":
+                    item.name,
+
+                "title":
+                    specification.title,
+                
+                "customer_review_status":
+                    specification.customer_review_status,
+                
+                "dimensions":
+                    specification.dimensions,
+
+                "material":
+                    specification.material,
+
+                "quantity":
+                    specification.quantity,
+
+                "technical_details":
+                    specification.technical_details,
+
+                "customer_review_status":
+                    specification.customer_review_status,
+
+                "files": [
+                    {
+                        "id": attachment.id,
+                        "file": attachment.file.url,
+                        "title": attachment.title or "",
+                    }
+                    for attachment
+                    in specification.attachments.all()
+                ],
+
+        })
+
+        return Response({
+
+            "project_id":
+                project.id,
+
+            "project_title":
+                project.title,
+
+            "tender_id":
+                tender.id,
+
+            "tender_status":
+                tender.status,
+
+            "items":
+                items,
+
+        })
+class CustomerSpecificationReviewView(
+    generics.GenericAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def post(self, request, pk):
+
+        specification = get_object_or_404(
+            ConsultantSpecification,
+            id=pk
+        )
+        
+        status_value = request.data.get(
+            "status"
+        )
+
+
+        if status_value not in [
+            "approved",
+            "revise",
+        ]:
+            return Response(
+                {
+                    "error":
+                    "Invalid status"
+                },
+                status=400
+            )
+
+
+        specification.customer_review_status = (
+            status_value
+        )
+
+
+        specification.customer_review_note = (
+            request.data.get(
+                "note",
+                ""
+            )
+        )
+
+
+        specification.save()
+
+
+        return Response(
+            {
+                "id":
+                    specification.id,
+
+                "status":
+                    specification.customer_review_status
+            }
+        )
+    
 # =====================================
 # PROJECT ATTACHMENTS
 # =====================================

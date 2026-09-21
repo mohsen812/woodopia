@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -191,14 +192,24 @@ class SpecificationAttachmentListCreateView(
         if user.is_superuser or user.is_staff:
             return specification
 
-        consultant_project = Project.objects.filter(
-            id=specification.tender.project_id,
-            assignments__membership__user=user,
-            assignments__membership__status="active",
-            assignments__membership__role_fk__name="consultant",
-            assignments__status="active",
+        project_access = Project.objects.filter(
+            id=specification.tender.project_id
+        ).filter(
+            Q(
+                assignments__membership__user=user,
+                assignments__membership__status="active",
+                assignments__status="active",
+            )
+            |
+            Q(
+                customer__members__user=user,
+                customer__members__status="active",
+            )
         ).exists()
 
+
+        if project_access:
+            return specification
         if consultant_project:
             return specification
 
@@ -257,13 +268,24 @@ class SpecificationAttachmentDeleteView(
         if user.is_superuser or user.is_staff:
             return specification
 
-        consultant_project = Project.objects.filter(
-            id=specification.tender.project_id,
-            assignments__membership__user=user,
-            assignments__membership__status="active",
-            assignments__membership__role_fk__name="consultant",
-            assignments__status="active",
+        project_access = Project.objects.filter(
+            id=specification.tender.project_id
+        ).filter(
+            Q(
+                assignments__membership__user=user,
+                assignments__membership__status="active",
+                assignments__status="active",
+            )
+            |
+            Q(
+                customer__members__user=user,
+                customer__members__status="active",
+            )
         ).exists()
+
+
+        if project_access:
+            return specification
 
         if consultant_project:
             return specification

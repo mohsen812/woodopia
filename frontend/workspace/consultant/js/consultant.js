@@ -1,7 +1,22 @@
 ﻿(function () {
 
 "use strict";
+function getCSRFToken(){
 
+    const cookie =
+        document.cookie
+        .split("; ")
+        .find(
+            row =>
+            row.startsWith("csrftoken=")
+        );
+
+
+    return cookie
+        ? cookie.split("=")[1]
+        : "";
+
+}
 
 /* ==================================================
    DASHBOARD
@@ -551,7 +566,16 @@ async function openConsultantProjectModal(
 
         const project =
             await response.json();
+        
+        console.log(
+            "FEEMAAS PROJECT DATA:",
+            project
+        );
 
+        console.log(
+            "FEEMAAS SPECIFICATION FILES:",
+            project.specification_attachments
+        );
 
         consultantCurrentProject =
             project;
@@ -887,8 +911,10 @@ function renderConsultantProjectTab(
 
         case "files": {
 
-            const files =
-                project.attachments || [];
+            const files = [
+                ...(project.attachments || []),
+                ...(project.specification_attachments || [])
+            ];
 
 
             content.innerHTML = `
@@ -933,7 +959,13 @@ function renderConsultantProjectTab(
                                         <span>
                                             ${escapeHTML(
                                                 file.file_type ||
-                                                ""
+                                                (
+                                                    file.file
+                                                    ?
+                                                    file.file.split(".").pop().toUpperCase()
+                                                    :
+                                                    ""
+                                                )
                                             )}
                                         </span>
 
@@ -1186,7 +1218,9 @@ function renderConsultantStandardization(
         );
 
     }
-
+console.log(
+    "STANDARDIZATION RENDER UPDATED"
+);
 
     content.innerHTML = `
 
@@ -1252,6 +1286,9 @@ function renderConsultantStandardization(
                         <div class="standardization-col-files">
                             فایل
                         </div>
+                        <div class="standardization-col-status">
+                            وضعیت مشتری
+                        </div>
 
                         <div class="standardization-col-required">
                             الزامی
@@ -1305,9 +1342,19 @@ function renderConsultantStandardization(
                     id="save-standardization"
                 >
                     ذخیره استانداردسازی
+
                 </button>
 
-            </div>
+
+                <button
+                   type="button"
+                   class="standardization-send-button"
+                   id="send-standardization-to-customer"
+                >
+                   ارسال برای تایید مشتری
+                </button>
+
+             </div>
 
         </div>
 
@@ -1453,19 +1500,38 @@ function renderStandardizationItem(
                     )}</textarea>
 
                 </div>
+   
+            
                 <div class="standardization-col-files">
 
-                    <button
-                        type="button"
-                        class="standardization-file-button"
-                        title="افزودن فایل"
-                    >
-                        📎
-                    </button>
+                     <button
+                         type="button"
+                         class="standardization-file-button"
+                         title="افزودن فایل"
+                     >
+                         📎
+                     </button>
 
                 </div>
 
 
+                <div class="standardization-col-status">
+
+                ${
+                    item.customer_review_status === "approved"
+                    ?
+                    "🟢 تایید مشتری"
+
+                    :
+                    item.customer_review_status === "revise"
+                    ?
+                    "🟠 نیاز به اصلاح"
+
+                    :
+                    "⚪ در انتظار"
+                }
+
+                </div> 
                 <div class="standardization-col-required">
 
                     <label
@@ -2715,6 +2781,77 @@ function bindStandardizationEvents() {
         );
 
     }
+const sendButton =
+    document.getElementById(
+        "send-standardization-to-customer"
+    );
+
+
+if (sendButton) {
+
+    sendButton.addEventListener(
+        "click",
+        async function(){
+
+            if(!consultantCurrentProject){
+
+                alert(
+                    "پروژه انتخاب نشده است."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/projects/${consultantCurrentProject.id}/standardization/send/`,
+                        {
+                            method:"POST",
+                            headers:{
+                                "X-CSRFToken":
+                                getCSRFToken()
+                            }
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                console.log(
+                    "STANDARDIZATION SENT:",
+                    data
+                );
+
+
+                alert(
+                    "استانداردسازی برای تایید مشتری ارسال شد."
+                );
+
+
+            }
+            catch(error){
+
+                console.error(
+                    error
+                );
+
+                alert(
+                    "ارسال استانداردسازی ناموفق بود."
+                );
+
+            }
+
+
+        }
+    );
+
+}
 
 
     /*

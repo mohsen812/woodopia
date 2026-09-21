@@ -1890,6 +1890,7 @@ if(
 
 
     }
+
 function renderProjectFiles(){
 
     if(!currentProject){
@@ -1905,33 +1906,12 @@ function renderProjectFiles(){
     }
 
 
-    const attachments =
+    const customerFiles =
         currentProject.attachments || [];
 
-    if(!attachments.length){
 
-
-        modalProjectContent.innerHTML = `
-
-            <div class="empty-state">
-
-                <h3>
-                    فایل‌های پروژه
-                </h3>
-
-                <p>
-                    هنوز فایلی برای این پروژه ثبت نشده است.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
+    const consultantFiles =
+        currentProject.specification_attachments || [];
 
 
 
@@ -1939,57 +1919,179 @@ function renderProjectFiles(){
 
         <div class="project-files">
 
+
             <h3>
-                فایل‌های پروژه
+                فایل‌ها و طراحی پروژه
             </h3>
 
 
-            <div class="project-files-list">
+
+            <section class="project-file-group">
+
+
+                <h4>
+                    📁 فایل‌های مشتری
+                </h4>
 
 
                 ${
-                    attachments.map(file => {
+                    customerFiles.length
+
+                    ?
+
+                    `
+                    <div class="project-files-list">
+
+                    ${
+                        customerFiles.map(file => `
+
+                            <article class="project-file-card">
+
+                                <h4>
+                                    ${
+                                        file.title ||
+                                        "فایل پروژه"
+                                    }
+                                </h4>
+
+                                <p>
+                                    نوع:
+                                    ${
+                                        file.file_type || "-"
+                                    }
+                                </p>
 
 
-                        return `
+                                <a
+                                    href="${file.file}"
+                                    target="_blank"
+                                >
+                                    مشاهده فایل
+                                </a>
 
-                        <article class="project-file-card">
+                            </article>
 
+                        `).join("")
+                    }
 
-                            <h4>
-                                ${
-                                    file.title ||
-                                    "فایل پروژه"
-                                }
-                            </h4>
+                    </div>
+                    `
 
+                    :
 
-                            <p>
-                                نوع:
-                                ${
-                                    file.file_type
-                                }
-                            </p>
+                    `
+                    <p>
+                        فایلی از طرف مشتری ثبت نشده است.
+                    </p>
+                    `
 
-
-                            <a
-                                href="${file.file}"
-                                target="_blank"
-                            >
-                                مشاهده فایل
-                            </a>
-
-
-                        </article>
-
-                        `;
-
-
-                    }).join("")
                 }
 
 
-            </div>
+            </section>
+
+
+
+
+            <section class="project-file-group">
+
+
+                <h4>
+                    📐 استانداردسازی مشاور
+                </h4>
+
+
+                ${
+                    consultantFiles.length
+
+                    ?
+
+                    `
+                    <div class="project-files-list">
+
+                    ${
+                        consultantFiles.map(file => `
+
+                            <article class="project-file-card consultant-file">
+
+
+                                <h4>
+                                    ${
+                                        file.title ||
+                                        "فایل استانداردسازی"
+                                    }
+                                </h4>
+
+
+                                <p>
+                                    ایجاد شده توسط مشاور
+                                </p>
+
+
+                                <a
+                                    href="${file.file}"
+                                    target="_blank"
+                                >
+                                    مشاهده فایل
+                                </a>
+
+
+                            </article>
+
+
+                        `).join("")
+                    }
+
+                    </div>
+                    `
+
+                    :
+
+                    `
+                    <p>
+                        هنوز استانداردسازی مشاور ثبت نشده است.
+                    </p>
+                    `
+
+                }
+
+
+            </section>
+
+
+
+            ${
+                consultantFiles.length
+
+                ?
+
+                `
+                <div class="standardization-actions">
+
+                    <button
+                        class="approve-standardization"
+                        data-project-id="${currentProject.id}"
+                    >
+                        تایید استانداردسازی
+                    </button>
+
+
+                    <button
+                        class="request-standardization-edit"
+                        data-project-id="${currentProject.id}"
+                    >
+                        درخواست اصلاح
+                    </button>
+
+
+                </div>
+                `
+
+                :
+
+                ""
+
+            }
 
 
         </div>
@@ -1998,7 +2100,6 @@ function renderProjectFiles(){
 
 
 }
-
 console.log("CUSTOMER JS LOADED");
 
 async function uploadProjectFiles(projectId){

@@ -1,5 +1,5 @@
-ï»¿/* =========================================================
-   FEEMAAS WORKSPACE â€” VISUAL SYSTEM
+/* =========================================================
+   FEEMAAS WORKSPACE — VISUAL SYSTEM
    Version: MVP UI Foundation
    ========================================================= */
 
@@ -1298,7 +1298,8 @@ textarea:focus-visible {
 
     display: grid;
 
-    grid-template-columns:
+    
+-template-columns:
         repeat(2, minmax(0, 1fr));
 
     gap: 9px;
@@ -1442,7 +1443,408 @@ textarea:focus-visible {
 
 }
 
+/* =========================================================
+   PROJECT DETAIL HEADER ACTIONS
+   ========================================================= */
 
+.project-detail-header-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+}
+
+
+.project-detail-header-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+}
+
+
+/* =========================================================
+   SEND TO CONSULTANT
+   ========================================================= */
+
+.project-consultant-action {
+
+    position: relative;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 9px;
+
+    min-width: 170px;
+
+    min-height: 42px;
+
+    padding: 9px 17px;
+
+    border:
+        1px solid
+        rgba(0,229,255,.55);
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(0,229,255,.13),
+            rgba(142,231,224,.06)
+        );
+
+    color:
+        var(--pastel-cyan);
+
+    cursor: pointer;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 0 8px
+        rgba(0,229,255,.22);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease;
+
+    animation:
+        consultantActionPulse
+        2.4s ease-in-out infinite;
+
+}
+
+
+.project-consultant-action:hover {
+
+    transform:
+        translateY(-2px);
+
+    border-color:
+        rgba(0,229,255,.9);
+
+    box-shadow:
+        0 0 14px
+        rgba(0,229,255,.55),
+        0 0 28px
+        rgba(0,229,255,.18);
+
+}
+
+
+.project-consultant-action:disabled {
+
+    opacity: .55;
+
+    cursor: wait;
+
+    animation: none;
+
+}
+
+
+.project-consultant-action-pulse {
+
+    width: 8px;
+
+    height: 8px;
+
+    border-radius: 50%;
+
+    background:
+        var(--pastel-cyan);
+
+    box-shadow:
+        0 0 7px
+        rgba(0,229,255,.8),
+        0 0 15px
+        rgba(0,229,255,.45);
+
+}
+
+
+@keyframes consultantActionPulse {
+
+    0%,
+    100% {
+
+        box-shadow:
+            0 0 7px
+            rgba(0,229,255,.22);
+
+    }
+
+    50% {
+
+        box-shadow:
+            0 0 14px
+            rgba(0,229,255,.52),
+            0 0 28px
+            rgba(0,229,255,.16);
+
+    }
+
+}
+
+
+/* =========================================================
+   PROJECT JOURNEY
+   ========================================================= */
+
+.project-journey {
+
+    margin:
+        22px 28px 0;
+
+    padding:
+        20px 18px;
+
+    border:
+        1px solid
+        var(--glass-border-soft);
+
+    border-radius:
+        var(--radius-lg);
+
+    background:
+        rgba(0,0,0,.12);
+
+}
+
+
+.project-journey-heading {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 22px;
+
+}
+
+
+.project-journey-heading strong {
+
+    color:
+        var(--text-soft);
+
+    font-size: 12px;
+
+}
+
+
+/* =========================================================
+   JOURNEY TRACK
+   ========================================================= */
+
+.project-journey-track {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    width: 100%;
+
+}
+
+
+.project-journey-step {
+
+    position: relative;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 90px;
+
+    color:
+        var(--text-muted);
+
+}
+
+
+.project-journey-dot {
+
+    width: 34px;
+
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid
+        rgba(255,255,255,.14);
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.035);
+
+    color:
+        var(--text-muted);
+
+    font-size: 9px;
+
+    transition:
+        all .25s ease;
+
+}
+
+
+.project-journey-label {
+
+    font-size: 10px;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+}
+
+
+/* =========================================================
+   JOURNEY LINE
+   ========================================================= */
+
+.project-journey-line {
+
+    flex: 1;
+
+    height: 1px;
+
+    margin-top: 17px;
+
+    background:
+        rgba(255,255,255,.10);
+
+    transition:
+        background .3s ease,
+        box-shadow .3s ease;
+
+}
+
+
+.project-journey-line.active {
+
+    background:
+        rgba(0,229,255,.55);
+
+    box-shadow:
+        0 0 7px
+        rgba(0,229,255,.28);
+
+}
+
+
+/* =========================================================
+   ACTIVE STEP
+   ========================================================= */
+
+.project-journey-step.active {
+
+    color:
+        var(--pastel-cyan);
+
+}
+
+
+.project-journey-step.active
+.project-journey-dot {
+
+    border-color:
+        rgba(0,229,255,.75);
+
+    background:
+        rgba(0,229,255,.09);
+
+    color:
+        var(--pastel-cyan);
+
+    box-shadow:
+        0 0 9px
+        rgba(0,229,255,.42),
+        0 0 18px
+        rgba(0,229,255,.16);
+
+    animation:
+        journeyPulse
+        2.6s ease-in-out infinite;
+
+}
+
+
+.project-journey-step.completed {
+
+    color:
+        var(--text-soft);
+
+}
+
+
+.project-journey-step.completed
+.project-journey-dot {
+
+    border-color:
+        rgba(142,231,224,.4);
+
+    color:
+        var(--pastel-cyan);
+
+    background:
+        rgba(142,231,224,.06);
+
+}
+
+
+@keyframes journeyPulse {
+
+    0%,
+    100% {
+
+        box-shadow:
+            0 0 6px
+            rgba(0,229,255,.25);
+
+    }
+
+    50% {
+
+        box-shadow:
+            0 0 12px
+            rgba(0,229,255,.55),
+            0 0 22px
+            rgba(0,229,255,.18);
+
+    }
+
+}
 .project-status {
 
     padding:
@@ -2764,5 +3166,1152 @@ select:focus {
     .workspace-create-project-cancel {
         width: 100%;
     }
+
+}
+/* =====================================================
+   CUSTOMER STANDARDIZATION
+===================================================== */
+
+
+.standardization-table-wrapper {
+
+    width:100%;
+
+    background:
+        rgba(255,255,255,0.035);
+
+    border:
+        1px solid var(--glass-border);
+
+    border-radius:
+        var(--radius-lg);
+
+    padding:18px;
+
+}
+
+
+.standardization-table-head,
+.standardization-row {
+
+    display:grid;
+
+    grid-template-columns:
+        50px
+        1.4fr
+        70px
+        110px
+        100px
+        1.5fr
+        120px
+        160px;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.standardization-row {
+
+    padding: 12px 8px;
+
+}
+
+
+.standardization-row-actions {
+
+    display: flex;
+
+    gap: 8px;
+
+    align-items: center;
+
+    white-space: nowrap;
+
+}
+
+
+.standardization-approve,
+
+.standardization-revise {
+
+    padding: 6px 10px;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+
+}
+.standardization-table-head {
+
+    padding:14px;
+
+    color:
+        var(--text-muted);
+
+    border-bottom:
+        1px solid var(--glass-border-soft);
+
+}
+
+
+
+.standardization-item {
+
+    margin-top:12px;
+
+    padding:14px;
+
+    background:
+        rgba(255,255,255,0.045);
+
+    border:
+        1px solid rgba(142,231,224,0.18);
+
+    border-radius:
+        16px;
+
+    transition:
+        var(--transition);
+
+}
+
+
+
+.standardization-item:hover {
+
+    background:
+        rgba(255,255,255,0.075);
+
+}
+
+
+
+.standardization-row-actions {
+
+    display:flex;
+
+    gap:10px;
+
+}
+
+
+
+.standardization-row-actions button,
+.standardization-global-approve,
+.standardization-global-revise {
+
+
+    padding:
+        9px 18px;
+
+    border-radius:
+        10px;
+
+    cursor:pointer;
+
+}
+
+
+
+.standardization-approve,
+.standardization-global-approve {
+
+    background:
+        rgba(142,231,224,0.18);
+
+    color:white;
+
+}
+
+
+
+.standardization-revise,
+.standardization-global-revise {
+
+    background:
+        rgba(255,175,215,0.15);
+
+    color:white;
+
+}
+
+
+
+.standardization-actions {
+
+    display:flex;
+
+    gap:14px;
+
+    margin-top:20px;
+
+}
+
+
+
+.standardization-timer {
+
+    margin-top:15px;
+
+    color:
+        var(--text-muted);
+
+}
+
+/* =====================================================
+   CUSTOMER STANDARDIZATION TABLE FINAL
+===================================================== */
+
+
+.standardization-table {
+
+    width:100%;
+
+}
+
+
+
+.standardization-table-head,
+.standardization-row {
+
+    display:grid !important;
+
+
+    grid-template-columns:
+
+        55px
+        1.4fr
+        80px
+        120px
+        120px
+        1.8fr
+        70px
+        170px;
+
+
+    align-items:center;
+
+}
+
+
+
+.standardization-table-head {
+
+
+    min-height:55px;
+
+
+    background:
+        rgba(255,255,255,0.05);
+
+
+    border:
+        1px solid rgba(255,255,255,0.12);
+
+
+    border-radius:14px;
+
+
+    margin-bottom:12px;
+
+
+}
+
+
+
+.standardization-table-head div {
+
+
+    text-align:center;
+
+
+    font-size:12px;
+
+
+}
+
+
+
+.standardization-item {
+
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,0.06),
+            rgba(255,255,255,0.02)
+        );
+
+
+    border:
+        1px solid rgba(142,231,224,0.15);
+
+
+    border-radius:14px;
+
+
+    margin-bottom:12px;
+
+
+}
+
+
+
+.standardization-row > div {
+
+
+    min-height:75px;
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    justify-content:center;
+
+
+    padding:10px;
+
+
+    border-left:
+        1px solid rgba(255,255,255,0.06);
+
+
+    text-align:center;
+
+}
+
+
+
+.standardization-row-actions {
+
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:8px;
+
+}
+
+
+
+.standardization-row-actions button {
+
+
+    padding:
+        8px 14px;
+
+
+    border-radius:10px;
+
+
+    font-size:12px;
+
+}
+
+
+/* buttons */
+
+.standardization-approve {
+
+
+    background:
+        rgba(142,231,224,0.18);
+
+
+    border:
+        1px solid rgba(142,231,224,0.45);
+
+
+    color:#8ee7e0;
+
+}
+
+
+
+.standardization-revise {
+
+
+    background:
+        rgba(200,167,255,0.18);
+
+
+    border:
+        1px solid rgba(200,167,255,0.45);
+
+
+    color:#c8a7ff;
+
+}
+
+
+
+.standardization-global-approve {
+
+
+    background:
+        rgba(142,231,224,0.18);
+
+
+    color:#8ee7e0;
+
+
+}
+
+
+
+.standardization-global-revise {
+
+
+    background:
+        rgba(200,167,255,0.18);
+
+
+    color:#c8a7ff;
+
+
+}
+
+/* =====================================================
+   CUSTOMER STANDARDIZATION GRID FIX
+===================================================== */
+
+
+[data-project-tab-content="standardization"] 
+.standardization-table-head,
+[data-project-tab-content="standardization"] 
+.standardization-row {
+
+
+    display:grid !important;
+
+
+    grid-template-columns:
+
+        45px
+        minmax(120px,1.1fr)
+        60px
+        100px
+        100px
+        minmax(160px,1.6fr)
+        60px
+        140px !important;
+
+    width:100%;
+
+}
+
+
+
+[data-project-tab-content="standardization"]
+.standardization-row > div,
+[data-project-tab-content="standardization"]
+.standardization-table-head > div {
+
+    min-width:0;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+}
+
+
+
+[data-project-tab-content="standardization"]
+.standardization-item {
+
+
+    width:100%;
+
+    overflow:hidden;
+
+}
+
+
+
+[data-project-tab-content="standardization"]
+.standardization-row-actions {
+
+    display:flex;
+
+    gap:6px;
+
+    justify-content:center;
+
+    align-items:center;
+
+    white-space:nowrap;
+
+}
+
+
+
+[data-project-tab-content="standardization"]
+.standardization-row-actions button {
+
+    flex-shrink:0;
+
+}
+
+/* =====================================================
+   STANDARDIZATION ACTION COLUMN FIX
+===================================================== */
+
+
+[data-project-tab-content="standardization"]
+.standardization-row-actions {
+
+
+    display:flex !important;
+
+    flex-direction:row;
+
+    gap:8px;
+
+    justify-content:center;
+
+    align-items:center;
+
+    width:100%;
+
+}
+
+
+
+[data-project-tab-content="standardization"]
+.standardization-row-actions button {
+
+
+    width:auto;
+
+    min-width:65px;
+
+    padding:8px 10px;
+
+    flex-shrink:0;
+
+    white-space:nowrap;
+
+}
+
+
+
+/* give more space to last columns */
+
+[data-project-tab-content="standardization"]
+.standardization-table-head,
+[data-project-tab-content="standardization"]
+.standardization-row {
+
+
+    grid-template-columns:
+
+        45px
+        minmax(120px,1fr)
+        60px
+        100px
+        100px
+        minmax(150px,1.5fr)
+        70px
+        190px !important;
+
+
+}
+
+/* =========================================================
+   PROJECT DETAIL — WIDE WORKSPACE
+   ========================================================= */
+
+#project-detail-view {
+    width: 100%;
+    max-width: none;
+}
+
+#project-detail-view .project-detail-card {
+    width: 100%;
+    max-width: none;
+}
+
+/* =========================================================
+   STANDARDIZATION — FULL WIDTH TABLE
+   ========================================================= */
+
+#project-detail-view
+.standardization-table-wrapper {
+    width: 100%;
+    max-width: none;
+    overflow-x: auto;
+}
+
+#project-detail-view
+.standardization-table {
+    width: 100%;
+    min-width: 1100px;
+}
+/* =========================================================
+   STANDARDIZATION COMPACT PROJECT VIEW
+========================================================= */
+
+
+#project-detail-view
+.standardization-table-head,
+#project-detail-view
+.standardization-row {
+
+
+    display:grid !important;
+
+
+    grid-template-columns:
+
+        45px
+        minmax(110px,1fr)
+        50px
+        90px
+        90px
+        minmax(140px,1.4fr)
+        110px
+        130px;
+
+
+    align-items:center;
+
+}
+
+
+#project-detail-view
+.standardization-row > div,
+#project-detail-view
+.standardization-table-head > div {
+
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+}
+
+
+/* ????? */
+
+#project-detail-view
+.standardization-status {
+
+
+    font-size:12px;
+
+}
+
+
+/* ???? */
+
+#project-detail-view
+.standardization-file-cell {
+
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+
+/* ??? ??? ???? */
+
+#project-detail-view
+.standardization-file-label {
+
+    display:none;
+
+}
+
+
+#project-detail-view
+.standardization-file-badge {
+
+
+    width:38px;
+
+    height:38px;
+
+    border-radius:50%;
+
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+
+    gap:2px;
+
+
+    padding:0;
+
+
+    font-size:14px;
+
+
+}
+
+
+/* ?????? */
+
+#project-detail-view
+.standardization-row-actions {
+
+
+    display:flex !important;
+
+
+    flex-direction:row !important;
+
+
+    flex-wrap:nowrap;
+
+
+    gap:5px;
+
+
+    justify-content:center;
+
+
+    align-items:center;
+
+
+}
+
+
+
+#project-detail-view
+.standardization-row-actions button {
+
+
+    font-size:11px;
+
+
+    padding:5px 8px;
+
+
+    min-width:auto;
+
+
+    white-space:nowrap;
+
+
+}
+
+/* =====================================================
+   FINAL STANDARDIZATION GRID OVERRIDE
+===================================================== */
+
+
+#project-detail-view
+.standardization-table-wrapper {
+
+    overflow-x:hidden !important;
+
+}
+
+
+#project-detail-view
+.standardization-table {
+
+    min-width:0 !important;
+    width:100% !important;
+
+}
+
+
+
+#project-detail-view
+.standardization-table-head,
+#project-detail-view
+.standardization-row {
+
+    display:grid !important;
+
+
+    grid-template-columns:
+
+        35px
+        120px
+        45px
+        85px
+        85px
+        minmax(120px,1fr)
+        90px
+        45px
+        125px !important;
+
+}
+
+
+
+#project-detail-view
+.standardization-row > div,
+#project-detail-view
+.standardization-table-head > div {
+
+    padding:4px !important;
+
+    font-size:12px !important;
+
+}
+
+
+
+#project-detail-view
+.standardization-row {
+
+    min-height:42px !important;
+
+}
+
+
+
+#project-detail-view
+.standardization-row-actions {
+
+    display:flex !important;
+
+    flex-direction:row !important;
+
+    flex-wrap:nowrap !important;
+
+    gap:3px !important;
+
+}
+
+
+
+#project-detail-view
+.standardization-row-actions button {
+
+    padding:3px 5px !important;
+
+    font-size:10px !important;
+
+}
+
+#project-detail-view
+.standardization-row-actions button {
+
+    overflow:hidden !important;
+
+    text-overflow:ellipsis !important;
+
+    max-width:70px !important;
+
+}
+/* =========================================================
+   CUSTOMER STANDARDIZATION HEADER
+   ========================================================= */
+
+#project-detail-view .standardization-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+#project-detail-view .standardization-header-title {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+#project-detail-view .standardization-header-title .eyebrow {
+    margin: 0;
+}
+
+#project-detail-view .standardization-header-title h3 {
+    margin: 0;
+}
+
+#project-detail-view .standardization-timer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 10px 18px;
+
+    border: 1px solid rgba(0, 255, 220, 0.35);
+    border-radius: 14px;
+
+    background: rgba(0, 255, 220, 0.045);
+
+    box-shadow:
+        0 0 14px rgba(0, 255, 220, 0.10),
+        inset 0 0 14px rgba(0, 255, 220, 0.025);
+
+    white-space: nowrap;
+}
+
+#project-detail-view .standardization-timer-label {
+    font-size: 13px;
+    opacity: 0.78;
+}
+
+#project-detail-view .standardization-timer strong {
+    direction: ltr;
+    font-size: 20px;
+    letter-spacing: 2px;
+}
+/* =========================================================
+   STANDARDIZATION — ROW FILES
+   ========================================================= */
+
+#project-detail-view .standardization-file-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#project-detail-view .standardization-file-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-width: 72px;
+    padding: 7px 10px;
+
+    border: 1px solid rgba(0, 255, 220, 0.45);
+    border-radius: 999px;
+
+    background: rgba(0, 255, 220, 0.055);
+
+    color: inherit;
+    cursor: pointer;
+
+    box-shadow:
+        0 0 10px rgba(0, 255, 220, 0.14),
+        inset 0 0 10px rgba(0, 255, 220, 0.035);
+
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
+}
+
+#project-detail-view .standardization-file-badge:hover {
+    transform: translateY(-1px);
+
+    border-color: rgba(0, 255, 220, 0.8);
+
+    box-shadow:
+        0 0 18px rgba(0, 255, 220, 0.3),
+        inset 0 0 12px rgba(0, 255, 220, 0.06);
+}
+
+#project-detail-view .standardization-file-icon {
+    font-size: 14px;
+}
+
+#project-detail-view .standardization-file-count {
+    font-weight: 700;
+    direction: ltr;
+}
+
+#project-detail-view .standardization-file-label {
+    font-size: 12px;
+}
+
+#project-detail-view .standardization-no-file {
+    opacity: 0.45;
+}
+
+
+/* ???????? ???? ???? */
+
+#project-detail-view .standardization-file-list {
+    position: absolute;
+    z-index: 20;
+
+    top: calc(100% + 8px);
+    right: 50%;
+
+    transform: translateX(50%);
+
+    min-width: 190px;
+    max-width: 280px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    padding: 10px;
+
+    border: 1px solid rgba(0, 255, 220, 0.28);
+    border-radius: 12px;
+
+    background: rgba(15, 22, 25, 0.96);
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.35),
+        0 0 16px rgba(0, 255, 220, 0.08);
+
+    backdrop-filter: blur(14px);
+}
+
+#project-detail-view .standardization-file-list.hidden {
+    display: none;
+}
+
+#project-detail-view .standardization-file-link {
+    display: block;
+
+    padding: 7px 9px;
+
+    border-radius: 8px;
+
+    color: inherit;
+    text-decoration: none;
+
+    background: rgba(255, 255, 255, 0.035);
+
+    transition:
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+#project-detail-view .standardization-file-link:hover {
+    background: rgba(0, 255, 220, 0.08);
+    transform: translateX(-2px);
+}
+/* =====================================================
+   STANDARDIZATION FILE MODAL
+===================================================== */
+
+
+.standardization-modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(0,0,0,.75);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:9999;
+
+}
+
+
+
+.standardization-modal-box {
+
+    width:min(850px,90vw);
+
+    max-height:85vh;
+
+    overflow:auto;
+
+    background:
+        rgba(20,20,30,.95);
+
+    border:
+        1px solid
+        rgba(255,255,255,.15);
+
+    border-radius:24px;
+
+    padding:30px;
+
+}
+
+
+
+.standardization-modal-box h3 {
+
+    margin-bottom:25px;
+
+}
+
+
+
+.standardization-modal-close {
+
+    float:left;
+
+    border:none;
+
+    background:none;
+
+    color:white;
+
+    font-size:30px;
+
+    cursor:pointer;
+
+}
+
+
+
+.standardization-modal-gallery {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:20px;
+
+}
+
+
+
+.standardization-modal-file img {
+
+    width:100%;
+
+    border-radius:16px;
+
+    display:block;
+
+}
+
+
+
+.standardization-modal-file a {
+
+    display:block;
+
+    padding:20px;
+
+    border-radius:14px;
+
+    background:
+    rgba(255,255,255,.08);
+
+    color:white;
 
 }

@@ -35,7 +35,16 @@ class Tender(models.Model):
         choices=STATUS_CHOICES,
         default="draft",
     )
-
+    standardization_status = models.CharField(
+        max_length=30,
+        choices=[
+            ("draft", "Draft"),
+            ("pending_customer", "Pending Customer"),
+            ("approved", "Approved"),
+            ("revision_requested", "Revision Requested"),
+        ],
+        default="draft",
+    )
     deadline = models.DateTimeField(
         null=True,
         blank=True,
@@ -127,7 +136,20 @@ class ConsultantSpecification(models.Model):
     is_required = models.BooleanField(
         default=True
     )
+    customer_review_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("revise", "Revise"),
+        ],
+        default="pending",
+    )
 
+
+    customer_review_note = models.TextField(
+        blank=True,
+    )
     created_at = models.DateTimeField(
         auto_now_add=True
     )

@@ -717,7 +717,13 @@ function openProjectDetail(project) {
                     قراردادها
                 </button>
 
-
+                <button
+                    type="button"
+                    class="project-detail-tab"
+                    data-project-tab="standardization"
+                >
+                    استانداردسازی
+                </button>
                 <button
                     type="button"
                     class="project-detail-tab"
@@ -839,7 +845,21 @@ function openProjectDetail(project) {
 
             </div>
 
+            <div
+                class="project-detail-tab-content hidden"
+                data-project-tab-content="standardization"
+            >
 
+                <div
+                    class="project-tab-panel"
+                    id="project-standardization-panel"
+                >
+
+                    در حال دریافت استانداردسازی...
+
+                </div>
+
+            </div>
             <div
                 class="project-detail-tab-content hidden"
                 data-project-tab-content="files"
@@ -1038,7 +1058,15 @@ if (
     );
 
 }
+if (
+    target === "standardization"
+) {
 
+    loadProjectStandardization(
+        project.id
+    );
+
+}
                     }
                 );
 
@@ -1813,5 +1841,177 @@ function escapeHtml(value) {
 
 
     return div.innerHTML;
+
+}
+
+/*
+============================================================
+ LOAD PROJECT STANDARDIZATION
+============================================================
+*/
+
+async function loadProjectStandardization(projectId){
+
+    console.log(
+        "PROJECT STANDARDIZATION LOAD:",
+        projectId
+    );
+
+    try {
+
+        const data =
+            await apiGet(
+                `/projects/${projectId}/standardization/view/`
+            );
+
+
+        const panel =
+            document.getElementById(
+                "project-standardization-panel"
+            );
+
+
+        if(!panel){
+            return;
+        }
+
+
+        const items =
+            data.items || [];
+
+
+        panel.innerHTML = `
+
+            <span class="eyebrow">
+                STANDARDIZATION
+            </span>
+
+
+            <h3>
+                استانداردسازی مشاور
+            </h3>
+
+
+            ${
+                items.length
+
+                ?
+
+                `
+
+                <table class="standardization-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                ردیف
+                            </th>
+
+                            <th>
+                                عنوان
+                            </th>
+
+                            <th>
+                                توضیحات
+                            </th>
+
+                            <th>
+                                وضعیت
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    ${
+                        items.map(
+                            (item,index)=>`
+
+                            <tr>
+
+                                <td>
+                                    ${index + 1}
+                                </td>
+
+
+                                <td>
+                                    ${item.title || "-"}
+                                </td>
+
+
+                                <td>
+                                    ${item.description || "-"}
+                                </td>
+
+
+                                <td>
+                                    آماده بررسی
+                                </td>
+
+
+                            </tr>
+
+                            `
+                        ).join("")
+                    }
+
+                    </tbody>
+
+                </table>
+
+
+                <div class="standardization-actions">
+
+                    <button class="approve-standardization">
+                        تایید استانداردسازی
+                    </button>
+
+
+                    <button class="edit-standardization">
+                        درخواست اصلاح
+                    </button>
+
+
+                    <div class="standardization-timer">
+
+                        زمان بررسی مشتری:
+                        60 دقیقه
+
+                    </div>
+
+                </div>
+
+                `
+
+
+                :
+
+                `
+
+                <p>
+                    هنوز استانداردسازی ثبت نشده است.
+                </p>
+
+                `
+
+            }
+
+        `;
+
+
+    }
+    catch(error){
+
+        console.error(
+            "STANDARDIZATION LOAD ERROR",
+            error
+        );
+
+    }
 
 }

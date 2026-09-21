@@ -30,20 +30,32 @@ function createProjectCard(project) {
 
         <div class="project-card-header">
 
-            <span class="eyebrow">
-                PROJECT #${project.id}
-            </span>
+            <div class="project-card-title">
+
+                <span class="eyebrow">
+                    PROJECT #${project.id}
+                </span>
+
+                <h3>
+                    ${escapeHtml(
+                        project.title ||
+                        "بدون عنوان"
+                    )}
+                </h3>
+
+            </div>
+
 
             <span class="project-status">
-                ${escapeHtml(project.status || "—")}
+
+                ${escapeHtml(
+                    project.status ||
+                    "نامشخص"
+                )}
+
             </span>
 
         </div>
-
-
-        <h3>
-            ${escapeHtml(project.title || "بدون عنوان")}
-        </h3>
 
 
         <div class="project-description">
@@ -138,6 +150,7 @@ function createProjectCard(project) {
     return div;
 
 }
+
 
 
 /*
@@ -474,24 +487,61 @@ function showProject(project) {
         );
 
 
-    if (consultantButton) {
+   if (consultantButton) {
 
-        consultantButton.addEventListener(
-            "click",
-            function(event) {
+    consultantButton.addEventListener(
+        "click",
+        async function(event) {
 
-                event.preventDefault();
+            event.preventDefault();
 
 
-                console.log(
-                    "FEEMAAS: Send project to consultant",
-                    project
+            const confirmed =
+                confirm(
+                    "آیا پروژه برای مشاور ارسال شود؟"
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                await apiPost(
+                    `/projects/${project.id}/send-to-consultant/`,
+                    {}
+                );
+
+
+                alert(
+                    "پروژه با موفقیت برای مشاور ارسال شد"
+                );
+
+
+                location.reload();
+
+
+            }
+            catch(error) {
+
+
+                console.error(
+                    error
+                );
+
+
+                alert(
+                    "خطا در ارسال پروژه به مشاور"
                 );
 
             }
-        );
 
-    }
+        }
+    );
+
+}
 
 }
 
@@ -568,6 +618,7 @@ function openProjectDetail(project) {
         <div class="project-detail-card">
 
 
+
             <div class="project-detail-header">
 
                 <div>
@@ -595,22 +646,119 @@ function openProjectDetail(project) {
             </div>
 
 
-            <div class="project-detail-description">
 
-                <span class="eyebrow">
-                    DESCRIPTION
-                </span>
+            <div class="project-journey">
 
-                <p>
+                <div class="project-journey-heading">
 
-                    ${escapeHtml(
-                        project.description ||
-                        "توضیحی برای این پروژه ثبت نشده است."
-                    )}
+                    <span class="eyebrow">
+                        PROJECT JOURNEY
+                    </span>
 
-                </p>
+                    <strong>
+                        مسیر اجرای پروژه
+                    </strong>
+
+                </div>
+
+
+                <div class="project-journey-track">
+
+                    <div class="project-journey-step active">
+                        <span class="project-journey-dot">01</span>
+                        <span class="project-journey-label">پیش‌نویس</span>
+                    </div>
+
+
+                    <div class="project-journey-line"></div>
+
+
+                    <div class="project-journey-step">
+                        <span class="project-journey-dot">02</span>
+                        <span class="project-journey-label">مشاور</span>
+                    </div>
+
+
+                    <div class="project-journey-line"></div>
+
+
+                    <div class="project-journey-step">
+                        <span class="project-journey-dot">03</span>
+                        <span class="project-journey-label">استانداردسازی / مناقصه</span>
+                    </div>
+
+
+                    <div class="project-journey-line"></div>
+
+
+                    <div class="project-journey-step">
+                        <span class="project-journey-dot">04</span>
+                        <span class="project-journey-label">تولید</span>
+                    </div>
+
+
+                    <div class="project-journey-line"></div>
+
+
+                    <div class="project-journey-step">
+                        <span class="project-journey-dot">05</span>
+                        <span class="project-journey-label">تکمیل</span>
+                    </div>
+
+                </div>
 
             </div>
+
+
+
+            <div class="project-detail-description">
+
+                <div class="project-description-action">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            DESCRIPTION
+                        </span>
+
+
+                        <p>
+
+                            ${escapeHtml(
+                                project.description ||
+                                "توضیحی برای این پروژه ثبت نشده است."
+                            )}
+
+                        </p>
+
+                    </div>
+
+
+                    ${
+                        project.status === "draft"
+                        ? `
+                        <button
+                            type="button"
+                            class="project-consultant-action"
+                            data-action="send-project-to-consultant"
+                        >
+
+                            <span class="project-consultant-action-pulse"></span>
+
+                            <span>
+                                ارسال برای مشاور
+                            </span>
+
+                        </button>
+                        `
+                        :
+                        ""
+                    }
+
+                </div>
+
+            </div>
+
 
 
             <div class="project-meta">
@@ -717,6 +865,13 @@ function openProjectDetail(project) {
                     قراردادها
                 </button>
 
+                <button
+                    type="button"
+                    class="project-detail-tab"
+                    data-project-tab="standardization"
+                >
+                    استانداردسازی
+                </button>
 
                 <button
                     type="button"
@@ -788,7 +943,23 @@ function openProjectDetail(project) {
     </div>
 
 </div>
+<div
+    class="project-detail-tab-content hidden"
+    data-project-tab-content="standardization"
+>
 
+    <div
+        class="project-tab-panel"
+        id="standardization-panel"
+    >
+
+        <div class="tender-loading">
+            در حال دریافت استانداردسازی...
+        </div>
+
+    </div>
+
+</div>
 
             <div
                 class="project-detail-tab-content hidden"
@@ -838,7 +1009,6 @@ function openProjectDetail(project) {
                 </div>
 
             </div>
-
 
             <div
                 class="project-detail-tab-content hidden"
@@ -894,8 +1064,78 @@ function openProjectDetail(project) {
 
     `;
 
+/*
+--------------------------------------------------------
+ SEND PROJECT TO CONSULTANT
+--------------------------------------------------------
+*/
 
-    /*
+const consultantAction =
+    projectView.querySelector(
+        '[data-action="send-project-to-consultant"]'
+    );
+
+if (consultantAction) {
+
+    consultantAction.addEventListener(
+        "click",
+        async function(event) {
+
+            event.preventDefault();
+
+            const confirmed =
+                confirm(
+                    "آیا پروژه برای مشاور ارسال شود؟"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+
+                consultantAction.disabled = true;
+
+                consultantAction.classList.add(
+                    "is-loading"
+                );
+
+                await apiPost(
+                    `/projects/${project.id}/send-to-consultant/`,
+                    {}
+                );
+
+                alert(
+                    "پروژه با موفقیت برای مشاور ارسال شد"
+                );
+
+                location.reload();
+
+            }
+            catch(error) {
+
+                console.error(
+                    error
+                );
+
+                consultantAction.disabled = false;
+
+                consultantAction.classList.remove(
+                    "is-loading"
+                );
+
+                alert(
+                    "خطا در ارسال پروژه به مشاور"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+/*
     --------------------------------------------------------
     HIDE OTHER WORKSPACE VIEWS
     --------------------------------------------------------
@@ -1039,6 +1279,17 @@ if (
 
 }
 
+
+if (
+    target === "standardization"
+) {
+
+    loadProjectStandardization(
+        project.id
+    );
+
+}
+
                     }
                 );
 
@@ -1069,6 +1320,7 @@ if (
     });
 
 }
+
 /*
 ============================================================
  LOAD PROJECT ATTACHMENTS
@@ -1092,13 +1344,7 @@ async function loadProjectAttachments(projectId) {
 
 
         if (!panel) {
-
-            console.warn(
-                "FEEMAAS: Files panel not found."
-            );
-
             return;
-
         }
 
 
@@ -1148,7 +1394,6 @@ async function loadProjectAttachments(projectId) {
 
         `;
 
-
     }
     catch(error) {
 
@@ -1160,6 +1405,522 @@ async function loadProjectAttachments(projectId) {
     }
 
 }
+
+
+/*
+============================================================
+ LOAD PROJECT STANDARDIZATION
+============================================================
+*/
+
+async function loadProjectStandardization(projectId){
+
+    console.log(
+        "CUSTOMER STANDARDIZATION LOAD:",
+        projectId
+    );
+
+
+    try {
+
+        const data =
+            await apiGet(
+                `/projects/${projectId}/standardization/view/`
+            );
+
+
+        console.log(
+            "STANDARDIZATION DATA:",
+            data
+        );
+
+
+        const panel =
+            document.getElementById(
+                "standardization-panel"
+            );
+
+
+        if(!panel){
+            console.warn(
+                "STANDARDIZATION PANEL NOT FOUND"
+            );
+            return;
+        }
+
+
+        const items =
+            data.items || [];
+
+console.log(
+    "STANDARDIZATION FULL ITEMS:",
+    JSON.stringify(items, null, 2)
+);
+
+items.forEach(item => {
+
+    console.log(
+        "ITEM STATUS:",
+        item.id,
+        item.customer_review_status
+    );
+
+});
+
+        panel.innerHTML = `
+
+
+<span class="eyebrow">
+    STANDARDIZATION
+</span>
+
+
+<div class="standardization-header">
+
+    <div class="standardization-header-title">
+        <span class="eyebrow">
+            STANDARDIZATION
+        </span>
+
+        <h3>
+            استانداردسازی مشاور
+        </h3>
+    </div>
+
+
+    <div
+        id="customer-review-timer"
+        class="standardization-timer"
+    >
+        <span class="standardization-timer-label">
+            زمان باقی‌مانده بررسی
+        </span>
+
+        <strong id="customer-review-timer-value">
+            60:00
+        </strong>
+    </div>
+
+</div>
+
+<div class="standardization-table-wrapper">
+
+
+<div class="standardization-table">
+
+
+<div class="standardization-table-head">
+
+    <div>ردیف</div>
+    <div>نام آیتم</div>
+    <div>تعداد</div>
+    <div>ابعاد</div>
+    <div>متریال</div>
+    <div>مشخصات فنی</div>
+    <div>وضعیت</div>    
+    <div>فایل</div>
+    <div>عملیات</div>
+
+
+</div>
+
+
+
+${
+items.map(
+(item,index)=>`
+
+<div class="standardization-item">
+
+<div class="standardization-row">
+
+
+<div>
+${index + 1}
+</div>
+
+
+<div>
+${item.name || item.title || "-"}
+</div>
+
+
+<div>
+${item.quantity || "-"}
+</div>
+
+
+<div>
+${item.dimensions || "-"}
+</div>
+
+
+<div>
+${item.material || "-"}
+</div>
+
+
+<div>
+${item.technical_details || "-"}
+</div>
+
+
+<div class="standardization-status">
+
+${
+    item.customer_review_status === "approved"
+    ?
+    "✓"
+    :
+    item.customer_review_status === "revise"
+    ?
+    "↻"
+    :
+    "—"
+}
+
+</div>
+
+
+<div class="standardization-file-cell">
+
+${
+    item.files && item.files.length
+    ?
+    `
+    <button
+        type="button"
+        class="standardization-file-badge"
+        data-standardization-files="${item.row_number}"
+    >
+
+        <span class="standardization-file-icon">
+            📎
+        </span>
+
+        <span class="standardization-file-count">
+            ${item.files.length}
+        </span>
+
+    </button>
+
+
+    <div
+        class="standardization-modal-data hidden"
+        data-standardization-modal-data="${item.row_number}"
+    >
+
+        ${
+
+            item.files.map(
+                file => `
+
+                <div class="standardization-modal-file">
+
+
+                    ${
+                        file.file.match(
+                            /\.(jpg|jpeg|png|gif|webp)$/i
+                        )
+
+                        ?
+
+                        `
+                        <img
+                            src="${file.file}"
+                            alt="${file.title || "تصویر فایل"}"
+                        >
+                        `
+
+                        :
+
+                        `
+                        <a
+                            href="${file.file}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            📄
+                            ${file.title || "مشاهده فایل"}
+                        </a>
+                        `
+
+                    }
+
+
+                </div>
+
+                `
+            ).join("")
+
+        }
+
+    </div>
+
+    `
+    :
+    `
+    <span class="standardization-no-file">
+        —
+    </span>
+    `
+}
+
+</div>
+
+<div class="standardization-row-actions">
+
+${
+    !item.customer_review_status ||
+
+    item.customer_review_status === "pending" ||
+
+    item.customer_review_status === "revise"
+
+    ?
+
+    `
+    <button
+        class="standardization-approve"
+        data-specification-id="${item.id}"
+        title="تایید استانداردسازی"
+    >
+        ✓
+    </button>
+
+
+    <button
+        class="standardization-revise"
+        data-specification-id="${item.id}"
+        title="درخواست اصلاح"
+    >
+        ↻
+    </button>
+    `
+
+    :
+
+    `
+    <span
+        class="standardization-locked"
+        title="تصمیم ثبت شده"
+    >
+        🔒
+    </span>
+    `
+}
+
+</div>
+
+</div>
+
+</div>
+
+`
+).join("")
+}
+
+
+</div>
+
+</div>
+
+
+
+
+<div class="standardization-actions">
+
+
+<button class="standardization-global-approve">
+✓ تایید کل استانداردسازی
+</button>
+
+
+<button class="standardization-global-revise">
+↻ درخواست اصلاح کلی
+</button>
+
+
+</div>
+
+
+
+`;
+
+panel.querySelectorAll(
+    "[data-standardization-files]"
+)
+.forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            function(){
+
+                const rowNumber =
+                    this.dataset.standardizationFiles;
+
+
+                const data =
+                    panel.querySelector(
+                        `[data-standardization-modal-data="${rowNumber}"]`
+                    );
+
+
+                if(!data){
+                    return;
+                }
+
+
+                openStandardizationFilesModal(
+                    data.innerHTML
+                );
+
+            }
+        );
+
+    }
+);
+
+panel.querySelectorAll(
+    ".standardization-approve"
+).forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            async function(){
+
+                const specificationId =
+                    this.dataset.specificationId;
+
+
+                try {
+
+                    const response =
+                        await apiPost(
+                            `/projects/${specificationId}/standardization/review/`,
+                            {
+                                status: "approved"
+                            }
+                        );
+
+
+                    console.log(
+                        "APPROVED:",
+                        response
+                    );
+
+
+                    this.innerHTML =
+                        "✓ تایید";
+ 
+                    this
+                    .closest(".standardization-row-actions")
+                    .querySelector(".standardization-revise")
+                    .disabled = true;
+                    this.disabled = true;
+
+
+                }
+                catch(error){
+
+                    console.error(
+                        "APPROVE ERROR:",
+                        error
+                    );
+
+                }
+
+
+
+            }
+        );
+
+    }
+);
+
+panel.querySelectorAll(
+    ".standardization-revise"
+).forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            async function(){
+
+                const specificationId =
+                    this.dataset.specificationId;
+
+
+try {
+
+    const response =
+        await apiPost(
+            `/projects/${specificationId}/standardization/review/`,
+            {
+                status: "revise",
+                note: "نیاز به اصلاح دارد"
+            }
+        );
+
+
+    console.log(
+        "REVISE SAVED:",
+        response
+    );
+
+
+    this.innerHTML =
+        "↻ اصلاح شد";
+
+
+    this.disabled = true;
+
+    this
+    .closest(".standardization-row-actions")
+    .querySelector(".standardization-approve")
+    .disabled = true;
+
+    this
+    .closest(".standardization-row-actions")
+    .querySelector(".standardization-approve")
+    .disabled = true;
+
+}
+catch(error){
+
+    console.error(
+        "REVISE ERROR:",
+        error
+    );
+
+}
+
+
+            }
+        );
+
+    }
+);
+        console.log(
+            "STANDARDIZATION RENDER DONE",
+            panel.innerHTML.length
+        );
+
+
+    }
+    catch(error){
+
+        console.error(
+            "STANDARDIZATION LOAD ERROR",
+            error
+        );
+
+    }
+
+}
+
 /*
 ============================================================
  LOAD TENDER DASHBOARD
@@ -1894,7 +2655,83 @@ function closeProjectModal() {
 
 }
 
+function openStandardizationFilesModal(content){
 
+
+    let modal =
+        document.getElementById(
+            "standardization-files-modal"
+        );
+
+
+    if(!modal){
+
+        modal =
+            document.createElement(
+                "div"
+            );
+
+        modal.id =
+            "standardization-files-modal";
+
+
+        document.body.appendChild(
+            modal
+        );
+
+    }
+
+
+    modal.innerHTML = `
+
+
+<div class="standardization-modal-overlay">
+
+
+    <div class="standardization-modal-box">
+
+
+        <button
+            class="standardization-modal-close"
+        >
+            ×
+        </button>
+
+
+        <h3>
+            فایل‌های استانداردسازی
+        </h3>
+
+
+        <div class="standardization-modal-gallery">
+
+            ${content}
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+`;
+
+
+    modal
+    .querySelector(
+        ".standardization-modal-close"
+    )
+    .onclick =
+    () => {
+
+        modal.innerHTML="";
+
+    };
+
+
+}
 /*
 ============================================================
  HTML ESCAPE
