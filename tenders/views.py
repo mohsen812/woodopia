@@ -1050,6 +1050,67 @@ class BidDetailView(
     )
 
     serializer_class = BidSerializer
+class BidSubmitView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request, pk):
+
+        bid = get_object_or_404(
+            Bid,
+            id=pk,
+        )
+
+        # workshop ownership check
+
+        membership_exists = (
+            Membership.objects
+            .filter(
+                user=request.user,
+                organization=bid.workshop,
+                status="active",
+            )
+            .exists()
+        )
+
+        if not membership_exists:
+            raise ValidationError(
+                "شما عضو فعال این کارگاه نیستید."
+            )
+
+
+        if bid.status != "draft":
+
+            raise ValidationError(
+                "این پیشنهاد قبلاً ارسال شده یا قابل ارسال نیست."
+            )
+
+
+        if not bid.items.exists():
+
+            raise ValidationError(
+                "حداقل یک آیتم قیمت باید ثبت شود."
+            )
+
+
+        bid.status = "submitted"
+
+        bid.save(
+            update_fields=[
+                "status",
+            ]
+        )
+
+
+        return Response(
+            {
+                "status": "ok",
+                "bid_id": bid.id,
+                "bid_status": bid.status,
+            }
+        )    
 class BidDiscountUpdateView(
     generics.GenericAPIView
 ):

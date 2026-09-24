@@ -8,8 +8,14 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from organizations.models import Organization
-from projects.models import Project
+from organizations.models import (
+    Organization,
+    Membership,
+)
+from projects.models import (
+    Project,
+    ProjectItem,
+)
 
 from datetime import timedelta
 from django.utils import timezone
@@ -18,6 +24,7 @@ from .models import (
     Tender,
     TenderRound,
     Bid,
+    BidItem,
     TenderAward,
     CustomerTenderSelection,
     TenderParticipant,
@@ -1442,6 +1449,11 @@ class TenderParticipantResponseTests(TestCase):
             organization_type="workshop",
             owner=self.user,
         )
+        Membership.objects.create(
+            user=self.user,
+            organization=self.workshop,
+            status="active",
+        )
 
         self.project = Project.objects.create(
             title="Participant Response Project",
@@ -1449,6 +1461,13 @@ class TenderParticipantResponseTests(TestCase):
             customer=self.customer,
             created_by=self.user,
             status="tender",
+        )
+
+        self.project_item = ProjectItem.objects.create(
+            project=self.project,
+            name="Test Item",
+            description="test item",
+            quantity=1,
         )
 
         self.tender = Tender.objects.create(
@@ -1513,4 +1532,41 @@ class TenderParticipantResponseTests(TestCase):
         self.assertEqual(
             bid.status,
             "draft",
+        )
+    def test_submit_draft_bid(self):
+
+        bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            status="draft",
+        )
+        BidItem.objects.create(
+            bid=bid,
+            project_item=self.project_item,
+            quantity=1,
+            unit_price=1000000,
+        )
+
+        response = self.client.post(
+            f"/api/tenders/bids/{bid.id}/submit/",
+            {},
+            format="json",
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        bid.refresh_from_db()
+
+        self.assertEqual(
+            bid.status,
+            "submitted",
+        )
+
+        self.assertEqual(
+            response.data["bid_status"],
+            "submitted",
         )
