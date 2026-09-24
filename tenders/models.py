@@ -268,6 +268,23 @@ class TenderParticipant(models.Model):
         auto_now_add=True
     )
 
+    RESPONSE_CHOICES = [
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("declined", "Declined"),
+    ]
+
+    response_status = models.CharField(
+        max_length=20,
+        choices=RESPONSE_CHOICES,
+        default="pending",
+    )
+
+    responded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
     class Meta:
 
         constraints = [
@@ -397,6 +414,24 @@ class Bid(models.Model):
 
     technical_notes = models.TextField(
         blank=True
+    )
+
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("submitted", "Submitted"),
+        ("under_review", "Under Review"),
+        ("selected", "Selected"),
+        ("rejected", "Rejected"),
+    ]
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="draft",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
     )
 
     created_at = models.DateTimeField(

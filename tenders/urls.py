@@ -21,6 +21,7 @@ from .views import (
     BidDiscountUpdateView,
     SpecificationAttachmentListCreateView,
     SpecificationAttachmentDeleteView,
+    TenderParticipantResponseView,
 
 )
 
@@ -59,6 +60,11 @@ urlpatterns = [
         "<int:tender_id>/participants/",
         TenderParticipantListCreateView.as_view(),
         name="tender-participant-list-create"
+    ),
+    path(
+        "participants/<int:pk>/respond/",
+        TenderParticipantResponseView.as_view(),
+        name="tender-participant-response",
     ),
     path(
         "<int:tender_id>/specifications/",

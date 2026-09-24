@@ -194,6 +194,7 @@ class BidSerializer(serializers.ModelSerializer):
             "discount_percentage",
             "discount_amount",
             "final_amount",
+            "status",
             "created_at",
             "updated_at",
 
@@ -203,6 +204,7 @@ class BidSerializer(serializers.ModelSerializer):
             "id",
             "discount_amount",
             "final_amount",
+            "status",            
             "created_at",
             "updated_at",
         ]
@@ -279,11 +281,15 @@ class TenderParticipantSerializer(
             "organization",
             "organization_name",
             "invited_at",
+            "response_status",
+            "responded_at",
         ]
 
         read_only_fields = [
             "id",
             "invited_at",
+            "responded_at",
+
         ]
 
 

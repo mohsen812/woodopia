@@ -4,6 +4,7 @@ from django.utils import timezone
 
 
 from rest_framework import generics
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError
@@ -618,6 +619,82 @@ class TenderParticipantListCreateView(
             ).data,
         })
 
+class TenderParticipantResponseView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request, pk):
+
+        participant = get_object_or_404(
+            TenderParticipant,
+            id=pk,
+        )
+
+        response_status = request.data.get(
+            "response_status"
+        )
+
+        if response_status not in [
+            "accepted",
+            "declined",
+        ]:
+            raise ValidationError(
+                "وضعیت پاسخ معتبر نیست."
+            )
+
+
+        participant.response_status = response_status
+        participant.responded_at = timezone.now()
+
+        participant.save(
+            update_fields=[
+                "response_status",
+                "responded_at",
+            ]
+        )
+
+
+        bid_id = None
+
+
+        if response_status == "accepted":
+
+            active_round = (
+                TenderRound.objects
+                .filter(
+                    tender=participant.tender,
+                    status="open",
+                )
+                .first()
+            )
+
+
+            if active_round:
+
+                bid, created = (
+                    Bid.objects
+                    .get_or_create(
+                        tender_round=active_round,
+                        workshop=participant.organization,
+                        defaults={
+                            "status": "draft",
+                        }
+                    )
+                )
+
+                bid_id = bid.id
+
+
+        return Response(
+            {
+                "status": "ok",
+                "participant_id": participant.id,
+                "response_status": participant.response_status,
+                "bid_id": bid_id,
+            }
+        )
 class TenderRoundListCreateView(
     generics.ListCreateAPIView
 ):
