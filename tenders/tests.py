@@ -20,6 +20,8 @@ from .models import (
     Bid,
     TenderAward,
     CustomerTenderSelection,
+    TenderParticipant,
+
 )
 from .services import get_visible_bids
 from .services import (
@@ -1417,3 +1419,98 @@ class TenderRevealWorkflowTests(TestCase):
             reveal_tender(
                 self.tender.id
             )
+
+class TenderParticipantResponseTests(TestCase):
+
+    def setUp(self):
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="workshop_response_test",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Response Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Response Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Participant Response Project",
+            description="test",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Participant Response Tender",
+            status="open",
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="open",
+        )
+
+        self.participant = TenderParticipant.objects.create(
+            tender=self.tender,
+            organization=self.workshop,
+        )
+
+        self.client = APIClient()
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+
+    def test_accept_creates_draft_bid(self):
+
+        response = self.client.post(
+            f"/api/tenders/participants/{self.participant.id}/respond/",
+            {
+                "response_status": "accepted"
+            },
+            format="json",
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+
+        self.assertEqual(
+            response.data["response_status"],
+            "accepted",
+        )
+
+
+        self.assertTrue(
+            Bid.objects.filter(
+                id=response.data["bid_id"]
+            ).exists()
+        )
+
+
+        bid = Bid.objects.get(
+            id=response.data["bid_id"]
+        )
+
+
+        self.assertEqual(
+            bid.status,
+            "draft",
+        )
