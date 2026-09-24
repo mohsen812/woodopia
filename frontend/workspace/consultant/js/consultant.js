@@ -1027,9 +1027,54 @@ function renderConsultantProjectTab(
 
         case "messages":
 
+            content.innerHTML = `
+
+                <div class="empty-state">
+
+                    <h3>
+                        گفتگو
+                    </h3>
+
+                    <p>
+                        بخش گفتگو در MVP بعدی تکمیل می‌شود.
+                    </p>
+
+                </div>
+
+            `;
+
+            break;
+
+
         case "timeline":
 
+            content.innerHTML = `
+
+                <div class="empty-state">
+
+                    <h3>
+                        روند پروژه
+                    </h3>
+
+                    <p>
+                        بخش روند پروژه در MVP بعدی تکمیل می‌شود.
+                    </p>
+
+                </div>
+
+            `;
+
+            break;
+
+
         case "tender":
+
+            loadConsultantTender(
+                project.id
+            );
+
+            break;
+
 
         case "report":
 
@@ -1169,7 +1214,2391 @@ async function loadConsultantStandardization(
 
 }
 
+async function loadConsultantTender(
+    projectId
+){
 
+    const content =
+        document.getElementById(
+            "consultant-project-content"
+        );
+
+
+    if(!content){
+        return;
+    }
+
+
+    content.innerHTML = `
+
+        <div class="project-section">
+
+            <div class="tender-loading">
+
+                <div class="tender-loading-dot"></div>
+
+                <span>
+                    در حال دریافت کنترل مناقصه...
+                </span>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/projects/${projectId}/tender/`,
+                {
+                    credentials:
+                        "same-origin",
+
+                    headers:{
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Tender loading failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        renderConsultantTender(
+            data
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Tender error:",
+            error
+        );
+
+
+        content.innerHTML = `
+
+            <div class="project-section">
+
+                <div class="tender-error">
+
+                    <div class="tender-error-icon">
+                        ⚠️
+                    </div>
+
+                    <h3>
+                        خطا در دریافت اطلاعات مناقصه
+                    </h3>
+
+                    <p>
+                        اطلاعات کنترل مناقصه پروژه دریافت نشد.
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+/* ==================================================
+   TENDER CONTROL ACTIONS
+================================================== */
+
+async function startConsultantTender(
+    tenderId,
+    projectId
+){
+
+    if(!confirm(
+        "آیا از شروع مناقصه اطمینان دارید؟\n\nپس از شروع، مناقصه برای کارگاه‌های انتخاب‌شده فعال می‌شود."
+    )){
+        return;
+    }
+
+
+    try{
+
+        const response =
+            await fetch(
+                `/api/tenders/${tenderId}/start/`,
+                {
+                    method: "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers:{
+                        "Accept":
+                            "application/json",
+
+                        "Content-Type":
+                            "application/json",
+
+                        "X-CSRFToken":
+                            getCSRFToken()
+                    },
+
+                    body: JSON.stringify({})
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!response.ok){
+
+            throw new Error(
+                data.detail ||
+                data.message ||
+                "شروع مناقصه انجام نشد."
+            );
+
+        }
+
+
+        alert(
+            data.message ||
+            "مناقصه با موفقیت شروع شد."
+        );
+
+
+        await loadConsultantTender(
+            projectId
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Tender start error:",
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "خطا در شروع مناقصه."
+        );
+
+    }
+
+}
+
+
+async function closeConsultantTender(
+    tenderId,
+    projectId
+){
+
+    if(!confirm(
+        "آیا از پایان دادن به این مناقصه اطمینان دارید؟\n\nپس از پایان، دریافت پیشنهادهای جدید متوقف می‌شود."
+    )){
+        return;
+    }
+
+
+    try{
+
+        const response =
+            await fetch(
+                `/api/tenders/${tenderId}/close/`,
+                {
+                    method: "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers:{
+                        "Accept":
+                            "application/json",
+
+                        "Content-Type":
+                            "application/json",
+
+                        "X-CSRFToken":
+                            getCSRFToken()
+                    },
+
+                    body: JSON.stringify({})
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!response.ok){
+
+            throw new Error(
+                data.detail ||
+                data.message ||
+                "پایان مناقصه انجام نشد."
+            );
+
+        }
+
+
+        alert(
+            data.message ||
+            "مناقصه با موفقیت پایان یافت."
+        );
+
+
+        await loadConsultantTender(
+            projectId
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Tender close error:",
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "خطا در پایان مناقصه."
+        );
+
+    }
+
+}
+
+/* ==================================================
+   TENDER WORKSHOP SELECTION
+================================================== */
+
+async function openTenderWorkshopSelector(
+    tenderId,
+    projectId,
+    currentParticipants = []
+){
+
+    const existingModal =
+        document.getElementById(
+            "tender-workshop-selector-modal"
+        );
+
+    if(existingModal){
+        existingModal.remove();
+    }
+
+
+    const selectedIds =
+        new Set(
+            currentParticipants
+                .map(
+                    participant =>
+                        Number(participant.organization)
+                )
+                .filter(
+                    id => !Number.isNaN(id)
+                )
+        );
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "tender-workshop-selector-modal";
+
+    modal.className =
+        "tender-workshop-modal";
+
+
+    modal.innerHTML = `
+
+        <div class="tender-workshop-modal-backdrop"></div>
+
+        <div
+            class="tender-workshop-modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tender-workshop-selector-title"
+        >
+
+            <div class="tender-workshop-modal-header">
+
+                <div>
+
+                    <span class="tender-panel-kicker">
+                        WORKSHOP SELECTION
+                    </span>
+
+                    <h3 id="tender-workshop-selector-title">
+                        انتخاب کارگاه‌های مناقصه
+                    </h3>
+
+                    <p>
+                        کارگاه‌هایی را که می‌خواهید برای این مناقصه
+                        انتخاب شوند مشخص کنید.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="tender-workshop-modal-close"
+                    id="tender-workshop-modal-close"
+                    aria-label="بستن"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="tender-workshop-modal-toolbar">
+
+                <input
+                    type="search"
+                    id="tender-workshop-search"
+                    class="tender-workshop-search"
+                    placeholder="جستجوی نام کارگاه..."
+                    autocomplete="off"
+                >
+
+                <span
+                    class="tender-workshop-selected-count"
+                    id="tender-workshop-selected-count"
+                >
+                    ${selectedIds.size} کارگاه انتخاب شده
+                </span>
+
+            </div>
+
+
+            <div
+                class="tender-workshop-list"
+                id="tender-workshop-list"
+            >
+
+                <div class="tender-workshop-loading">
+                    <span class="tender-loading-dot"></span>
+                    در حال دریافت فهرست کارگاه‌ها...
+                </div>
+
+            </div>
+
+
+            <div class="tender-workshop-modal-footer">
+
+                <div class="tender-workshop-footer-info">
+
+                    <span>
+                        انتخاب‌های فعلی جایگزین انتخاب‌های قبلی می‌شوند.
+                    </span>
+
+                </div>
+
+                <div class="tender-workshop-footer-actions">
+
+                    <button
+                        type="button"
+                        class="tender-workshop-secondary-button"
+                        id="tender-workshop-cancel"
+                    >
+                        انصراف
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tender-workshop-primary-button"
+                        id="tender-workshop-save"
+                    >
+                        ذخیره انتخاب‌ها
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+
+
+    const closeModal = () => {
+
+        modal.remove();
+
+    };
+
+
+    const closeButton =
+        document.getElementById(
+            "tender-workshop-modal-close"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "tender-workshop-cancel"
+        );
+
+
+    const backdrop =
+        modal.querySelector(
+            ".tender-workshop-modal-backdrop"
+        );
+
+
+    if(closeButton){
+        closeButton.addEventListener(
+            "click",
+            closeModal
+        );
+    }
+
+
+    if(cancelButton){
+        cancelButton.addEventListener(
+            "click",
+            closeModal
+        );
+    }
+
+
+    if(backdrop){
+        backdrop.addEventListener(
+            "click",
+            closeModal
+        );
+    }
+
+
+    const searchInput =
+        document.getElementById(
+            "tender-workshop-search"
+        );
+
+
+    const list =
+        document.getElementById(
+            "tender-workshop-list"
+        );
+
+
+    const selectedCount =
+        document.getElementById(
+            "tender-workshop-selected-count"
+        );
+
+
+    function updateSelectedCount(){
+
+        const count =
+            selectedIds.size;
+
+        if(selectedCount){
+
+            selectedCount.textContent =
+                `${count} کارگاه انتخاب شده`;
+
+        }
+
+    }
+
+
+    function renderWorkshopList(
+        workshops
+    ){
+
+        if(!Array.isArray(workshops)){
+            workshops = [];
+        }
+
+
+        const query =
+            searchInput
+                ? searchInput.value
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+
+        const filtered =
+            workshops.filter(
+                workshop => {
+
+                    const name =
+                        String(
+                            workshop.name || ""
+                        )
+                        .toLowerCase();
+
+                    return !query ||
+                        name.includes(query);
+
+                }
+            );
+
+
+        if(!filtered.length){
+
+            list.innerHTML = `
+
+                <div class="tender-workshop-empty">
+
+                    <div class="tender-workshop-empty-icon">
+                        ◌
+                    </div>
+
+                    <strong>
+                        کارگاهی پیدا نشد
+                    </strong>
+
+                    <small>
+                        نام کارگاه را بررسی کنید.
+                    </small>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        list.innerHTML =
+            filtered
+                .map(
+                    workshop => {
+
+                        const id =
+                            Number(workshop.id);
+
+                        const checked =
+                            selectedIds.has(id);
+
+                        const safeName =
+                            escapeHTML(
+                                workshop.name ||
+                                "کارگاه بدون نام"
+                            );
+
+
+                        return `
+
+                            <label
+                                class="tender-workshop-option
+                                ${checked ? "selected" : ""}"
+                                data-workshop-option="${id}"
+                            >
+
+                                <input
+                                    type="checkbox"
+                                    class="tender-workshop-checkbox"
+                                    value="${id}"
+                                    ${checked ? "checked" : ""}
+                                >
+
+                                <span
+                                    class="tender-workshop-checkmark"
+                                >
+                                    ✓
+                                </span>
+
+                                <span
+                                    class="tender-workshop-option-content"
+                                >
+
+                                    <strong>
+                                        ${safeName}
+                                    </strong>
+
+                                    <small>
+                                        کارگاه فعال
+                                    </small>
+
+                                </span>
+
+                            </label>
+
+                        `;
+
+                    }
+                )
+                .join("");
+
+
+        list
+            .querySelectorAll(
+                ".tender-workshop-checkbox"
+            )
+            .forEach(
+                checkbox => {
+
+                    checkbox.addEventListener(
+                        "change",
+                        () => {
+
+                            const id =
+                                Number(
+                                    checkbox.value
+                                );
+
+
+                            if(checkbox.checked){
+
+                                selectedIds.add(id);
+
+                            }
+                            else{
+
+                                selectedIds.delete(id);
+
+                            }
+
+
+                            const option =
+                                checkbox.closest(
+                                    ".tender-workshop-option"
+                                );
+
+
+                            if(option){
+
+                                option.classList.toggle(
+                                    "selected",
+                                    checkbox.checked
+                                );
+
+                            }
+
+
+                            updateSelectedCount();
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+
+    if(searchInput){
+
+        searchInput.addEventListener(
+            "input",
+            () => {
+
+                renderWorkshopList(
+                    window.__tenderAvailableWorkshops || []
+                );
+
+            }
+        );
+
+    }
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/organizations/workshops/",
+                {
+                    method: "GET",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!response.ok){
+
+            throw new Error(
+                data.detail ||
+                data.message ||
+                "دریافت فهرست کارگاه‌ها انجام نشد."
+            );
+
+        }
+
+
+        const workshops =
+            Array.isArray(data.workshops)
+                ? data.workshops
+                : [];
+
+
+        window.__tenderAvailableWorkshops =
+            workshops;
+
+
+        renderWorkshopList(
+            workshops
+        );
+
+    }
+    catch(error){
+
+        console.error(
+            "Workshop list error:",
+            error
+        );
+
+
+        list.innerHTML = `
+
+            <div class="tender-workshop-error">
+
+                <div class="tender-workshop-empty-icon">
+                    !
+                </div>
+
+                <strong>
+                    دریافت کارگاه‌ها انجام نشد
+                </strong>
+
+                <small>
+                    ${escapeHTML(
+                        error.message ||
+                        "خطای نامشخص"
+                    )}
+                </small>
+
+            </div>
+
+        `;
+
+    }
+
+
+    const saveButton =
+        document.getElementById(
+            "tender-workshop-save"
+        );
+
+
+    if(saveButton){
+
+        saveButton.addEventListener(
+            "click",
+            async () => {
+
+                const organizationIds =
+                    Array.from(
+                        selectedIds
+                    );
+
+
+                saveButton.disabled =
+                    true;
+
+                saveButton.textContent =
+                    "در حال ذخیره...";
+
+
+                try{
+
+                    const response =
+                        await fetch(
+                            `/api/tenders/${tenderId}/participants/`,
+                            {
+                                method: "POST",
+
+                                credentials:
+                                    "same-origin",
+
+                                headers:{
+                                    "Accept":
+                                        "application/json",
+
+                                    "Content-Type":
+                                        "application/json",
+
+                                    "X-CSRFToken":
+                                        getCSRFToken()
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        organizations:
+                                            organizationIds
+                                    })
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if(!response.ok){
+
+                        throw new Error(
+                            data.detail ||
+                            data.message ||
+                            "ذخیره کارگاه‌ها انجام نشد."
+                        );
+
+                    }
+
+
+                    alert(
+                        data.message ||
+                        "کارگاه‌های مناقصه با موفقیت ذخیره شدند."
+                    );
+
+
+                    closeModal();
+
+
+                    await loadConsultantTender(
+                        projectId
+                    );
+
+                }
+                catch(error){
+
+                    console.error(
+                        "Workshop selection error:",
+                        error
+                    );
+
+
+                    alert(
+                        error.message ||
+                        "خطا در ذخیره کارگاه‌ها."
+                    );
+
+
+                    saveButton.disabled =
+                        false;
+
+                    saveButton.textContent =
+                        "ذخیره انتخاب‌ها";
+
+                }
+
+            }
+        );
+
+    }
+
+}
+
+/* ==================================================
+   TENDER SETTINGS PANEL
+================================================== */
+
+function openTenderSettingsPanel(
+    tender,
+    projectId
+){
+
+    const existingModal =
+        document.getElementById(
+            "tender-settings-modal"
+        );
+
+    if(existingModal){
+        existingModal.remove();
+    }
+
+
+    function toDateTimeLocalValue(value){
+
+        if(!value){
+            return "";
+        }
+
+        const date =
+            new Date(value);
+
+        if(Number.isNaN(date.getTime())){
+            return "";
+        }
+
+        const pad =
+            number =>
+                String(number).padStart(2, "0");
+
+        return (
+            date.getFullYear() +
+            "-" +
+            pad(date.getMonth() + 1) +
+            "-" +
+            pad(date.getDate()) +
+            "T" +
+            pad(date.getHours()) +
+            ":" +
+            pad(date.getMinutes())
+        );
+
+    }
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "tender-settings-modal";
+
+    modal.className =
+        "tender-workshop-modal";
+
+
+    modal.innerHTML = `
+
+        <div class="tender-workshop-modal-backdrop"></div>
+
+        <div
+            class="tender-workshop-modal-dialog tender-settings-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tender-settings-title"
+        >
+
+            <div class="tender-workshop-modal-header">
+
+                <div>
+
+                    <span class="tender-panel-kicker">
+                        TENDER SETTINGS
+                    </span>
+
+                    <h3 id="tender-settings-title">
+                        تنظیمات مناقصه
+                    </h3>
+
+                    <p>
+                        زمان‌بندی و ساختار دورهای مناقصه را مشخص کنید.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="tender-workshop-modal-close"
+                    id="tender-settings-close"
+                    aria-label="بستن"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="tender-settings-form">
+
+                <div class="tender-settings-field">
+
+                    <label for="tender-scheduled-start">
+                        شروع مناقصه
+                    </label>
+
+                    <input
+                        type="datetime-local"
+                        id="tender-scheduled-start"
+                        value="${toDateTimeLocalValue(
+                            tender.scheduled_start_at
+                        )}"
+                    >
+
+                    <small>
+                        زمان برنامه‌ریزی‌شده شروع مناقصه
+                    </small>
+
+                </div>
+
+
+                <div class="tender-settings-field">
+
+                    <label for="tender-deadline">
+                        مهلت ارسال پیشنهاد
+                    </label>
+
+                    <input
+                        type="datetime-local"
+                        id="tender-deadline"
+                        value="${toDateTimeLocalValue(
+                            tender.deadline
+                        )}"
+                    >
+
+                    <small>
+                        آخرین زمان مجاز برای ارسال پیشنهاد
+                    </small>
+
+                </div>
+
+
+                <div class="tender-settings-field">
+
+                    <label for="tender-scheduled-end">
+                        پایان مناقصه
+                    </label>
+
+                    <input
+                        type="datetime-local"
+                        id="tender-scheduled-end"
+                        value="${toDateTimeLocalValue(
+                            tender.scheduled_end_at
+                        )}"
+                    >
+
+                    <small>
+                        زمان پایان برنامه‌ریزی‌شده مناقصه
+                    </small>
+
+                </div>
+
+
+                <div class="tender-settings-field">
+
+                    <label for="tender-round-count">
+                        تعداد دور
+                    </label>
+
+                    <input
+                        type="number"
+                        id="tender-round-count"
+                        min="1"
+                        step="1"
+                        value="${Number(tender.round_count || 1)}"
+                    >
+
+                    <small>
+                        تعداد دورهای قابل اجرای مناقصه
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="tender-workshop-modal-footer">
+
+                <div class="tender-workshop-footer-info">
+
+                    <span>
+                        این تنظیمات تا قبل از فعال‌سازی قابل ویرایش هستند.
+                    </span>
+
+                </div>
+
+                <div class="tender-workshop-footer-actions">
+
+                    <button
+                        type="button"
+                        class="tender-workshop-secondary-button"
+                        id="tender-settings-cancel"
+                    >
+                        انصراف
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tender-workshop-primary-button"
+                        id="tender-settings-save"
+                    >
+                        ذخیره تنظیمات
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(modal);
+
+
+    const closeModal = () => {
+
+        modal.remove();
+
+    };
+
+
+    document
+        .getElementById("tender-settings-close")
+        ?.addEventListener(
+            "click",
+            closeModal
+        );
+
+
+    document
+        .getElementById("tender-settings-cancel")
+        ?.addEventListener(
+            "click",
+            closeModal
+        );
+
+
+    modal
+        .querySelector(
+            ".tender-workshop-modal-backdrop"
+        )
+        ?.addEventListener(
+            "click",
+            closeModal
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            "tender-settings-save"
+        );
+
+
+    saveButton?.addEventListener(
+        "click",
+        async () => {
+
+            const startInput =
+                document.getElementById(
+                    "tender-scheduled-start"
+                );
+
+            const deadlineInput =
+                document.getElementById(
+                    "tender-deadline"
+                );
+
+            const endInput =
+                document.getElementById(
+                    "tender-scheduled-end"
+                );
+
+            const roundInput =
+                document.getElementById(
+                    "tender-round-count"
+                );
+
+
+            const startValue =
+                startInput.value;
+
+            const deadlineValue =
+                deadlineInput.value;
+
+            const endValue =
+                endInput.value;
+
+            const roundCount =
+                Number(roundInput.value);
+
+
+            if(
+                !startValue ||
+                !deadlineValue ||
+                !endValue
+            ){
+
+                alert(
+                    "لطفاً زمان شروع، مهلت و پایان مناقصه را مشخص کنید."
+                );
+
+                return;
+
+            }
+
+
+            if(
+                !Number.isInteger(roundCount) ||
+                roundCount < 1
+            ){
+
+                alert(
+                    "تعداد دور باید حداقل ۱ باشد."
+                );
+
+                return;
+
+            }
+
+
+            const startDate =
+                new Date(startValue);
+
+            const deadlineDate =
+                new Date(deadlineValue);
+
+            const endDate =
+                new Date(endValue);
+
+
+            if(
+                startDate >= endDate
+            ){
+
+                alert(
+                    "زمان پایان باید بعد از زمان شروع باشد."
+                );
+
+                return;
+
+            }
+
+
+            if(
+                deadlineDate < startDate
+            ){
+
+                alert(
+                    "مهلت ارسال پیشنهاد نمی‌تواند قبل از شروع مناقصه باشد."
+                );
+
+                return;
+
+            }
+
+
+            if(
+                deadlineDate > endDate
+            ){
+
+                alert(
+                    "مهلت ارسال پیشنهاد نمی‌تواند بعد از پایان مناقصه باشد."
+                );
+
+                return;
+
+            }
+
+
+            saveButton.disabled =
+                true;
+
+            saveButton.textContent =
+                "در حال ذخیره...";
+
+
+            try{
+
+                const response =
+                    await fetch(
+                        `/api/tenders/${tender.id}/settings/`,
+                        {
+                            method: "PATCH",
+
+                            credentials:
+                                "same-origin",
+
+                            headers: {
+
+                                "Accept":
+                                    "application/json",
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "X-CSRFToken":
+                                    getCSRFToken()
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    scheduled_start_at:
+                                        startDate.toISOString(),
+
+                                    deadline:
+                                        deadlineDate.toISOString(),
+
+                                    scheduled_end_at:
+                                        endDate.toISOString(),
+
+                                    round_count:
+                                        roundCount
+
+                                })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if(!response.ok){
+
+                    throw new Error(
+                        data.detail ||
+                        data.message ||
+                        "ذخیره تنظیمات انجام نشد."
+                    );
+
+                }
+
+
+                closeModal();
+
+
+                await loadConsultantTender(
+                    projectId
+                );
+
+            }
+            catch(error){
+
+                console.error(
+                    "Tender settings error:",
+                    error
+                );
+
+
+                alert(
+                    error.message ||
+                    "خطا در ذخیره تنظیمات مناقصه."
+                );
+
+
+                saveButton.disabled =
+                    false;
+
+                saveButton.textContent =
+                    "ذخیره تنظیمات";
+
+            }
+
+        }
+    );
+
+}
+
+/* ==================================================
+   TENDER RENDER
+================================================== */
+
+function renderConsultantTender(
+    data
+){
+
+    const content =
+        document.getElementById(
+            "consultant-project-content"
+        );
+
+
+    if(!content){
+        return;
+    }
+
+
+    const tender =
+        data.tender || null;
+
+
+    /*
+    --------------------------------------------------
+    NO TENDER
+    --------------------------------------------------
+    */
+
+    if(!tender){
+
+        content.innerHTML = `
+
+            <div class="project-section tender-control-section">
+
+                <div class="tender-header">
+
+                    <div>
+
+                        <div class="tender-kicker">
+                            PROJECT CONTROL
+                        </div>
+
+                        <h3>
+                            🏆 کنترل مناقصه پروژه
+                        </h3>
+
+                        <p>
+                            مناقصه هنوز ایجاد نشده است.
+                        </p>
+
+                    </div>
+
+                    <div class="tender-status-badge draft">
+
+                        <span class="tender-status-dot"></span>
+
+                        آماده ایجاد
+
+                    </div>
+
+                </div>
+
+
+                <div class="tender-empty-state">
+
+                    <div class="tender-empty-icon">
+                        🏆
+                    </div>
+
+                    <h4>
+                        هنوز مناقصه‌ای برای این پروژه ایجاد نشده
+                    </h4>
+
+                    <p>
+                        پس از تأیید استانداردسازی، تنظیمات مناقصه
+                        از همین بخش مدیریت خواهد شد.
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    /*
+    --------------------------------------------------
+    DATA
+    --------------------------------------------------
+    */
+
+    const standardizationStatus =
+        tender.standardization_status ||
+        data.standardization_status ||
+        "pending";
+
+
+    const tenderStatus =
+        tender.status ||
+        "draft";
+
+
+    const deadline =
+        tender.deadline ||
+        null;
+
+
+    const closedAt =
+        tender.closed_at ||
+        null;
+
+
+    const rounds =
+        Array.isArray(tender.rounds)
+            ? tender.rounds
+            : [];
+
+
+    const activeRound =
+        rounds.find(
+            round =>
+                round.status === "open"
+        ) ||
+        rounds[rounds.length - 1] ||
+        null;
+
+
+    const participants =
+        Array.isArray(tender.participants)
+            ? tender.participants
+            : [];
+
+
+    /*
+    --------------------------------------------------
+    STATUS LABELS
+    --------------------------------------------------
+    */
+
+    const standardizationLabels = {
+
+        draft:
+            "پیش‌نویس",
+
+        pending_customer:
+            "در انتظار تأیید مشتری",
+
+        approved:
+            "تأیید شده",
+
+        revision_requested:
+            "نیازمند اصلاح"
+
+    };
+
+
+    const tenderLabels = {
+
+        draft:
+            "پیش‌نویس",
+
+        open:
+            "در حال برگزاری",
+
+        closed:
+            "بسته شده",
+
+        revealed:
+            "پیشنهادها آشکار شده",
+
+        awarded:
+            "برنده انتخاب شده",
+
+        cancelled:
+            "لغو شده"
+
+    };
+
+
+    const standardizationLabel =
+        standardizationLabels[
+            standardizationStatus
+        ] ||
+        standardizationStatus;
+
+
+    const tenderLabel =
+        tenderLabels[
+            tenderStatus
+        ] ||
+        tenderStatus;
+
+
+    /*
+    --------------------------------------------------
+    PARTICIPATION
+    --------------------------------------------------
+    */
+
+    const participantCount =
+        participants.length;
+    
+        /*
+    --------------------------------------------------
+    TENDER CONTROL
+    --------------------------------------------------
+    */
+
+    const activeRoundStartedAt =
+        activeRound &&
+        activeRound.started_at
+            ? activeRound.started_at
+            : null;
+
+    const hasTenderSchedule =
+        !!tender.scheduled_start_at &&
+        !!tender.scheduled_end_at &&
+        !!tender.deadline;
+
+
+    const hasValidRoundCount =
+        Number.isInteger(
+            Number(tender.round_count)
+        ) &&
+        Number(tender.round_count) >= 1;
+
+    const scheduledStartAt =
+        tender.scheduled_start_at ||
+        null;
+
+
+    const scheduledEndAt =
+        tender.scheduled_end_at ||
+        null;
+
+
+    const timelineStart =
+        tenderStatus === "draft"
+            ? scheduledStartAt
+            : activeRoundStartedAt;
+
+
+    const timelineEnd =
+        tenderStatus === "draft"
+            ? scheduledEndAt
+            : closedAt;  
+
+    const canStartTender =
+        tenderStatus === "draft" &&
+        standardizationStatus === "approved" &&
+        participantCount > 0 &&
+        hasTenderSchedule &&
+        hasValidRoundCount;
+
+    const canCloseTender =
+        tenderStatus === "open";
+
+
+    let tenderActionHtml = "";
+
+
+    if (tenderStatus === "draft") {
+
+        tenderActionHtml = `
+
+            <div class="tender-action-panel">
+
+                <div class="tender-action-info">
+
+                    <span class="tender-action-kicker">
+                        TENDER ACTION
+                    </span>
+
+                    <strong>
+                        شروع مناقصه
+                    </strong>
+
+                    <small>
+                        پس از شروع، مناقصه برای کارگاه‌های انتخاب‌شده فعال می‌شود.
+                    </small>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="start-tender-button"
+                    class="tender-action-button start"
+                    ${canStartTender ? "" : "disabled"}
+                    data-tender-id="${tender.id}"
+                >
+                    <span>▶</span>
+                    شروع مناقصه
+                </button>
+
+            </div>
+
+        `;
+
+    }
+    else if (tenderStatus === "open") {
+
+        tenderActionHtml = `
+
+            <div class="tender-action-panel">
+
+                <div class="tender-action-info">
+
+                    <span class="tender-action-kicker">
+                        TENDER ACTION
+                    </span>
+
+                    <strong>
+                        مناقصه در حال برگزاری است
+                    </strong>
+
+                    <small>
+                        در صورت پایان مهلت دریافت پیشنهادها، مناقصه را ببندید.
+                    </small>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="close-tender-button"
+                    class="tender-action-button close"
+                    data-tender-id="${tender.id}"
+                >
+                    <span>■</span>
+                    پایان مناقصه
+                </button>
+
+            </div>
+
+        `;
+
+
+
+    }
+
+
+    /*
+    --------------------------------------------------
+    CONTROL ACTION HANDLERS
+    --------------------------------------------------
+    */
+
+    function bindTenderControlActions(){
+
+    const startButton =
+        document.getElementById(
+            "start-tender-button"
+        );
+
+
+    const closeButton =
+        document.getElementById(
+            "close-tender-button"
+        );
+
+
+    const settingsButton =
+        document.getElementById(
+            "tender-settings-button"
+        );
+
+
+    /*
+    ----------------------------------------------
+    START TENDER
+    ----------------------------------------------
+    */
+
+    if(startButton){
+
+        startButton.addEventListener(
+            "click",
+            () => {
+
+                startConsultantTender(
+                    tender.id,
+                    data.project_id
+                );
+
+            }
+        );
+
+    }
+
+
+    /*
+    ----------------------------------------------
+    CLOSE TENDER
+    ----------------------------------------------
+    */
+
+    if(closeButton){
+
+        closeButton.addEventListener(
+            "click",
+            () => {
+
+                closeConsultantTender(
+                    tender.id,
+                    data.project_id
+                );
+
+            }
+        );
+
+    }
+
+
+    /*
+    ----------------------------------------------
+    TENDER SETTINGS
+    ----------------------------------------------
+    */
+
+    if(settingsButton){
+
+        settingsButton.addEventListener(
+            "click",
+            () => {
+
+                openTenderSettingsPanel(
+                    tender,
+                    data.project_id
+                );
+
+            }
+        );
+
+    }
+
+}
+    /*
+    --------------------------------------------------
+    RENDER
+    --------------------------------------------------
+    */
+
+    content.innerHTML = `
+
+        <div class="project-section tender-control-section">
+
+
+            <!-- =====================================
+                 HEADER
+            ====================================== -->
+
+            <div class="tender-header">
+
+
+                <div class="tender-header-main">
+
+                    <div class="tender-kicker">
+                        PROJECT CONTROL
+                    </div>
+
+                    <h3>
+                        🏆 کنترل مناقصه پروژه
+                    </h3>
+
+                    <p>
+                        مدیریت وضعیت، زمان‌بندی و مشارکت کارگاه‌ها
+                    </p>
+
+                </div>
+
+
+                <div class="tender-main-status ${tenderStatus}">
+
+                    <span class="tender-status-dot"></span>
+
+                    <span>
+                        ${tenderLabel}
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =====================================
+                 STATUS CARDS
+            ====================================== -->
+
+            <div class="tender-overview-grid">
+
+
+                <div class="tender-info-card standardization-card">
+
+                    <div class="tender-card-top">
+
+                        <span class="tender-card-icon">
+                            ✓
+                        </span>
+
+                        <span class="tender-card-label">
+                            استانداردسازی
+                        </span>
+
+                    </div>
+
+
+                    <div class="tender-card-value">
+                        ${standardizationLabel}
+                    </div>
+
+
+                    <div class="tender-card-footer">
+
+                        <span
+                            class="tender-mini-dot ${standardizationStatus}"
+                        ></span>
+
+                        وضعیت استانداردسازی
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="tender-info-card">
+
+                    <div class="tender-card-top">
+
+                        <span class="tender-card-icon">
+                            ◉
+                        </span>
+
+                        <span class="tender-card-label">
+                            وضعیت مناقصه
+                        </span>
+
+                    </div>
+
+
+                    <div class="tender-card-value">
+                        ${tenderLabel}
+                    </div>
+
+
+                    <div class="tender-card-footer">
+
+                        Tender Status
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="tender-info-card">
+
+                    <div class="tender-card-top">
+
+                        <span class="tender-card-icon">
+                            ↻
+                        </span>
+
+                        <span class="tender-card-label">
+                            دور فعال
+                        </span>
+
+                    </div>
+
+
+                    <div class="tender-card-value">
+
+                        ${
+                            activeRound
+                                ? `Round ${activeRound.round_number || "-"}`
+                                : "Round -"
+                        }
+
+                    </div>
+
+
+                    <div class="tender-card-footer">
+
+                        ${
+                            activeRound &&
+                            activeRound.status
+                                ? activeRound.status
+                                : "هنوز دوری فعال نیست"
+                        }
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="tender-info-card">
+
+                    <div class="tender-card-top">
+
+                        <span class="tender-card-icon">
+                            ◌
+                        </span>
+
+                        <span class="tender-card-label">
+                            کارگاه‌ها
+                        </span>
+
+                    </div>
+
+
+                    <div class="tender-card-value">
+                        ${participantCount}
+                    </div>
+
+
+                    <div class="tender-card-footer">
+                        کارگاه دعوت‌شده
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =====================================
+                 TIMELINE
+            ====================================== -->
+
+            <div class="tender-panel">
+
+
+                <div class="tender-panel-header">
+
+                    <div>
+
+                        <span class="tender-panel-kicker">
+                            SCHEDULE
+                        </span>
+
+                        <h4>
+                            زمان‌بندی مناقصه
+                        </h4>
+
+                    </div>
+
+                    ${
+
+                        tenderStatus === "draft"
+
+                            ? `
+
+                                <button
+
+                                    type="button"
+
+                                    id="tender-settings-button"
+                                    class="tender-settings-button"
+
+                                    data-tender-id="${tender.id}"
+
+                                >
+
+                                    ⚙ تنظیمات مناقصه
+
+                              </button>
+
+                            `
+
+                            : ""
+                
+    }
+ 
+                </div>
+
+
+                <div class="tender-timeline">
+
+
+                    <div class="tender-time-item">
+
+                        <span class="tender-time-dot"></span>
+
+                        <div>
+
+                            <span class="tender-time-label">
+                                شروع
+                            </span>
+
+                            <strong>
+                                ${timelineStart || "-"}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="tender-time-line"></div>
+
+
+
+                    <div class="tender-time-item">
+
+                        <span class="tender-time-dot"></span>
+
+                        <div>
+
+                            <span class="tender-time-label">
+                                مهلت
+                            </span>
+
+                            <strong>
+                                ${deadline || "-"}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="tender-time-line"></div>
+
+
+
+                    <div class="tender-time-item">
+
+                        <span class="tender-time-dot"></span>
+
+                        <div>
+
+                            <span class="tender-time-label">
+                                پایان
+                            </span>
+
+                            <strong>
+                                ${timelineEnd || "-"}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+<!-- =====================================
+     WORKSHOPS
+====================================== -->
+
+<div class="tender-panel">
+
+    <div class="tender-panel-header">
+
+        <div>
+
+            <span class="tender-panel-kicker">
+                PARTICIPANTS
+            </span>
+
+            <h4>
+                کارگاه‌های مناقصه
+            </h4>
+
+            <p class="tender-panel-description">
+                کارگاه‌هایی که برای دریافت درخواست مناقصه انتخاب می‌شوند.
+            </p>
+
+        </div>
+
+
+        <div class="tender-workshop-header-actions">
+
+            <div class="tender-count-badge">
+                ${participantCount}
+                کارگاه
+            </div>
+
+
+            ${
+                tenderStatus === "draft"
+                    ? `
+                        <button
+                            type="button"
+                            id="select-tender-workshops-button"
+                            class="tender-workshop-select-button"
+                            data-tender-id="${tender.id}"
+                        >
+                            <span>＋</span>
+                            انتخاب کارگاه‌ها
+                        </button>
+                    `
+                    : ""
+            }
+
+        </div>
+
+    </div>
+
+
+    ${
+        participantCount > 0
+            ? `
+
+                <div class="tender-selected-workshops">
+
+                    ${
+
+                        participants
+                            .map(
+                                participant => `
+
+                                    <div
+                                        class="tender-selected-workshop"
+                                    >
+
+                                        <span
+                                            class="tender-selected-workshop-dot"
+                                        ></span>
+
+                                        <div>
+
+                                            <strong>
+                                                ${
+                                                    participant.organization_name ||
+                                                    "کارگاه"
+                                                }
+                                            </strong>
+
+                                            <small>
+                                                ${
+                                                    tenderStatus === "draft"
+                                                        ? "انتخاب‌شده برای مناقصه"
+                                                        : "در فهرست مشارکت‌کنندگان"
+                                                }
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                `
+                            )
+                            .join("")
+
+                    }
+
+                </div>
+
+            `
+            : `
+
+                <div class="tender-no-workshops">
+
+                    <span class="tender-no-workshops-icon">
+                        🏭
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            هنوز کارگاهی انتخاب نشده
+                        </strong>
+
+                        <small>
+                            برای ادامه، حداقل یک کارگاه انتخاب کنید.
+                        </small>
+
+                    </div>
+
+                </div>
+
+            `
+    }
+
+</div>
+ 
+
+<!-- =====================================
+
+                 CONTROL ACTION
+            
+====================================== -->
+
+
+
+
+            ${tenderActionHtml}
+
+
+
+
+
+            <!-- =====================================
+                 CONTROL FOOTER
+            ====================================== -->
+
+            <div class="tender-control-footer">
+
+                <div>
+
+                    <span class="tender-footer-title">
+                        Tender Control Center
+                    </span>
+
+                    <span class="tender-footer-text">
+                        تنظیمات و اقدامات مناقصه از این بخش کنترل می‌شود.
+                    </span>
+
+                </div>
+
+
+                <div class="tender-control-state">
+
+                    <span class="tender-status-dot"></span>
+
+                    ${tenderLabel}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    `;
+    /*
+    --------------------------------------------------
+    TENDER CONTROL BINDINGS
+    --------------------------------------------------
+    */
+
+    bindTenderControlActions();
+
+
+    const workshopButton =
+        document.getElementById(
+            "select-tender-workshops-button"
+        );
+
+
+    if(workshopButton){
+
+        workshopButton.addEventListener(
+            "click",
+            () => {
+
+                openTenderWorkshopSelector(
+                    tender.id,
+                    data.project_id,
+                    participants
+                );
+
+            }
+        );
+
+    }
+
+
+    const settingsButton =
+        document.getElementById(
+            "tender-settings-button"
+        );
+
+
+    if(settingsButton){
+
+        settingsButton.addEventListener(
+            "click",
+            () => {
+
+                openTenderSettingsPanel(
+                    tender,
+                    data.project_id
+                );
+
+            }
+        );
+
+    }
+}
 /* ==================================================
    STANDARDIZATION RENDER
 ================================================== */
@@ -1193,6 +3622,9 @@ function renderConsultantStandardization(
 
     const items =
         data.items || [];
+
+    const standardizationStatus =
+        data.standardization_status || "pending";
 
 
     const minimumRows = 5;
@@ -1252,7 +3684,40 @@ console.log(
                 </button>
 
             </div>
+<div class="standardization-global-status">
 
+${
+    standardizationStatus === "approved"
+
+    ? `
+    <div class="standardization-light approved">
+        <span class="status-dot"></span>
+        تایید مشتری
+    </div>
+    `
+
+    :
+
+    standardizationStatus === "revision_requested"
+
+    ? `
+    <div class="standardization-light revision">
+        <span class="status-dot"></span>
+        اصلاح مشتری
+    </div>
+    `
+
+    :
+
+    `
+    <div class="standardization-light pending">
+        <span class="status-dot"></span>
+        انتظار مشتری
+    </div>
+    `
+}
+
+</div>
 
             <div class="standardization-table-wrapper">
 

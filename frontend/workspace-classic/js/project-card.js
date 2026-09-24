@@ -1827,7 +1827,7 @@ panel.querySelectorAll(
 
                     const response =
                         await apiPost(
-                            `/projects/${specificationId}/standardization/review/`,
+                            `/projects/specifications/${specificationId}/standardization/review/`,
                             {
                                 status: "approved"
                             }
@@ -1885,7 +1885,7 @@ try {
 
     const response =
         await apiPost(
-            `/projects/${specificationId}/standardization/review/`,
+            `/projects/specifications/${specificationId}/standardization/review/`,
             {
                 status: "revise",
                 note: "نیاز به اصلاح دارد"
@@ -1944,7 +1944,7 @@ panel.querySelector(
 
             const response =
                 await apiPost(
-                    `/projects/${projectId}/standardization/review/`,
+                    `/projects/${projectId}/standardization/global-review/`,
                     {
                         status: "approved"
                     }
@@ -1995,7 +1995,7 @@ panel.querySelector(
 
             const response =
                 await apiPost(
-                    `/projects/${projectId}/standardization/review/`,
+                    `/projects/${projectId}/standardization/global-review/`,
                     {
                         status:
                             "revision_requested"

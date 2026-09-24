@@ -85,3 +85,33 @@ def organization_detail(request, organization_id):
             else membership.role
         ),
     })
+    
+@login_required
+def workshop_list(request):
+    """
+    Return active workshops for tender selection.
+    """
+
+    workshops = (
+        Organization.objects
+        .filter(
+            organization_type="workshop",
+            status="active",
+        )
+        .order_by("name")
+    )
+
+    data = []
+
+    for workshop in workshops:
+
+        data.append({
+            "id": workshop.id,
+            "name": workshop.name,
+            "organization_type": workshop.organization_type,
+            "status": workshop.status,
+        })
+
+    return JsonResponse({
+        "workshops": data
+    })

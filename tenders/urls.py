@@ -3,6 +3,9 @@ from django.urls import path
 from .views import (
     TenderListCreateView,
     TenderDetailView,
+    TenderSettingsView,
+    TenderStartView,
+    TenderCloseView,
     TenderParticipantListCreateView,
     TenderRoundListCreateView,
     BidCreateView,
@@ -15,6 +18,7 @@ from .views import (
     TenderSelectBidView,
     TenderAwardView,
     ConsultantSpecificationListCreateView,
+    BidDiscountUpdateView,
     SpecificationAttachmentListCreateView,
     SpecificationAttachmentDeleteView,
 
@@ -34,6 +38,23 @@ urlpatterns = [
         name="tender-detail"
     ),
 
+    path(
+        "<int:pk>/settings/",
+        TenderSettingsView.as_view(),
+        name="tender-settings",
+    ),
+    
+    path(
+        "<int:pk>/start/",
+        TenderStartView.as_view(),
+        name="tender-start"
+    ),
+
+    path(
+        "<int:pk>/close/",
+        TenderCloseView.as_view(),
+        name="tender-close"
+    ),
     path(
         "<int:tender_id>/participants/",
         TenderParticipantListCreateView.as_view(),
@@ -96,7 +117,11 @@ urlpatterns = [
         BidDetailView.as_view(),
         name="bid-detail"
     ),
-
+    path(
+        "bids/<int:pk>/discount/",
+        BidDiscountUpdateView.as_view(),
+        name="bid-discount-update",
+    ),
     path(
         "bids/<int:bid_id>/items/",
         BidItemCreateView.as_view(),

@@ -191,6 +191,9 @@ class BidSerializer(serializers.ModelSerializer):
             "technical_notes",
             "items",
             "payment_schedules",
+            "discount_percentage",
+            "discount_amount",
+            "final_amount",
             "created_at",
             "updated_at",
 
@@ -198,6 +201,8 @@ class BidSerializer(serializers.ModelSerializer):
 
         read_only_fields = [
             "id",
+            "discount_amount",
+            "final_amount",
             "created_at",
             "updated_at",
         ]
@@ -282,7 +287,6 @@ class TenderParticipantSerializer(
         ]
 
 
-
 class TenderSerializer(serializers.ModelSerializer):
 
     rounds = TenderRoundSerializer(
@@ -295,7 +299,6 @@ class TenderSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-
     class Meta:
 
         model = Tender
@@ -306,13 +309,18 @@ class TenderSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "status",
+            "standardization_status",
+
+            "scheduled_start_at",
+            "scheduled_end_at",
+            "round_count",
             "deadline",
+
             "created_at",
             "updated_at",
             "rounds",
             "participants",
         ]
-
         read_only_fields = [
             "id",
             "created_at",
@@ -320,8 +328,6 @@ class TenderSerializer(serializers.ModelSerializer):
             "rounds",
             "participants",
         ]
-
-
 
 
 class TenderAwardCreateSerializer(

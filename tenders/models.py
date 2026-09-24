@@ -45,10 +45,26 @@ class Tender(models.Model):
         ],
         default="draft",
     )
+    scheduled_start_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    scheduled_end_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    round_count = models.PositiveIntegerField(
+        default=1,
+    )
+
     deadline = models.DateTimeField(
         null=True,
         blank=True,
     )
+    
+    
     closed_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -345,6 +361,25 @@ class Bid(models.Model):
         default=0,
     )
 
+    discount_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+
+    discount_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=0,
+        default=0,
+    )
+
+
+    final_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=0,
+        default=0,
+    )
     production_days = models.PositiveIntegerField(
         null=True,
         blank=True,
@@ -383,7 +418,18 @@ class Bid(models.Model):
                 name="unique_workshop_bid_per_round",
             )
         ]
+    def calculate_final_amount(self):
 
+        self.discount_amount = (
+            self.total_amount *
+            self.discount_percentage /
+            100
+        )
+
+        self.final_amount = (
+            self.total_amount -
+            self.discount_amount
+        )
     def __str__(self):
         return (
             f"{self.workshop.name} - "
@@ -460,9 +506,15 @@ class BidItem(models.Model):
             or 0
         )
 
+
+        self.bid.calculate_final_amount()
+
+
         self.bid.save(
             update_fields=[
-                "total_amount"
+                "total_amount",
+                "discount_amount",
+                "final_amount",
             ]
         )
     class Meta:

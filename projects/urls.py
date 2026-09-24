@@ -17,8 +17,7 @@ from .views import (
     CustomerStandardizationView,
     SendStandardizationToCustomerView,    
     CustomerSpecificationReviewView,
-    CustomerStandardizationReviewView,
-   
+    CustomerStandardizationGlobalReviewView,
 
 
 )
@@ -83,10 +82,11 @@ urlpatterns = [
         name="send-standardization-to-customer",
     ),
     path(
-        "<int:pk>/standardization/review/",
-        CustomerStandardizationReviewView.as_view(),
-        name="customer-standardization-review",
+        "<int:pk>/standardization/global-review/",
+        CustomerStandardizationGlobalReviewView.as_view(),
+        name="customer-standardization-global-review",
     ),
+
 
   
     # =====================================
@@ -147,9 +147,9 @@ urlpatterns = [
     ),
 
     path(
-    "<int:pk>/standardization/review/",
-    CustomerSpecificationReviewView.as_view(),
-    name="customer-standardization-review",
+        "specifications/<int:pk>/standardization/review/",
+        CustomerSpecificationReviewView.as_view(),
+        name="customer-specification-review",
     ),
 
 ]

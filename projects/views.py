@@ -418,6 +418,10 @@ class ConsultantStandardizationView(
             "project_id": project.id,
             "tender_id": tender.id,
             "tender_status": tender.status,
+            
+            "standardization_status":
+                tender.standardization_status,
+            
             "items": data,
         })
 
@@ -949,7 +953,80 @@ class CustomerStandardizationReviewView(
             }
         )
 
-    
+class CustomerStandardizationGlobalReviewView(
+    generics.GenericAPIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def post(self, request, pk):
+
+        project = get_object_or_404(
+            Project,
+            id=pk
+        )
+
+
+        tender = (
+            Tender.objects
+            .filter(
+                project=project
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+
+        if not tender:
+            return Response(
+                {
+                    "error":
+                    "Tender not found"
+                },
+                status=404
+            )
+
+
+        status_value = request.data.get(
+            "status"
+        )
+
+
+        if status_value not in [
+            "approved",
+            "revision_requested",
+        ]:
+            return Response(
+                {
+                    "error":
+                    "Invalid status"
+                },
+                status=400
+            )
+
+
+        tender.standardization_status = (
+            status_value
+        )
+
+        tender.save()
+
+
+        return Response(
+            {
+                "project_id":
+                    project.id,
+
+                "tender_id":
+                    tender.id,
+
+                "standardization_status":
+                    tender.standardization_status,
+            }
+        )   
 # =====================================
 # PROJECT ATTACHMENTS
 # =====================================
@@ -993,7 +1070,7 @@ class ProjectAttachmentListCreateView(
             uploaded_by=self.request.user
         )
 
-
+# =====================================
 # PROJECT TENDER
 # =====================================
 
@@ -1005,15 +1082,41 @@ class ProjectTenderView(
         IsAuthenticated
     ]
 
-    def get_queryset(self):
+    def get_project(self):
 
-        return get_visible_projects(
-            self.request.user
+        project_id = self.kwargs["pk"]
+
+        user = self.request.user
+
+        if user.is_superuser or user.is_staff:
+
+            return get_object_or_404(
+                Project.objects.all(),
+                id=project_id,
+            )
+
+        return get_object_or_404(
+            Project.objects.filter(
+                Q(
+                    assignments__membership__user=user,
+                    assignments__membership__status="active",
+                    assignments__membership__role_fk__name="consultant",
+                    assignments__status="active",
+                )
+                |
+                Q(
+                    customer__members__user=user,
+                    customer__members__status="active",
+                    customer__organization_type="customer",
+                    customer__status="active",
+                )
+            ).distinct(),
+            id=project_id,
         )
 
     def get(self, request, pk):
 
-        project = self.get_object()
+        project = self.get_project()
 
         project_item = (
             project.items
@@ -1031,13 +1134,22 @@ class ProjectTenderView(
             .filter(
                 project=project
             )
+            .order_by("-created_at")
             .first()
         )
 
         if not tender:
-            raise NotFound(
-                "No tender exists for this project."
-            )
+
+            return Response({
+                "project_id": project.id,
+                "project_title": project.title,
+                "tender": None,
+                "evaluation": None,
+                "ready": False,
+                "message": (
+                    "هنوز مناقصه‌ای برای این پروژه ایجاد نشده است."
+                ),
+            })
 
         tender_data = TenderSerializer(
             tender
@@ -1047,17 +1159,15 @@ class ProjectTenderView(
             tender.id
         )
 
-        return Response(
-            {
-                "project_id": project.id,
-                "project_title": project.title,
-                "project_item_id": project_item.id,
-                "project_item_name": project_item.name,
-                "tender": tender_data,
-                "evaluation": evaluation_data,
-            }
-        )
-
+        return Response({
+            "project_id": project.id,
+            "project_title": project.title,
+            "project_item_id": project_item.id,
+            "project_item_name": project_item.name,
+            "tender": tender_data,
+            "evaluation": evaluation_data,
+            "ready": True,
+        })
 # =====================================
 # PROJECT VISUAL LIST + CREATE
 # =====================================
@@ -1103,14 +1213,27 @@ class ProjectTenderSelectWinnerView(
     def post(self, request, pk):
         project = self.get_object()
 
-        tender = Tender.objects.filter(
-            project=project
-        ).first()
+        tender = (
+            Tender.objects
+            .filter(
+                project=project
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
 
         if not tender:
-            raise NotFound(
-                "No tender exists for this project."
-            )
+
+            tender = Tender.objects.create(
+                project=project,
+                title=(
+                    f"{project.title} - "
+                    "مناقصه"
+                ),
+                description=project.description or "",
+                status="draft",
+        )
 
         serializer = self.get_serializer(
             data=request.data

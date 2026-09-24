@@ -11,6 +11,12 @@ urlpatterns = [
     ),
 
     path(
+        "workshops/",
+        api.workshop_list,
+        name="workshop_list"
+    ),
+    
+    path(
         "<int:organization_id>/",
         api.organization_detail,
         name="organization_detail"
