@@ -1,0 +1,270 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FEEMAAS | انتخاب محیط</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            font-family:
+                Tahoma,
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(164, 112, 57, 0.16),
+                    transparent 34%
+                ),
+                #11100e;
+
+            color: #f4f1eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 32px;
+        }
+
+        .gateway {
+            width: min(920px, 100%);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 34px;
+        }
+
+        .brand {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #b9b4ac;
+            font-size: 15px;
+        }
+
+        .workspace-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(240px, 1fr)
+                );
+
+            gap: 18px;
+        }
+
+        .workspace-card {
+            display: block;
+
+            border: 1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 18px;
+
+            padding: 26px;
+
+            background:
+                rgba(255, 255, 255, 0.045);
+
+            color: inherit;
+
+            text-decoration: none;
+
+            transition:
+                transform 0.18s ease,
+                border-color 0.18s ease,
+                background 0.18s ease;
+
+            backdrop-filter: blur(8px);
+        }
+
+        .workspace-card:hover {
+            transform: translateY(-3px);
+
+            border-color:
+                rgba(221, 169, 98, 0.65);
+
+            background:
+                rgba(255, 255, 255, 0.075);
+        }
+
+        .workspace-icon {
+            width: 54px;
+            height: 54px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 18px;
+
+            font-size: 23px;
+
+            background:
+                rgba(221, 169, 98, 0.12);
+
+            border:
+                1px solid
+                rgba(221, 169, 98, 0.35);
+        }
+
+        .workspace-name {
+            font-size: 19px;
+            font-weight: 700;
+
+            margin-bottom: 8px;
+        }
+
+        .organization-name {
+            color: #aaa49b;
+            font-size: 13px;
+
+            margin-bottom: 18px;
+        }
+
+        .workspace-role {
+            color: #d9d2c8;
+            font-size: 13px;
+        }
+
+        .enter {
+            margin-top: 20px;
+
+            color: #dcae6a;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="gateway">
+
+    <div class="header">
+
+        <div class="brand">
+            FEEMAAS
+        </div>
+
+        <div class="subtitle">
+            محیط کاری موردنظر خود را انتخاب کنید
+        </div>
+
+    </div>
+
+
+    <div class="workspace-grid">
+
+        {% for workspace in workspaces %}
+
+            <form
+                method="post"
+                action="{% url 'workspace_switch' %}"
+                class="workspace-card"
+            >
+
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="membership_id"
+                    value="{{ workspace.membership_id }}"
+                >
+
+                <button
+                    type="submit"
+                    style="
+                        all: unset;
+                        display: block;
+                        width: 100%;
+                        cursor: pointer;
+                    "
+                >
+
+                    <div class="workspace-icon">
+
+                        {% if workspace.workspace == "customer" %}
+                            C
+                        {% elif workspace.workspace == "workshop" %}
+                            W
+                        {% elif workspace.workspace == "consultant" %}
+                            C
+                        {% elif workspace.workspace == "designer" %}
+                            D
+                        {% else %}
+                            F
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="workspace-name">
+
+                        {% if workspace.workspace == "customer" %}
+                            محیط مشتری
+                        {% elif workspace.workspace == "workshop" %}
+                            محیط کارگاه
+                        {% elif workspace.workspace == "consultant" %}
+                            محیط مشاور
+                        {% elif workspace.workspace == "designer" %}
+                            محیط طراح
+                        {% else %}
+                            محیط FEEMAAS
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="organization-name">
+                        {{ workspace.organization_name }}
+                    </div>
+
+
+                    <div class="workspace-role">
+                        نقش: {{ workspace.role }}
+                    </div>
+
+
+                    <div class="enter">
+                        ورود به محیط ←
+                    </div>
+
+                </button>
+
+            </form>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+</body>
+</html>
