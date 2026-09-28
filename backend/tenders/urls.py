@@ -1,0 +1,160 @@
+from django.urls import path
+
+from .views import (
+    TenderListCreateView,
+    TenderDetailView,
+    TenderSettingsView,
+    TenderStartView,
+    TenderCloseView,
+    TenderParticipantListCreateView,
+    TenderRoundListCreateView,
+    BidCreateView,
+    BidDetailView,
+    BidUpdateView,
+    BidItemCreateView,
+    PaymentScheduleListCreateView,
+    TenderEvaluationView,
+    TenderReportView,
+    TenderBidListView,
+    TenderSelectBidView,
+    TenderAwardView,
+    ConsultantSpecificationListCreateView,
+    BidDiscountUpdateView,
+    BidSubmitView,
+    SpecificationAttachmentListCreateView,
+    SpecificationAttachmentDeleteView,
+    TenderParticipantResponseView,
+    WorkshopTenderInvitationListView,
+
+)
+
+urlpatterns = [
+
+    path(
+        "",
+        TenderListCreateView.as_view(),
+        name="tender-list-create"
+    ),
+
+    path(
+        "<int:pk>/",
+        TenderDetailView.as_view(),
+        name="tender-detail"
+    ),
+
+    path(
+        "<int:pk>/settings/",
+        TenderSettingsView.as_view(),
+        name="tender-settings",
+    ),
+    
+    path(
+        "<int:pk>/start/",
+        TenderStartView.as_view(),
+        name="tender-start"
+    ),
+
+    path(
+        "<int:pk>/close/",
+        TenderCloseView.as_view(),
+        name="tender-close"
+    ),
+    path(
+        "<int:tender_id>/participants/",
+        TenderParticipantListCreateView.as_view(),
+        name="tender-participant-list-create"
+    ),
+    path(
+        "workshop/invitations/",
+        WorkshopTenderInvitationListView.as_view(),
+        name="workshop-tender-invitations",
+    ),
+    path(
+        "participants/<int:pk>/respond/",
+        TenderParticipantResponseView.as_view(),
+        name="tender-participant-response",
+    ),
+    path(
+        "<int:tender_id>/specifications/",
+        ConsultantSpecificationListCreateView.as_view(),
+        name="tender-specification-list-create"
+    ),
+    path(
+        "specifications/<int:specification_id>/attachments/",
+        SpecificationAttachmentListCreateView.as_view(),
+        name="specification-attachment-list-create",
+    ),
+    path(
+        "specifications/<int:specification_id>/attachments/<int:pk>/",
+        SpecificationAttachmentDeleteView.as_view(),
+        name="specification-attachment-delete",
+    ),
+
+    path(
+        "<int:tender_id>/rounds/",
+        TenderRoundListCreateView.as_view(),
+        name="tender-round-list-create"
+    ),
+
+    path(
+        "<int:pk>/evaluation/",
+        TenderEvaluationView.as_view(),
+        name="tender-evaluation"
+    ),
+    path(
+        "<int:pk>/report/",
+        TenderReportView.as_view(),
+        name="tender-report"
+    ),
+    path(
+        "<int:tender_id>/select/",
+        TenderSelectBidView.as_view(),
+        name="tender-select-bid",
+    ),
+    path(
+        "<int:pk>/award/",
+        TenderAwardView.as_view(),
+        name="tender-award",
+    ),
+    path(
+        "<int:tender_id>/visible-bids/",
+        TenderBidListView.as_view(),
+        name="tender-visible-bids"
+    ),
+    path(
+        "<int:tender_id>/bids/",
+        BidCreateView.as_view(),
+        name="bid-create"
+    ),
+    path(
+        "bids/<int:pk>/",
+        BidDetailView.as_view(),
+        name="bid-detail"
+    ),
+    path(
+        "bids/<int:pk>/update/",
+        BidUpdateView.as_view(),
+        name="bid-update"
+    ),
+    path(
+        "bids/<int:pk>/submit/",
+        BidSubmitView.as_view(),
+        name="bid-submit",
+    ),
+    path(
+        "bids/<int:pk>/discount/",
+        BidDiscountUpdateView.as_view(),
+        name="bid-discount-update",
+    ),
+    path(
+        "bids/<int:bid_id>/items/",
+        BidItemCreateView.as_view(),
+        name="bid-item-create"
+    ),
+    path(
+        "bids/<int:bid_id>/payment-schedules/",
+        PaymentScheduleListCreateView.as_view(),
+        name="payment-schedule-list-create",
+    ),
+
+]

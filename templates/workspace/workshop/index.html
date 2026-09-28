@@ -1,0 +1,816 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>FEEMAAS | کارگاه</title>
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+      href="{% static 'workspace/workshop/css/workshop.css' %}">
+
+</head>
+
+<body>
+
+<div class="workshop-shell">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="workshop-sidebar">
+
+        <div class="brand-box">
+
+            <div class="brand-logo">
+                FEEMAAS
+            </div>
+
+            <div class="brand-role">
+                Workshop Workspace
+            </div>
+
+        </div>
+
+
+        <nav class="workshop-nav">
+
+            <button
+                type="button"
+                class="workshop-nav-item active"
+                data-workshop-section="dashboard">
+
+                <span class="nav-icon">⌂</span>
+                <span>داشبورد</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="workshop-nav-item"
+                data-workshop-section="projects">
+
+                <span class="nav-icon">▣</span>
+                <span>پروژه‌ها</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="workshop-nav-item"
+                data-workshop-section="tenders">
+
+                <span class="nav-icon">◆</span>
+                <span>مناقصه‌ها</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="workshop-nav-item"
+                data-workshop-section="contracts">
+
+                <span class="nav-icon">▤</span>
+                <span>قراردادها</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="workshop-nav-item"
+                data-workshop-section="payments">
+
+                <span class="nav-icon">◈</span>
+                <span>پرداخت‌ها</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="workshop-nav-item"
+                data-workshop-section="files">
+
+                <span class="nav-icon">□</span>
+                <span>فایل‌ها</span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="workshop-nav-item"
+                data-workshop-section="settings">
+
+                <span class="nav-icon">⚙</span>
+                <span>تنظیمات</span>
+
+            </button>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="workshop-account">
+
+                <div class="account-avatar">
+                    ک
+                </div>
+
+                <div class="account-info">
+
+                    <strong>
+                        حساب کارگاه
+                    </strong>
+
+                    <span>
+                        کارگاه
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <a
+                href="/users/logout/"
+                class="logout-button">
+
+                خروج از حساب
+
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="workshop-main">
+
+        <header class="workshop-topbar">
+
+            <div>
+
+                <div class="page-kicker">
+                    WORKSHOP CONTROL
+                </div>
+
+                <h1 id="workshop-page-title">
+                    داشبورد کارگاه
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-status">
+
+                <span class="status-dot"></span>
+
+                <span>
+                    محیط کارگاه
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             DASHBOARD
+        ================================================== -->
+
+        <section
+            class="workshop-section active"
+            data-workshop-content="dashboard">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        کنترل کارگاه
+                    </h2>
+
+                    <p>
+                        دعوت‌های مناقصه و فعالیت‌های جاری کارگاه
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-cards">
+
+                <div class="dashboard-card">
+
+                    <span class="card-label">
+                        دعوت‌های جدید
+                    </span>
+
+                    <strong
+                        id="dashboard-invitation-count">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="dashboard-card">
+
+                    <span class="card-label">
+                        مناقصه‌های فعال
+                    </span>
+
+                    <strong>
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="dashboard-card">
+
+                    <span class="card-label">
+                        پیشنهادهای ارسال‌شده
+                    </span>
+
+                    <strong>
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="dashboard-card">
+
+                    <span class="card-label">
+                        قراردادهای جاری
+                    </span>
+
+                    <strong>
+                        -
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="workspace-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h3>
+                            دعوت‌های اخیر
+                        </h3>
+
+                        <p>
+                            مناقصه‌هایی که از طرف مشاور برای کارگاه ارسال شده‌اند
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        data-workshop-section-button="tenders">
+
+                        مشاهده همه
+
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="dashboard-invitations"
+                    class="invitation-list">
+
+                    <div class="empty-state">
+                        در حال دریافت دعوت‌ها...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             PROJECTS
+        ================================================== -->
+
+        <section
+            class="workshop-section"
+            data-workshop-content="projects">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        پروژه‌ها
+                    </h2>
+
+                    <p>
+                        پروژه‌هایی که کارگاه در آن‌ها مشارکت دارد
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="workshop-project-list"
+                class="project-grid">
+
+                <div class="empty-state">
+                    پروژه‌ای برای نمایش وجود ندارد.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             TENDERS
+        ================================================== -->
+
+        <section
+            class="workshop-section"
+            data-workshop-content="tenders">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        مناقصه‌ها
+                    </h2>
+
+                    <p>
+                        دعوت‌ها و پیشنهادهای کارگاه
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workspace-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h3>
+                            دعوت‌های مناقصه
+                        </h3>
+
+                        <p>
+                            ابتدا مشارکت خود را مشخص کنید.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="workshop-tender-list"
+                    class="tender-list">
+
+                    <div class="empty-state">
+                        در حال دریافت مناقصه‌ها...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CONTRACTS
+        ================================================== -->
+
+        <section
+            class="workshop-section"
+            data-workshop-content="contracts">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        قراردادها
+                    </h2>
+
+                    <p>
+                        قراردادهای کارگاه
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workspace-panel">
+
+                <div class="empty-state">
+                    قراردادهای کارگاه در این بخش نمایش داده خواهند شد.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             PAYMENTS
+        ================================================== -->
+
+        <section
+            class="workshop-section"
+            data-workshop-content="payments">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        پرداخت‌ها
+                    </h2>
+
+                    <p>
+                        وضعیت پرداخت‌های قراردادها و پیشنهادها
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workspace-panel">
+
+                <div class="empty-state">
+                    اطلاعات پرداخت در این بخش نمایش داده خواهد شد.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             FILES
+        ================================================== -->
+
+        <section
+            class="workshop-section"
+            data-workshop-content="files">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        فایل‌ها
+                    </h2>
+
+                    <p>
+                        فایل‌های مرتبط با پروژه‌ها و مناقصه‌ها
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workspace-panel">
+
+                <div class="empty-state">
+                    فایل‌های کارگاه در این بخش نمایش داده خواهند شد.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SETTINGS
+        ================================================== -->
+
+        <section
+            class="workshop-section"
+            data-workshop-content="settings">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        تنظیمات
+                    </h2>
+
+                    <p>
+                        تنظیمات حساب و اطلاعات کارگاه
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workspace-panel">
+
+                <div class="empty-state">
+                    تنظیمات کارگاه در این بخش قرار خواهد گرفت.
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     PROJECT VIEW
+========================================================== -->
+
+<div
+    id="workshop-project-modal"
+    class="workshop-modal"
+    aria-hidden="true">
+
+    <div class="modal-backdrop"
+         data-close-workshop-modal></div>
+
+
+    <div class="project-modal-window">
+
+        <button
+            type="button"
+            class="modal-close"
+            data-close-workshop-modal>
+            ×
+        </button>
+
+
+        <div class="project-modal-header">
+
+            <div>
+
+                <div class="modal-kicker">
+                    WORKSHOP PROJECT VIEW
+                </div>
+
+                <h2 id="workshop-project-title">
+                    پروژه
+                </h2>
+
+                <p id="workshop-project-subtitle">
+                    -
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <nav class="project-tabs">
+
+            <button
+                type="button"
+                class="project-tab active"
+                data-project-tab="summary">
+                خلاصه
+            </button>
+
+            <button
+                type="button"
+                class="project-tab"
+                data-project-tab="discussion">
+                گفتگو
+            </button>
+
+            <button
+                type="button"
+                class="project-tab"
+                data-project-tab="tender">
+                پیشنهاد مناقصه
+            </button>
+
+            <button
+                type="button"
+                class="project-tab"
+                data-project-tab="files">
+                فایل‌ها
+            </button>
+
+            <button
+                type="button"
+                class="project-tab"
+                data-project-tab="contract">
+                قرارداد
+            </button>
+
+            <button
+                type="button"
+                class="project-tab"
+                data-project-tab="payments">
+                پرداخت‌ها
+            </button>
+
+        </nav>
+
+
+        <div class="project-tab-body">
+
+            <section
+                class="project-tab-content active"
+                data-project-content="summary">
+
+                <div
+                    id="workshop-project-summary"
+                    class="project-summary">
+
+                    <div class="empty-state">
+                        اطلاعات پروژه در حال دریافت است...
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section
+                class="project-tab-content"
+                data-project-content="discussion">
+
+                <div class="workspace-panel">
+
+                    <div class="empty-state">
+                        بخش گفتگو آماده توسعه است.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section
+                class="project-tab-content"
+                data-project-content="tender">
+
+                <div
+                    id="workshop-tender-view"
+                    class="tender-view">
+
+                    <div class="empty-state">
+                        مناقصه را برای مشاهده جزئیات انتخاب کنید.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section
+                class="project-tab-content"
+                data-project-content="files">
+
+                <div class="workspace-panel">
+
+                    <div class="empty-state">
+                        فایل‌های پروژه در این بخش نمایش داده خواهند شد.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section
+                class="project-tab-content"
+                data-project-content="contract">
+
+                <div class="workspace-panel">
+
+                    <div class="empty-state">
+                        قرارداد پروژه در این بخش نمایش داده خواهد شد.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section
+                class="project-tab-content"
+                data-project-content="payments">
+
+                <div class="workspace-panel">
+
+                    <div class="empty-state">
+                        پرداخت‌های پروژه در این بخش نمایش داده خواهد شد.
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     ROW FILE MODAL
+========================================================== -->
+
+<div
+    id="workshop-file-modal"
+    class="workshop-modal small-modal"
+    aria-hidden="true">
+
+    <div class="modal-backdrop"
+         data-close-file-modal></div>
+
+
+    <div class="file-modal-window">
+
+        <button
+            type="button"
+            class="modal-close"
+            data-close-file-modal>
+            ×
+        </button>
+
+
+        <div class="modal-kicker">
+            SPECIFICATION FILES
+        </div>
+
+        <h3 id="workshop-file-modal-title">
+            فایل‌های ردیف
+        </h3>
+
+
+        <div
+            id="workshop-file-list"
+            class="row-file-list">
+
+            <div class="empty-state">
+                در حال دریافت فایل‌ها...
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     SCRIPTS
+========================================================== -->
+
+<script src="{% static 'workspace/workshop/js/workshop.js' %}"></script>
+
+<script src="{% static 'workspace/workshop/js/workshop-project.js' %}"></script>
+
+<script src="{% static 'workspace/workshop/js/workshop-tender.js' %}"></script>
+
+</body>
+
+</html>

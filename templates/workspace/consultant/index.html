@@ -1,0 +1,482 @@
+﻿{% load static %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+FEEMAAS Consultant
+</title>
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+
+<link rel="stylesheet"
+href="{% static 'workspace/consultant/css/consultant.css' %}">
+
+</head>
+
+
+<body>
+
+
+<div class="consultant-shell">
+
+
+<!-- SIDEBAR -->
+
+<aside class="consultant-sidebar">
+
+
+<div class="brand-box">
+
+<div class="brand-logo">
+FEEMAAS
+</div>
+
+<div class="brand-role">
+Consultant Workspace
+</div>
+
+</div>
+
+
+
+<nav class="consultant-menu">
+
+
+<a class="menu-item active">
+🏠 داشبورد
+</a>
+
+
+<a class="menu-item">
+📂 پروژه‌ها
+</a>
+
+
+<a class="menu-item">
+🔨 مناقصه‌ها
+</a>
+
+
+<a class="menu-item">
+📊 گزارش‌ها
+</a>
+
+
+<a class="menu-item">
+💬 گفتگوها
+</a>
+
+
+<a class="menu-item">
+⚙ تنظیمات
+</a>
+
+
+</nav>
+
+
+
+<div class="sidebar-footer">
+
+
+<div>
+مشاور فعال
+</div>
+
+
+<div class="online-badge">
+● آنلاین
+</div>
+
+
+</div>
+
+
+</aside>
+
+
+
+
+
+<!-- MAIN -->
+
+
+<main class="consultant-main">
+
+
+<header class="top-header">
+
+
+<div>
+
+<h1>
+Workspace مشاور
+</h1>
+
+
+<p>
+مدیریت پروژه، مناقصه و ارتباط با مشتری
+</p>
+
+
+</div>
+
+
+
+<div class="user-box">
+
+<span>
+{{request.user.username}}
+</span>
+
+
+<a href="/accounts/logout/">
+خروج
+</a>
+
+
+</div>
+
+
+</header>
+
+
+
+
+
+<section class="stats-grid">
+
+
+<div class="stat-card">
+
+<span>
+پروژه‌های جدید
+</span>
+
+<strong id="queue-count">
+0
+</strong>
+
+</div>
+
+
+
+<div class="stat-card">
+
+<span>
+پروژه‌های من
+</span>
+
+<strong id="my-projects-count">
+0
+</strong>
+
+</div>
+
+
+
+
+<div class="stat-card">
+
+<span>
+مناقصه‌های فعال
+</span>
+
+<strong id="tenders-count">
+0
+</strong>
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+<section class="workspace-grid">
+
+
+
+<div class="workspace-card">
+
+
+<header>
+
+<h2>
+پروژه‌های من
+</h2>
+
+
+<span>
+My Projects
+</span>
+
+
+</header>
+
+
+
+<div
+id="consultant-my-projects-list"
+class="project-list"
+>
+
+
+<div class="loading-box">
+در حال دریافت پروژه‌ها...
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<div class="workspace-card">
+
+
+<header>
+
+<h2>
+صف پروژه‌ها
+</h2>
+
+
+<span>
+Consultant Queue
+</span>
+
+
+</header>
+
+
+
+
+<div
+id="consultant-queue-list"
+class="project-list"
+>
+
+
+<div class="loading-box">
+در حال بررسی صف...
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+</section>
+
+
+
+
+</main>
+
+
+
+</div>
+
+
+
+
+
+
+<!-- PROJECT MODAL -->
+
+
+<div
+id="consultant-project-modal"
+class="consultant-project-modal hidden"
+>
+
+
+
+<div
+id="consultant-project-backdrop"
+class="consultant-project-backdrop">
+</div>
+
+
+
+
+<div class="consultant-project-box">
+
+
+
+<button
+id="close-consultant-project-modal"
+class="consultant-project-close">
+
+×
+
+</button>
+
+
+
+
+<div class="consultant-project-header">
+
+
+<div>
+
+
+<div class="consultant-project-label">
+PROJECT CONTROL
+</div>
+
+
+<h2 id="consultant-project-title">
+پروژه
+</h2>
+
+
+</div>
+
+
+
+
+<div
+id="consultant-project-status"
+class="consultant-project-status">
+-
+</div>
+
+
+
+</div>
+
+
+<div
+    id="consultant-project-journey"
+    class="consultant-project-journey"
+>
+</div>
+
+
+
+
+<nav class="consultant-project-tabs">
+
+
+<button
+class="consultant-project-tab active"
+data-project-tab="summary">
+
+خلاصه
+
+</button>
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="files">
+
+فایل‌ها
+
+</button>
+
+<button
+class="consultant-project-tab"
+data-project-tab="standardization">
+
+استانداردسازی
+
+</button>
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="messages">
+
+گفتگو
+
+</button>
+
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="timeline">
+
+روند
+
+</button>
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="tender">
+
+مناقصه
+
+</button>
+
+
+
+<button
+class="consultant-project-tab"
+data-project-tab="report">
+
+گزارش
+
+</button>
+
+
+</nav>
+
+
+
+
+
+<div
+id="consultant-project-content"
+class="consultant-project-content">
+
+
+</div>
+
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<script src="{% static 'workspace/consultant/js/consultant.js' %}">
+</script>
+
+
+</body>
+
+</html>

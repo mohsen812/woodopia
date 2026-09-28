@@ -1,0 +1,1399 @@
+/*
+==================================================
+FEEMAAS WORKSHOP WORKSPACE
+MVP-10.2
+==================================================
+*/
+
+:root {
+    --bg: #071017;
+    --bg-soft: #0b171f;
+    --panel: #0d1c25;
+    --panel-2: #11232d;
+
+    --cyan: #55e8ff;
+    --cyan-soft: rgba(85, 232, 255, .12);
+
+    --green: #64ffad;
+    --green-soft: rgba(100, 255, 173, .10);
+
+    --red: #ff718b;
+    --red-soft: rgba(255, 113, 139, .10);
+
+    --purple: #bb8cff;
+    --purple-soft: rgba(187, 140, 255, .10);
+
+    --text: #eaf7fa;
+    --muted: #8ca5af;
+
+    --border: rgba(130, 220, 240, .14);
+    --border-strong: rgba(85, 232, 255, .34);
+
+    --sidebar-width: 245px;
+}
+
+
+/* ==================================================
+   RESET
+================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    background:
+        radial-gradient(
+            circle at 80% 0%,
+            rgba(50, 190, 230, .09),
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at 20% 90%,
+            rgba(130, 70, 220, .07),
+            transparent 36%
+        ),
+        var(--bg);
+
+    color: var(--text);
+
+    font-family:
+        Tahoma,
+        Arial,
+        sans-serif;
+}
+
+
+/* ==================================================
+   MAIN SHELL
+================================================== */
+
+.workshop-shell {
+    min-height: 100vh;
+}
+
+
+/* ==================================================
+   SIDEBAR
+================================================== */
+
+.workshop-sidebar {
+    position: fixed;
+
+    top: 0;
+    right: 0;
+    bottom: 0;
+
+    width: var(--sidebar-width);
+
+    padding: 24px 16px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0b1b24,
+            #061016
+        );
+
+    border-left:
+        1px solid var(--border);
+
+    display: flex;
+    flex-direction: column;
+
+    z-index: 50;
+
+    box-shadow:
+        -15px 0 45px rgba(0, 0, 0, .22);
+}
+
+
+/* ==================================================
+   BRAND
+================================================== */
+
+.brand-box {
+    padding:
+        5px 10px 23px;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.brand-logo {
+    color: var(--cyan);
+
+    font-size: 28px;
+
+    font-weight: 900;
+
+    letter-spacing: 3px;
+
+    direction: ltr;
+
+    text-shadow:
+        0 0 7px rgba(85, 232, 255, .65),
+        0 0 22px rgba(85, 232, 255, .18);
+}
+
+.brand-role {
+    margin-top: 8px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+
+    letter-spacing: 1.5px;
+
+    direction: ltr;
+}
+
+
+/* ==================================================
+   NAVIGATION
+================================================== */
+
+.workshop-nav {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding-top: 22px;
+}
+
+.workshop-nav-item {
+    width: 100%;
+
+    border:
+        1px solid transparent;
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: var(--muted);
+
+    padding:
+        12px 13px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    text-align: right;
+
+    transition:
+        .18s ease;
+}
+
+.workshop-nav-item:hover {
+    color: var(--text);
+
+    background:
+        rgba(85, 232, 255, .045);
+
+    border-color:
+        var(--border);
+}
+
+.workshop-nav-item.active {
+    color: var(--cyan);
+
+    background:
+        var(--cyan-soft);
+
+    border-color:
+        var(--border-strong);
+
+    box-shadow:
+        inset 0 0 22px rgba(85, 232, 255, .035),
+        0 0 16px rgba(85, 232, 255, .05);
+}
+
+.nav-icon {
+    width: 25px;
+
+    text-align: center;
+
+    font-size: 17px;
+
+    line-height: 1;
+}
+
+
+/* ==================================================
+   SIDEBAR ACCOUNT
+================================================== */
+
+.sidebar-bottom {
+    margin-top: auto;
+
+    padding-top: 18px;
+
+    border-top:
+        1px solid var(--border);
+}
+
+.workshop-account {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 12px;
+}
+
+.account-avatar {
+    width: 38px;
+    height: 38px;
+
+    flex: 0 0 38px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(85, 232, 255, .12);
+
+    border:
+        1px solid rgba(85, 232, 255, .38);
+
+    color: var(--cyan);
+
+    box-shadow:
+        0 0 16px rgba(85, 232, 255, .16);
+
+    font-weight: bold;
+}
+
+.account-info {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.account-info strong {
+    font-size: 11px;
+}
+
+.account-info span {
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+.logout-button {
+    display: block;
+
+    padding: 10px;
+
+    text-align: center;
+
+    text-decoration: none;
+
+    color: var(--red);
+
+    border:
+        1px solid rgba(255, 113, 139, .24);
+
+    background:
+        rgba(255, 113, 139, .035);
+
+    border-radius: 9px;
+
+    font-size: 11px;
+
+    transition: .18s ease;
+}
+
+.logout-button:hover {
+    background:
+        var(--red-soft);
+
+    border-color:
+        rgba(255, 113, 139, .48);
+}
+
+
+/* ==================================================
+   MAIN
+================================================== */
+
+.workshop-main {
+    margin-right: var(--sidebar-width);
+
+    min-height: 100vh;
+
+    padding:
+        30px 34px 50px;
+}
+
+
+/* ==================================================
+   TOPBAR
+================================================== */
+
+.workshop-topbar {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    padding-bottom: 22px;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.page-kicker,
+.modal-kicker {
+    color: var(--cyan);
+
+    font-size: 9px;
+
+    letter-spacing: 2px;
+
+    direction: ltr;
+}
+
+.workshop-topbar h1 {
+    margin:
+        8px 0 0;
+
+    font-size: 23px;
+}
+
+.topbar-status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background:
+        var(--green);
+
+    box-shadow:
+        0 0 9px var(--green);
+}
+
+
+/* ==================================================
+   SECTIONS
+================================================== */
+
+.workshop-section {
+    display: none;
+
+    padding-top: 27px;
+}
+
+.workshop-section.active {
+    display: block;
+}
+
+.section-heading {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.section-heading h2 {
+    margin: 0;
+
+    font-size: 19px;
+}
+
+.section-heading p {
+    margin:
+        6px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+
+/* ==================================================
+   DASHBOARD CARDS
+================================================== */
+
+.dashboard-cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 13px;
+
+    margin-bottom: 17px;
+}
+
+.dashboard-card {
+    min-height: 105px;
+
+    padding: 17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17, 37, 47, .92),
+            rgba(8, 19, 26, .96)
+        );
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, .16);
+}
+
+.dashboard-card:hover {
+    border-color:
+        rgba(85, 232, 255, .26);
+}
+
+.card-label {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 10px;
+
+    margin-bottom: 15px;
+}
+
+.dashboard-card strong {
+    color: var(--cyan);
+
+    font-size: 25px;
+}
+
+
+/* ==================================================
+   PANELS
+================================================== */
+
+.workspace-panel {
+    overflow: hidden;
+
+    background:
+        rgba(9, 23, 31, .88);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, .18);
+}
+
+.panel-header {
+    padding:
+        17px 19px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.panel-header h3 {
+    margin: 0;
+
+    font-size: 14px;
+}
+
+.panel-header p {
+    margin:
+        6px 0 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+
+/* ==================================================
+   BUTTONS
+================================================== */
+
+.primary-button,
+.secondary-button,
+.accept-button,
+.decline-button {
+    border-radius: 8px;
+
+    padding:
+        8px 13px;
+
+    font-family: inherit;
+
+    font-size: 10px;
+
+    cursor: pointer;
+
+    transition:
+        .18s ease;
+}
+
+.primary-button {
+    color: #061116;
+
+    background:
+        var(--cyan);
+
+    border:
+        1px solid var(--cyan);
+
+    box-shadow:
+        0 0 13px rgba(85, 232, 255, .12);
+}
+
+.primary-button:hover {
+    box-shadow:
+        0 0 20px rgba(85, 232, 255, .22);
+}
+
+.secondary-button {
+    color: var(--cyan);
+
+    background:
+        rgba(85, 232, 255, .045);
+
+    border:
+        1px solid rgba(85, 232, 255, .28);
+}
+
+.secondary-button:hover {
+    background:
+        rgba(85, 232, 255, .10);
+}
+
+.accept-button {
+    color: var(--green);
+
+    background:
+        var(--green-soft);
+
+    border:
+        1px solid rgba(100, 255, 173, .28);
+}
+
+.accept-button:hover {
+    background:
+        rgba(100, 255, 173, .15);
+}
+
+.decline-button {
+    color: var(--red);
+
+    background:
+        var(--red-soft);
+
+    border:
+        1px solid rgba(255, 113, 139, .25);
+}
+
+.decline-button:hover {
+    background:
+        rgba(255, 113, 139, .15);
+}
+
+
+/* ==================================================
+   INVITATIONS
+================================================== */
+
+.invitation-list,
+.tender-list {
+    padding: 13px;
+}
+
+.invitation-item {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 16px;
+
+    margin-bottom: 9px;
+
+    border:
+        1px solid rgba(130, 220, 240, .075);
+
+    border-radius: 11px;
+
+    background:
+        rgba(255, 255, 255, .012);
+
+    transition:
+        .18s ease;
+}
+
+.invitation-item:hover {
+    border-color:
+        rgba(85, 232, 255, .20);
+
+    background:
+        rgba(85, 232, 255, .025);
+}
+
+.invitation-item:last-child {
+    margin-bottom: 0;
+}
+
+.invitation-main h4 {
+    margin: 0;
+
+    font-size: 13px;
+}
+
+.invitation-main p {
+    margin:
+        6px 0 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+.invitation-meta {
+    display: flex;
+
+    gap: 7px;
+
+    flex-wrap: wrap;
+
+    margin-top: 9px;
+}
+
+.meta-chip {
+    padding:
+        4px 7px;
+
+    border-radius: 5px;
+
+    color: var(--muted);
+
+    background:
+        rgba(85, 232, 255, .045);
+
+    font-size: 8px;
+}
+
+.invitation-actions {
+    display: flex;
+
+    gap: 6px;
+
+    flex-wrap: wrap;
+}
+
+
+/* ==================================================
+   PROJECT GRID
+================================================== */
+
+.project-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 13px;
+}
+
+.project-card {
+    padding: 18px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 13px;
+
+    background:
+        rgba(12, 28, 37, .88);
+}
+
+.project-card h3 {
+    margin:
+        0 0 7px;
+
+    font-size: 13px;
+}
+
+.project-card p {
+    color: var(--muted);
+
+    font-size: 10px;
+
+    line-height: 1.8;
+}
+
+.project-card-footer {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 15px;
+}
+
+
+/* ==================================================
+   MODAL
+================================================== */
+
+.workshop-modal {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    display: none;
+}
+
+.workshop-modal.open {
+    display: block;
+}
+
+.modal-backdrop {
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        rgba(2, 7, 10, .84);
+
+    backdrop-filter:
+        blur(6px);
+}
+
+.project-modal-window {
+    position: relative;
+
+    z-index: 2;
+
+    width:
+        min(1180px, calc(100vw - 55px));
+
+    height:
+        min(820px, calc(100vh - 45px));
+
+    margin:
+        22px auto;
+
+    overflow: hidden;
+
+    display: flex;
+
+    flex-direction: column;
+
+    background:
+        #09161e;
+
+    border:
+        1px solid rgba(85, 232, 255, .28);
+
+    border-radius: 17px;
+
+    box-shadow:
+        0 35px 100px rgba(0, 0, 0, .65),
+        0 0 40px rgba(85, 232, 255, .055);
+}
+
+.project-modal-header {
+    padding:
+        22px 27px;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.project-modal-header h2 {
+    margin:
+        7px 0 4px;
+
+    font-size: 20px;
+}
+
+.project-modal-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+.modal-close {
+    position: absolute;
+
+    top: 14px;
+    left: 15px;
+
+    width: 31px;
+    height: 31px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, .025);
+
+    border:
+        1px solid rgba(255,255,255,.10);
+
+    color: var(--muted);
+
+    cursor: pointer;
+
+    font-size: 20px;
+
+    z-index: 5;
+}
+
+.modal-close:hover {
+    color: var(--red);
+
+    border-color:
+        rgba(255, 113, 139, .4);
+}
+
+
+/* ==================================================
+   PROJECT TABS
+================================================== */
+
+.project-tabs {
+    display: flex;
+
+    gap: 4px;
+
+    padding:
+        9px 16px;
+
+    overflow-x: auto;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.project-tab {
+    border:
+        1px solid transparent;
+
+    background: transparent;
+
+    color: var(--muted);
+
+    padding:
+        9px 14px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+}
+
+.project-tab:hover {
+    color: var(--text);
+}
+
+.project-tab.active {
+    color: var(--cyan);
+
+    background:
+        rgba(85, 232, 255, .07);
+
+    border-color:
+        rgba(85, 232, 255, .18);
+}
+
+.project-tab-body {
+    flex: 1;
+
+    overflow: auto;
+
+    padding: 21px;
+}
+
+.project-tab-content {
+    display: none;
+}
+
+.project-tab-content.active {
+    display: block;
+}
+
+
+/* ==================================================
+   SUMMARY
+================================================== */
+
+.project-summary {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+.summary-box {
+    padding: 17px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 11px;
+
+    background:
+        rgba(255,255,255,.015);
+}
+
+.summary-box span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 9px;
+
+    margin-bottom: 7px;
+}
+
+.summary-box strong {
+    font-size: 12px;
+}
+
+
+/* ==================================================
+   TENDER VIEW
+================================================== */
+
+.tender-header {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 17px;
+}
+
+.tender-header h3 {
+    margin: 0;
+
+    font-size: 15px;
+}
+
+.tender-header p {
+    margin:
+        6px 0 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+
+/* ==================================================
+   SPECIFICATION TABLE
+================================================== */
+
+.spec-table-wrapper {
+    overflow: auto;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 11px;
+}
+
+.spec-table {
+    width: 100%;
+
+    min-width: 1000px;
+
+    border-collapse: collapse;
+}
+
+.spec-table th {
+    padding:
+        11px 9px;
+
+    background:
+        rgba(85, 232, 255, .055);
+
+    color: var(--cyan);
+
+    font-size: 9px;
+
+    font-weight: normal;
+
+    white-space: nowrap;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.spec-table td {
+    padding:
+        10px 9px;
+
+    color: #dcecf1;
+
+    font-size: 9px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.045);
+
+    vertical-align: middle;
+}
+
+.spec-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.spec-row-number {
+    color: var(--cyan);
+
+    font-weight: bold;
+}
+
+.file-count-button {
+    border:
+        1px solid rgba(187,140,255,.32);
+
+    background:
+        rgba(187,140,255,.07);
+
+    color: var(--purple);
+
+    border-radius: 7px;
+
+    padding:
+        5px 8px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    font-size: 9px;
+}
+
+.file-count-button:hover {
+    background:
+        rgba(187,140,255,.14);
+}
+
+.spec-input {
+    width: 100%;
+
+    min-width: 85px;
+
+    padding:
+        7px 8px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 6px;
+
+    background:
+        rgba(0,0,0,.18);
+
+    color: var(--text);
+
+    outline: none;
+
+    font-family: inherit;
+
+    font-size: 9px;
+}
+
+.spec-input:focus {
+    border-color:
+        rgba(85,232,255,.40);
+
+    box-shadow:
+        0 0 9px rgba(85,232,255,.08);
+}
+
+.bid-total-box {
+    display: flex;
+
+    justify-content: flex-end;
+
+    margin-top: 14px;
+}
+
+.bid-total {
+    padding:
+        13px 21px;
+
+    border:
+        1px solid rgba(100,255,173,.24);
+
+    border-radius: 10px;
+
+    background:
+        rgba(100,255,173,.035);
+}
+
+.bid-total span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+.bid-total strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: var(--green);
+
+    font-size: 19px;
+}
+
+
+/* ==================================================
+   FILE MODAL
+================================================== */
+
+.file-modal-window {
+    position: relative;
+
+    z-index: 2;
+
+    width:
+        min(560px, calc(100vw - 35px));
+
+    max-height:
+        calc(100vh - 70px);
+
+    overflow: auto;
+
+    margin:
+        35px auto;
+
+    padding: 24px;
+
+    background:
+        #09161e;
+
+    border:
+        1px solid rgba(187,140,255,.28);
+
+    border-radius: 15px;
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.65);
+}
+
+.file-modal-window h3 {
+    margin:
+        7px 0 18px;
+
+    font-size: 15px;
+}
+
+.row-file-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.row-file-item {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding:
+        10px 12px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 8px;
+
+    background:
+        rgba(255,255,255,.015);
+}
+
+.row-file-name {
+    font-size: 9px;
+}
+
+.row-file-meta {
+    margin-top: 4px;
+
+    color: var(--muted);
+
+    font-size: 8px;
+}
+
+
+/* ==================================================
+   EMPTY
+================================================== */
+
+.empty-state {
+    padding:
+        32px 20px;
+
+    color: var(--muted);
+
+    text-align: center;
+
+    font-size: 10px;
+}
+
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 1050px) {
+
+    .dashboard-cards {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .project-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 760px) {
+
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    .workshop-shell {
+        display: block;
+    }
+
+    .workshop-sidebar {
+        position: relative;
+
+        width: 100%;
+
+        min-height: auto;
+    }
+
+    .workshop-main {
+        margin-right: 0;
+
+        padding:
+            20px 15px 35px;
+    }
+
+    .workshop-nav {
+        flex-direction: row;
+
+        overflow-x: auto;
+    }
+
+    .workshop-nav-item {
+        width: auto;
+
+        white-space: nowrap;
+    }
+
+    .dashboard-cards,
+    .project-grid,
+    .project-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .invitation-item {
+        grid-template-columns: 1fr;
+    }
+
+    .project-modal-window {
+        width:
+            calc(100vw - 14px);
+
+        height:
+            calc(100vh - 14px);
+
+        margin:
+            7px auto;
+    }
+
+}
+
