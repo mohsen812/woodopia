@@ -8,6 +8,8 @@ from .views import (
     ProjectTenderView,
     ProjectTenderSelectWinnerView,
     ProjectAttachmentListCreateView,
+	ProjectFileCenterView,
+    ProjectAttachmentDeleteView,
     SendProjectToConsultantView,
     ConsultantDashboardView,
     ConsultantQueueView,
@@ -15,7 +17,7 @@ from .views import (
     ConsultantMyProjectsView,
     ConsultantStandardizationView,
     CustomerStandardizationView,
-    SendStandardizationToCustomerView,    
+    SendStandardizationToCustomerView,
     CustomerSpecificationReviewView,
     CustomerStandardizationGlobalReviewView,
 
@@ -88,7 +90,7 @@ urlpatterns = [
     ),
 
 
-  
+
     # =====================================
     # PROJECT TENDER
     # =====================================
@@ -144,6 +146,17 @@ urlpatterns = [
         "<int:pk>/attachments/",
         ProjectAttachmentListCreateView.as_view(),
         name="project-attachment-create",
+    ),
+	path(
+        "<int:pk>/files/",
+        ProjectFileCenterView.as_view(),
+        name="project-file-center",
+    ),
+
+	path(
+        "<int:project_id>/attachments/<int:pk>/delete/",
+        ProjectAttachmentDeleteView.as_view(),
+        name="project-attachment-delete",
     ),
 
     path(

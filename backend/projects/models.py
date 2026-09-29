@@ -90,6 +90,20 @@ class ProjectAttachment(models.Model):
         blank=True
     )
 
+    OWNER_ROLE_CHOICES = [
+        ("customer","Customer"),
+        ("consultant","Consultant"),
+        ("workshop","Workshop"),
+        ("designer","Designer"),
+        ("company","Company"),
+    ]
+
+    owner_role = models.CharField(
+        max_length=30,
+        choices=OWNER_ROLE_CHOICES,
+        default="customer"
+    )
+
     file = models.FileField(
         upload_to='projects/%Y/%m/'
     )
@@ -628,7 +642,7 @@ class ProjectMovement(models.Model):
 
     def __str__(self):
         return f"{self.token.title} - {self.action}"
-    
+
 class ProjectVisual(models.Model):
 
     SHAPE_TYPES = [

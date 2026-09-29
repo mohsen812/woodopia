@@ -1,257 +1,1253 @@
-*{
-    box-sizing:border-box;
-    font-family:tahoma;
+/*
+==================================================
+FEEMAAS CUSTOMER WORKSPACE
+MVP-10.2
+Customer Dashboard UI
+==================================================
+*/
+
+
+:root {
+
+    --customer-bg:
+        #f4f7fb;
+
+    --customer-bg-soft:
+        #eef3ff;
+
+    --customer-panel:
+        rgba(255,255,255,.72);
+
+    --customer-panel-solid:
+        #ffffff;
+
+    --customer-border:
+        rgba(120,140,180,.18);
+
+    --customer-primary:
+        #2563eb;
+
+    --customer-secondary:
+        #8b5cf6;
+
+    --customer-cyan:
+        #06b6d4;
+
+    --customer-text:
+        #172033;
+
+    --customer-muted:
+        #64748b;
+
+    --customer-radius:
+        24px;
+
+    --customer-shadow:
+        0 20px 60px rgba(15,23,42,.08);
+
 }
 
 
-body{
+
+/* ==================================================
+   RESET
+================================================== */
+
+
+* {
+
+    box-sizing:border-box;
+
+}
+
+
+html,
+body {
 
     margin:0;
 
-    background:
-    radial-gradient(circle at top,#14213d,#050816);
-
-    color:white;
-
-    min-height:100vh;
+    min-height:100%;
 
 }
 
 
-/* HEADER */
+body {
 
-.header{
+    direction:rtl;
 
-    height:90px;
+    font-family:
+
+        Tahoma,
+        Arial,
+        sans-serif;
+
+
+    background:
+
+        radial-gradient(
+            circle at top right,
+            rgba(37,99,235,.18),
+            transparent 35%
+        ),
+
+        radial-gradient(
+            circle at bottom left,
+            rgba(139,92,246,.16),
+            transparent 35%
+        ),
+
+        var(--customer-bg);
+
+
+    color:
+
+        var(--customer-text);
+
+}
+
+
+
+/* ==================================================
+   MAIN APP LAYOUT
+================================================== */
+
+
+.app {
+
+    min-height:100vh;
+
+    display:flex;
+
+}
+
+
+
+/* ==================================================
+   SIDEBAR
+================================================== */
+
+
+.sidebar {
+
+    width:260px;
+
+    flex-shrink:0;
+
+
+    padding:24px;
+
+
+    background:
+
+        rgba(255,255,255,.65);
+
+
+    backdrop-filter:
+
+        blur(18px);
+
+
+    border-left:
+
+        1px solid var(--customer-border);
+
+
+    box-shadow:
+
+        var(--customer-shadow);
+
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+
+/* BRAND */
+
+
+.brand {
 
     display:flex;
 
     align-items:center;
 
-    justify-content:space-between;
+    gap:14px;
 
-    padding:0 40px;
-
-    background:
-    rgba(255,255,255,.05);
-
-    backdrop-filter:blur(15px);
-
-    border-bottom:
-    1px solid rgba(0,255,255,.3);
+    margin-bottom:35px;
 
 }
 
 
-.logo{
+.brand-mark {
 
-    font-size:30px;
+    width:52px;
 
-    color:#00ffff;
-
-    text-shadow:
-    0 0 20px cyan;
-
-}
+    height:52px;
 
 
-.user-box{
-
-    color:#ddd;
-
-}
+    border-radius:18px;
 
 
-/* MAIN */
+    display:flex;
 
-.container{
+    align-items:center;
 
-    padding:40px;
-
-}
+    justify-content:center;
 
 
-/* HERO */
+    font-size:26px;
 
-.hero{
-
-    padding:35px;
-
-    border-radius:25px;
-
-    background:
-    linear-gradient(
-    135deg,
-    rgba(0,255,255,.15),
-    rgba(150,0,255,.15)
-    );
-
-
-    border:
-    1px solid rgba(0,255,255,.5);
-
-
-    box-shadow:
-    0 0 40px rgba(0,255,255,.2);
-
-
-}
-
-
-.hero h1{
-
-    font-size:38px;
-
-    color:#00ffff;
-
-}
-
-
-/* BUTTON */
-
-
-.create-btn{
-
-    margin-top:25px;
-
-    padding:18px 40px;
-
-    border-radius:50px;
-
-    border:none;
-
-    cursor:pointer;
-
-    background:
-    linear-gradient(
-    90deg,
-    #00ffff,
-    #8a2be2
-    );
+    font-weight:900;
 
 
     color:white;
 
-    font-size:20px;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            var(--customer-primary),
+            var(--customer-secondary)
+        );
 
 
     box-shadow:
 
-    0 0 30px cyan;
+        0 0 25px rgba(37,99,235,.35);
+
+}
+
+
+
+.brand-text {
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+.brand-text strong {
+
+    font-size:20px;
+
+}
+
+
+.brand-text span {
+
+    font-size:12px;
+
+    color:
+
+        var(--customer-muted);
+
+}
+
+
+
+/* USER PANEL */
+
+
+.user-panel {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+
+    padding:15px;
+
+
+    border-radius:20px;
+
+
+    background:
+
+        rgba(255,255,255,.55);
+
+
+    border:
+
+        1px solid var(--customer-border);
+
+
+    margin-bottom:25px;
+
+}
+
+
+.user-avatar {
+
+    width:42px;
+
+    height:42px;
+
+
+    border-radius:50%;
+
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+
+    background:
+
+        linear-gradient(
+            135deg,
+            var(--customer-cyan),
+            var(--customer-primary)
+        );
+
+
+    color:white;
+
+    font-weight:bold;
+
+}
+
+
+.user-info {
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+.user-info span {
+
+    color:
+
+        var(--customer-muted);
+
+    font-size:13px;
+
+}
+
+
+
+/* ==================================================
+   NAVIGATION
+================================================== */
+
+
+.dashboard-nav {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+
+.nav-section-title {
+
+    color:
+
+        var(--customer-muted);
+
+
+    font-size:12px;
+
+
+    margin-bottom:10px;
+
+}
+
+
+
+.nav-item {
+
+    border:none;
+
+
+    background:
+
+        transparent;
+
+
+    width:100%;
+
+
+    padding:13px 16px;
+
+
+    border-radius:18px;
+
+
+    display:flex;
+
+    align-items:center;
+
+
+    gap:12px;
+
+
+    cursor:pointer;
+
+
+    color:
+
+        var(--customer-text);
+
+
+    font-size:14px;
+
+
+    transition:
+
+        .25s ease;
+
+}
+
+
+
+.nav-item:hover {
+
+
+    background:
+
+        rgba(37,99,235,.08);
+
+
+    transform:
+
+        translateX(-4px);
+
+}
+
+
+
+.nav-item.active {
+
+
+    background:
+
+        linear-gradient(
+            135deg,
+            rgba(37,99,235,.15),
+            rgba(139,92,246,.15)
+        );
+
+
+    color:
+
+        var(--customer-primary);
+
+
+    box-shadow:
+
+        0 10px 25px rgba(37,99,235,.12);
+
+}
+
+
+
+.nav-icon {
+
+    font-size:20px;
+
+}
+
+
+
+/* ==================================================
+   CONTENT
+================================================== */
+
+
+.content {
+
+    flex:1;
+
+    padding:30px;
+
+}
+
+
+
+/* ==================================================
+   TOPBAR
+================================================== */
+
+
+.topbar {
+
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+
+    padding:
+
+        20px 25px;
+
+
+    border-radius:
+
+        var(--customer-radius);
+
+
+    background:
+
+        var(--customer-panel);
+
+
+    backdrop-filter:
+
+        blur(15px);
+
+
+    border:
+
+        1px solid var(--customer-border);
+
+
+    box-shadow:
+
+        var(--customer-shadow);
+
+
+    margin-bottom:30px;
+
+}
+
+
+.breadcrumb {
+
+    color:
+
+        var(--customer-muted);
+
+
+    font-size:13px;
+
+}
+
+
+.topbar h1 {
+
+    margin:8px 0 0;
+
+}
+
+
+
+/* ==================================================
+   PROFILE BUTTONS
+================================================== */
+
+
+.profile-button,
+.icon-button {
+
+
+    border:none;
+
+
+    cursor:pointer;
+
+
+    border-radius:18px;
+
+
+    padding:12px 18px;
+
+
+    background:white;
+
+
+    box-shadow:
+
+        0 8px 25px rgba(15,23,42,.08);
+
+}
+
+
+
+.profile-avatar {
+
+    display:inline-flex;
+
+
+    width:35px;
+
+    height:35px;
+
+
+    border-radius:50%;
+
+
+    align-items:center;
+
+    justify-content:center;
+
+
+    background:
+
+        var(--customer-primary);
+
+
+    color:white;
+
+}
+
+
+
+/* ==================================================
+   PANELS
+================================================== */
+
+
+.welcome-panel {
+
+
+    padding:35px;
+
+
+    border-radius:
+
+        30px;
+
+
+    background:
+
+        linear-gradient(
+            135deg,
+            rgba(37,99,235,.12),
+            rgba(139,92,246,.12)
+        );
+
+
+    border:
+
+        1px solid rgba(37,99,235,.15);
+
+
+    box-shadow:
+
+        var(--customer-shadow);
+
+
+    margin-bottom:30px;
+
+}
+
+
+.eyebrow {
+
+
+    color:
+
+        var(--customer-primary);
+
+
+    font-size:12px;
+
+
+    font-weight:bold;
 
 
 }
 
 
 
-/* CARDS */
+.welcome-panel h2 {
+
+    font-size:32px;
+
+}
 
 
-.grid{
 
-    margin-top:40px;
+/* ==================================================
+   STAT CARDS
+================================================== */
+
+
+.stats-grid {
+
 
     display:grid;
 
-    grid-template-columns:
-    repeat(auto-fit,minmax(280px,1fr));
 
-    gap:25px;
+    grid-template-columns:
+
+        repeat(
+            auto-fit,
+            minmax(200px,1fr)
+        );
+
+
+    gap:20px;
+
+
+    margin-bottom:35px;
 
 }
 
 
 
-.card{
+.stat-card {
+
 
     padding:25px;
+
 
     border-radius:25px;
 
 
     background:
-    rgba(255,255,255,.06);
+
+        var(--customer-panel);
 
 
     border:
-    1px solid rgba(255,255,255,.15);
+
+        1px solid var(--customer-border);
 
 
-    backdrop-filter:blur(20px);
+    backdrop-filter:
 
-
-    transition:.3s;
-
-
-}
-
-
-
-.card:hover{
-
-
-    transform:
-    translateY(-8px);
+        blur(15px);
 
 
     box-shadow:
-    0 0 30px rgba(0,255,255,.4);
+
+        var(--customer-shadow);
+
+
+    transition:.25s;
+
+}
+
+
+
+.stat-card:hover {
+
+
+    transform:
+
+        translateY(-6px);
+
+
+    box-shadow:
+
+        0 20px 50px rgba(37,99,235,.18);
+
+}
+
+
+
+.stat-card strong {
+
+
+    display:block;
+
+
+    font-size:34px;
+
+
+    margin-top:12px;
 
 
 }
 
 
 
-.card h2{
+/* ==================================================
+   BUTTONS
+================================================== */
 
-    color:#00ffff;
+
+.primary-button {
+
+
+    border:none;
+
+
+    cursor:pointer;
+
+
+    padding:
+
+        14px 28px;
+
+
+    border-radius:50px;
+
+
+    color:white;
+
+
+    background:
+
+        linear-gradient(
+            135deg,
+            var(--customer-primary),
+            var(--customer-secondary)
+        );
+
+
+    box-shadow:
+
+        0 0 25px rgba(37,99,235,.35);
+
+
+    transition:.25s;
 
 }
 
 
 
-.status{
+.primary-button:hover {
 
-    display:inline-block;
 
-    padding:8px 18px;
+    transform:
+
+        translateY(-3px);
+
+
+    box-shadow:
+
+        0 0 40px rgba(139,92,246,.45);
+
+}
+
+
+
+.secondary-button {
+
+
+    border:none;
+
+
+    cursor:pointer;
+
+
+    padding:
+
+        14px 25px;
+
+
+    border-radius:50px;
+
+
+    background:white;
+
+
+    color:
+
+        var(--customer-primary);
+
+
+}
+
+
+
+/* ==================================================
+   PROJECT AREA
+================================================== */
+
+
+.section-header {
+
+
+    display:flex;
+
+
+    justify-content:space-between;
+
+
+    align-items:center;
+
+
+    margin-bottom:25px;
+
+}
+
+
+.workspace-view {
+
+    animation:
+
+        fade .3s ease;
+
+}
+
+
+
+.hidden {
+
+    display:none;
+
+}
+
+
+
+@keyframes fade {
+
+
+    from {
+
+        opacity:0;
+
+        transform:translateY(10px);
+
+    }
+
+
+    to {
+
+        opacity:1;
+
+        transform:none;
+
+    }
+
+}
+
+
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+
+@media(max-width:900px){
+
+
+    .app {
+
+        flex-direction:column;
+
+    }
+
+
+    .sidebar {
+
+        width:100%;
+
+    }
+
+
+    .content {
+
+        padding:20px;
+
+    }
+
+
+}
+.project-card{
+
+    background:
+    rgba(255,255,255,0.06);
+
+    border:
+    1px solid rgba(255,255,255,0.12);
+
+    border-radius:18px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+
+    backdrop-filter:blur(12px);
+
+    transition:.3s;
+
+}
+
+
+.project-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+    0 0 25px rgba(0,255,200,.25);
+
+}
+
+
+
+.project-card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+
+
+.project-card h3{
+
+    margin:0;
+
+    font-size:20px;
+
+}
+
+
+
+.project-description{
+
+    opacity:.8;
+
+    margin-top:15px;
+
+}
+
+
+
+.project-status{
+
+    padding:5px 12px;
 
     border-radius:20px;
 
+    background:#222;
+
+    font-size:12px;
+
+}
+
+
+
+.open-project-btn{
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    background:#00e5b0;
+
+    color:#111;
+
+}
+.modal{
+
+display:none;
+
+position:fixed;
+
+inset:0;
+
+background:rgba(0,0,0,.65);
+
+z-index:999;
+
+align-items:center;
+
+justify-content:center;
+
+}
+
+
+
+.modal.active{
+
+display:flex;
+
+}
+
+
+
+.modal-box{
+
+position:relative;
+
+width:500px;
+
+max-width:90%;
+
+background:#151515;
+
+border-radius:25px;
+
+padding:30px;
+
+box-shadow:
+0 0 40px rgba(0,255,200,.3);
+
+}
+
+
+
+.modal-close{
+
+position:absolute;
+
+right:20px;
+
+top:15px;
+
+background:none;
+
+border:none;
+
+color:white;
+
+font-size:28px;
+
+cursor:pointer;
+
+}
+.project-modal{
+
+    position:fixed;
+
+    inset:0;
+
     background:
-    rgba(0,255,100,.2);
+    rgba(0,0,0,.65);
 
-    color:#00ff88;
+    z-index:999;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+}
+
+
+
+.project-modal-box{
+
+
+    position:relative;
+
+
+    width:500px;
+
+
+    max-width:90%;
+
+
+    background:
+    #151515;
+
+
+    border-radius:25px;
+
+
+    padding:30px;
+
+
+    box-shadow:
+    0 0 40px rgba(0,255,200,.3);
+
+
+    color:white;
 
 }
 
 
 
-/* FLOW */
+.project-modal-box h2{
 
-
-.flow{
-
-    margin-top:40px;
+    margin-top:0;
 
 }
 
 
-.step{
 
-    display:inline-block;
-
-    padding:15px 25px;
-
-    margin:10px;
-
-    border-radius:30px;
+.project-modal-box input,
+.project-modal-box textarea{
 
 
-    border:
-    1px solid cyan;
+    width:100%;
 
 
-    color:#00ffff;
+    box-sizing:border-box;
+
+
+    margin-top:15px;
+
+
+    padding:12px;
+
+
+    border-radius:12px;
+
+
+    border:1px solid rgba(255,255,255,.15);
+
+
+    background:
+    rgba(255,255,255,.08);
+
+
+    color:white;
+
+
+}
+
+
+
+.project-modal-box textarea{
+
+    min-height:120px;
+
+    resize:vertical;
+
+}
+
+
+
+#save-project-button{
+
+
+    margin-top:20px;
+
+
+    width:100%;
+
+
+    padding:14px;
+
+
+    border:none;
+
+
+    border-radius:14px;
+
+
+    background:#00e5b0;
+
+
+    color:#111;
+
+
+    cursor:pointer;
+
+
+    font-size:16px;
 
 }

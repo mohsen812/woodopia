@@ -581,3 +581,2805 @@ body {
     border:1px solid #cbd5e1;
 
 }
+/* =========================================================
+   CUSTOMER PROJECT STANDARDIZATION
+========================================================= */
+
+.standardization-customer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    margin-bottom: 22px;
+}
+
+
+.standardization-customer-header h3 {
+    margin: 6px 0 4px;
+}
+
+
+.standardization-customer-subtitle {
+    margin: 0;
+
+    color: rgba(255,255,255,0.48);
+
+    font-size: 12px;
+}
+
+
+.standardization-customer-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 13px;
+
+    border: 1px solid rgba(0,229,255,0.18);
+    border-radius: 999px;
+
+    background: rgba(0,229,255,0.045);
+
+    color: rgba(255,255,255,0.68);
+
+    font-size: 11px;
+}
+
+
+.standardization-status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #00e5ff;
+
+    box-shadow:
+        0 0 8px rgba(0,229,255,0.8);
+}
+
+
+/* ---------------------------------------------------------
+   TABLE
+--------------------------------------------------------- */
+
+.standardization-customer-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border:
+        1px solid rgba(0,229,255,0.12);
+
+    border-radius: 14px;
+
+    background:
+        rgba(5,12,22,0.52);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+
+.standardization-customer-table {
+    min-width: 980px;
+}
+
+
+.standardization-customer-head,
+.standardization-customer-row {
+
+    display: grid;
+
+    grid-template-columns:
+        42px
+        minmax(130px, 1.15fr)
+        60px
+        minmax(100px, 0.9fr)
+        minmax(110px, 0.9fr)
+        minmax(210px, 1.7fr)
+        70px
+        minmax(105px, 0.9fr);
+
+    align-items: stretch;
+}
+
+
+.standardization-customer-head {
+
+    min-height: 48px;
+
+    background:
+        rgba(0,229,255,0.075);
+
+    border-bottom:
+        1px solid rgba(0,229,255,0.18);
+
+    color:
+        rgba(255,255,255,0.62);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.standardization-customer-head > div {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 8px;
+
+    border-left:
+        1px solid rgba(0,229,255,0.08);
+}
+
+
+.standardization-customer-head > div:last-child {
+    border-left: none;
+}
+
+
+/* ---------------------------------------------------------
+   ROW
+--------------------------------------------------------- */
+
+.standardization-customer-row {
+
+    min-height: 74px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,0.055);
+
+    transition:
+        background 0.18s ease;
+}
+
+
+.standardization-customer-row:last-child {
+    border-bottom: none;
+}
+
+
+.standardization-customer-row:hover {
+
+    background:
+        rgba(0,229,255,0.025);
+}
+
+
+.standardization-customer-row > div {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+
+    padding: 9px 10px;
+
+    border-left:
+        1px solid rgba(255,255,255,0.045);
+
+    color:
+        rgba(255,255,255,0.72);
+
+    font-size: 12px;
+
+    text-align: center;
+}
+
+
+.standardization-customer-row > div:last-child {
+    border-left: none;
+}
+
+
+/* ---------------------------------------------------------
+   CELLS
+--------------------------------------------------------- */
+
+.standardization-customer-number {
+
+    color:
+        rgba(0,229,255,0.78) !important;
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    font-weight: 700;
+}
+
+
+.standardization-customer-name {
+
+    justify-content: flex-start !important;
+
+    color:
+        #ffffff !important;
+
+    font-weight: 600;
+
+    text-align: right !important;
+}
+
+
+.standardization-customer-technical {
+
+    justify-content: flex-start !important;
+
+    color:
+        rgba(255,255,255,0.58) !important;
+
+    line-height: 1.7;
+
+    text-align: right !important;
+
+    white-space: normal;
+
+    word-break: break-word;
+}
+
+
+/* ---------------------------------------------------------
+   FILE
+--------------------------------------------------------- */
+
+.standardization-customer-file-button {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    min-width: 38px;
+    height: 32px;
+
+    border:
+        1px solid rgba(0,229,255,0.22);
+
+    border-radius: 8px;
+
+    background:
+        rgba(0,229,255,0.045);
+
+    color:
+        rgba(0,229,255,0.85);
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.standardization-customer-file-button:hover {
+
+    background:
+        rgba(0,229,255,0.10);
+
+    border-color:
+        rgba(0,229,255,0.42);
+
+    transform:
+        translateY(-1px);
+}
+
+
+.standardization-customer-file-button span {
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    font-size: 10px;
+}
+
+
+.standardization-customer-no-file {
+
+    color:
+        rgba(255,255,255,0.20);
+}
+
+
+/* ---------------------------------------------------------
+   STATUS
+--------------------------------------------------------- */
+
+.standardization-customer-status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+}
+
+
+.standardization-customer-status-badge.pending {
+
+    border:
+        1px solid rgba(255,255,255,0.10);
+
+    background:
+        rgba(255,255,255,0.035);
+
+    color:
+        rgba(255,255,255,0.52);
+}
+
+
+.standardization-customer-status-badge.approved {
+
+    border:
+        1px solid rgba(80,255,150,0.20);
+
+    background:
+        rgba(80,255,150,0.055);
+
+    color:
+        rgba(100,255,170,0.85);
+}
+
+
+.standardization-customer-status-badge.revision {
+
+    border:
+        1px solid rgba(255,170,70,0.22);
+
+    background:
+        rgba(255,170,70,0.055);
+
+    color:
+        rgba(255,190,100,0.88);
+}
+
+
+/* ---------------------------------------------------------
+   ACTIONS
+--------------------------------------------------------- */
+
+.standardization-customer-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 18px;
+}
+
+
+.standardization-customer-actions .approve-standardization,
+.standardization-customer-actions .edit-standardization {
+
+    min-height: 40px;
+
+    padding: 0 17px;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.18s ease,
+        background 0.18s ease;
+}
+
+
+.standardization-customer-actions .approve-standardization {
+
+    border:
+        1px solid rgba(80,255,150,0.22);
+
+    background:
+        rgba(80,255,150,0.07);
+
+    color:
+        rgba(110,255,175,0.90);
+}
+
+
+.standardization-customer-actions .edit-standardization {
+
+    border:
+        1px solid rgba(255,170,70,0.20);
+
+    background:
+        rgba(255,170,70,0.055);
+
+    color:
+        rgba(255,190,110,0.88);
+}
+
+
+.standardization-customer-actions button:hover {
+
+    transform:
+        translateY(-1px);
+}
+
+
+.standardization-timer {
+
+    margin-right: auto;
+
+    color:
+        rgba(255,255,255,0.45);
+
+    font-size: 11px;
+}
+
+
+.standardization-timer strong {
+
+    color:
+        rgba(0,229,255,0.78);
+}
+
+
+.timer-icon {
+
+    margin-left: 5px;
+
+    color:
+        rgba(0,229,255,0.70);
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY / ERROR
+--------------------------------------------------------- */
+
+.standardization-customer-empty {
+
+    padding: 55px 20px;
+
+    text-align: center;
+
+    border:
+        1px dashed rgba(0,229,255,0.12);
+
+    border-radius: 12px;
+
+    background:
+        rgba(255,255,255,0.018);
+}
+
+
+.standardization-empty-icon {
+
+    margin-bottom: 10px;
+
+    color:
+        rgba(0,229,255,0.45);
+
+    font-size: 32px;
+}
+
+
+.standardization-customer-empty h4 {
+
+    margin: 0 0 7px;
+
+    color:
+        rgba(255,255,255,0.72);
+}
+
+
+.standardization-customer-empty p {
+
+    margin: 0;
+
+    color:
+        rgba(255,255,255,0.38);
+
+    font-size: 12px;
+}
+
+
+.standardization-customer-error {
+
+    padding: 25px;
+
+    border:
+        1px solid rgba(255,80,100,0.18);
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,80,100,0.04);
+
+    color:
+        rgba(255,140,150,0.85);
+
+    text-align: center;
+}
+
+/* =========================================================
+   CUSTOMER STANDARDIZATION — MVP-10.2 REVIEW UI
+========================================================= */
+
+.standardization-customer-review-timer {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    width: fit-content;
+
+    margin:
+        0 0 18px
+        auto;
+
+    padding:
+        8px 13px;
+
+    border:
+        1px solid rgba(0,229,255,0.16);
+
+    border-radius: 999px;
+
+    background:
+        rgba(0,229,255,0.045);
+
+    color:
+        rgba(255,255,255,0.48);
+
+    font-size: 11px;
+}
+
+
+.standardization-customer-review-timer strong {
+    color:
+        rgba(0,229,255,0.82);
+
+    font-weight: 700;
+}
+
+
+.standardization-customer-review-timer .timer-icon {
+    margin: 0;
+
+    color:
+        rgba(0,229,255,0.72);
+}
+
+
+/* ---------------------------------------------------------
+   9-COLUMN CUSTOMER TABLE
+--------------------------------------------------------- */
+
+.standardization-customer-table {
+    width: 100%;
+
+    min-width: 1180px;
+}
+
+
+.standardization-customer-head,
+.standardization-customer-row {
+
+    grid-template-columns:
+        42px
+        minmax(125px, 1.1fr)
+        58px
+        minmax(95px, .85fr)
+        minmax(100px, .85fr)
+        minmax(190px, 1.65fr)
+        62px
+        minmax(105px, .9fr)
+        minmax(170px, 1.25fr);
+}
+
+
+/* ---------------------------------------------------------
+   REVIEW COLUMN
+--------------------------------------------------------- */
+
+.standardization-customer-review-actions {
+
+    display: flex !important;
+
+    flex-direction: column;
+
+    align-items: stretch !important;
+    justify-content: center !important;
+
+    gap: 6px;
+
+    padding:
+        7px 8px !important;
+}
+
+
+.standardization-row-review-button {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 28px;
+
+    padding:
+        4px 7px;
+
+    border-radius: 7px;
+
+    font-family: inherit;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    line-height: 1.2;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+
+.standardization-row-review-button.approve {
+
+    border:
+        1px solid rgba(80,255,150,0.20);
+
+    background:
+        rgba(80,255,150,0.055);
+
+    color:
+        rgba(110,255,175,0.88);
+}
+
+
+.standardization-row-review-button.revise {
+
+    border:
+        1px solid rgba(255,170,70,0.20);
+
+    background:
+        rgba(255,170,70,0.045);
+
+    color:
+        rgba(255,190,110,0.86);
+}
+
+
+.standardization-row-review-button:hover {
+
+    transform:
+        translateY(-1px);
+}
+
+
+.standardization-row-review-button.approve:hover {
+
+    background:
+        rgba(80,255,150,0.11);
+
+    border-color:
+        rgba(80,255,150,0.38);
+
+    box-shadow:
+        0 0 12px rgba(80,255,150,0.08);
+}
+
+
+.standardization-row-review-button.revise:hover {
+
+    background:
+        rgba(255,170,70,0.09);
+
+    border-color:
+        rgba(255,170,70,0.38);
+
+    box-shadow:
+        0 0 12px rgba(255,170,70,0.07);
+}
+
+
+.standardization-row-review-button:disabled {
+
+    opacity: .45;
+
+    cursor:
+        wait;
+
+    transform: none;
+}
+
+
+/* ---------------------------------------------------------
+   GLOBAL REVIEW
+--------------------------------------------------------- */
+
+.standardization-customer-global-review {
+
+    margin-top: 18px;
+
+    padding: 18px;
+
+    border:
+        1px solid rgba(0,229,255,0.12);
+
+    border-radius: 14px;
+
+    background:
+        rgba(5,12,22,0.42);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.025);
+}
+
+
+.standardization-customer-global-review-header {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 15px;
+}
+
+
+.standardization-customer-global-review-header h4 {
+
+    margin:
+        5px 0 4px;
+
+    color:
+        rgba(255,255,255,0.84);
+
+    font-size: 13px;
+}
+
+
+.standardization-customer-global-review-header p {
+
+    margin: 0;
+
+    color:
+        rgba(255,255,255,0.38);
+
+    font-size: 11px;
+
+    line-height: 1.7;
+}
+
+
+.standardization-customer-global-status {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    padding:
+        6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+}
+
+
+.standardization-customer-global-status.pending {
+
+    border:
+        1px solid rgba(255,255,255,0.10);
+
+    background:
+        rgba(255,255,255,0.035);
+
+    color:
+        rgba(255,255,255,0.52);
+}
+
+
+.standardization-customer-global-status.approved {
+
+    border:
+        1px solid rgba(80,255,150,0.20);
+
+    background:
+        rgba(80,255,150,0.055);
+
+    color:
+        rgba(100,255,170,0.86);
+}
+
+
+.standardization-customer-global-status.revision {
+
+    border:
+        1px solid rgba(255,170,70,0.22);
+
+    background:
+        rgba(255,170,70,0.055);
+
+    color:
+        rgba(255,190,100,0.88);
+}
+
+
+.standardization-customer-global-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    flex-wrap: wrap;
+}
+
+
+.standardization-customer-global-actions button {
+
+    min-height: 38px;
+
+    padding:
+        0 16px;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        background .18s ease,
+        border-color .18s ease;
+}
+
+
+.standardization-customer-global-actions
+.approve-standardization {
+
+    border:
+        1px solid rgba(80,255,150,0.22);
+
+    background:
+        rgba(80,255,150,0.065);
+
+    color:
+        rgba(110,255,175,0.90);
+}
+
+
+.standardization-customer-global-actions
+.edit-standardization {
+
+    border:
+        1px solid rgba(255,170,70,0.20);
+
+    background:
+        rgba(255,170,70,0.05);
+
+    color:
+        rgba(255,190,110,0.88);
+}
+
+
+.standardization-customer-global-actions button:hover {
+
+    transform:
+        translateY(-1px);
+}
+
+
+.standardization-customer-global-actions button:disabled {
+
+    opacity: .45;
+
+    cursor:
+        wait;
+
+    transform: none;
+}
+
+
+/* ---------------------------------------------------------
+   TABLE RESPONSIVE BEHAVIOR
+--------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+
+    .standardization-customer-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 12px;
+
+    }
+
+
+    .standardization-customer-review-timer {
+
+        margin-right: 0;
+
+        margin-left: auto;
+
+    }
+
+
+    .standardization-customer-table-wrapper {
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .standardization-customer-global-review-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+    }
+
+
+    .standardization-customer-global-status {
+
+        align-self: flex-start;
+
+    }
+
+}
+
+
+/* =========================================================
+   FEEMAAS CUSTOMER — PROJECT DETAIL VIEW
+   MVP-10.2
+   ========================================================= */
+
+#project-detail-view {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 4px 0 40px;
+    box-sizing: border-box;
+    direction: rtl;
+}
+
+
+/* ---------------------------------------------------------
+   PROJECT HEADING
+--------------------------------------------------------- */
+
+#project-detail-view .page-heading {
+    margin-bottom: 20px;
+    padding: 24px 28px;
+    border-radius: 24px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.94),
+            rgba(248,250,252,.88)
+        );
+    border: 1px solid rgba(15,23,42,.08);
+    box-shadow:
+        0 16px 40px rgba(15,23,42,.08);
+}
+
+#project-detail-view .page-heading .eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    color: #64748b;
+}
+
+#project-detail-view .page-heading h2 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.25;
+    color: #0f172a;
+}
+
+#project-detail-view .page-heading p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   MAIN PROJECT CARD
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-card {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 28px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.97),
+            rgba(248,250,252,.94)
+        );
+    border: 1px solid rgba(15,23,42,.08);
+    box-shadow:
+        0 24px 70px rgba(15,23,42,.12);
+}
+
+
+/* ---------------------------------------------------------
+   PROJECT HEADER
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px 28px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(15,23,42,.025),
+            rgba(37,99,235,.045)
+        );
+    border-bottom: 1px solid rgba(15,23,42,.07);
+}
+
+#project-detail-view .project-detail-header .eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.3px;
+    color: #64748b;
+}
+
+#project-detail-view .project-detail-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #0f172a;
+}
+
+#project-detail-view .project-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    padding: 9px 15px;
+    border-radius: 999px;
+    background: rgba(37,99,235,.09);
+    border: 1px solid rgba(37,99,235,.18);
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* ---------------------------------------------------------
+   DESCRIPTION
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-description {
+    padding: 22px 28px 8px;
+}
+
+#project-detail-view .project-detail-description .eyebrow {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #64748b;
+}
+
+#project-detail-view .project-detail-description p {
+    margin: 0;
+    color: #334155;
+    line-height: 1.9;
+    font-size: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   PROJECT META
+--------------------------------------------------------- */
+
+#project-detail-view .project-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    padding: 20px 28px 26px;
+}
+
+#project-detail-view .project-meta-item {
+    min-width: 0;
+    padding: 15px 16px;
+    border-radius: 17px;
+    background: rgba(248,250,252,.95);
+    border: 1px solid rgba(15,23,42,.07);
+}
+
+#project-detail-view .project-meta-item span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+#project-detail-view .project-meta-item strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #0f172a;
+    font-size: 15px;
+}
+
+
+/* ---------------------------------------------------------
+   PROJECT TABS
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 10px;
+    margin: 0 18px;
+    overflow-x: auto;
+    border-radius: 18px;
+    background: rgba(241,245,249,.9);
+    border: 1px solid rgba(15,23,42,.06);
+    scrollbar-width: thin;
+}
+
+#project-detail-view .project-detail-tab {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 17px;
+    border: 0;
+    border-radius: 13px;
+    background: transparent;
+    color: #64748b;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background .18s ease,
+        color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+#project-detail-view .project-detail-tab:hover {
+    color: #0f172a;
+    background: rgba(255,255,255,.75);
+}
+
+#project-detail-view .project-detail-tab.active {
+    color: #0f172a;
+    background: #ffffff;
+    box-shadow:
+        0 5px 18px rgba(15,23,42,.09);
+}
+
+#project-detail-view .project-detail-tab:active {
+    transform: translateY(1px);
+}
+
+
+/* ---------------------------------------------------------
+   TAB CONTENT
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-tab-content {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#project-detail-view .project-tab-panel {
+    margin: 18px;
+    padding: 24px;
+    border-radius: 22px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(15,23,42,.07);
+    box-sizing: border-box;
+}
+
+#project-detail-view .project-tab-panel > .eyebrow {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #64748b;
+}
+
+#project-detail-view .project-tab-panel h3 {
+    margin: 0 0 9px;
+    color: #0f172a;
+    font-size: 20px;
+}
+
+#project-detail-view .project-tab-panel p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.9;
+    font-size: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   STANDARDIZATION PANEL
+--------------------------------------------------------- */
+
+#project-detail-view #project-standardization-panel {
+    padding: 20px;
+    overflow: hidden;
+}
+
+#project-detail-view #project-standardization-panel .standardization-customer {
+    width: 100%;
+}
+
+
+/* ---------------------------------------------------------
+   TENDER PANEL
+--------------------------------------------------------- */
+
+#project-detail-view #tender-dashboard {
+    min-height: 180px;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE / NARROW
+--------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+
+    #project-detail-view .project-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #project-detail-view .project-detail-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
+
+
+@media (max-width: 640px) {
+
+    #project-detail-view {
+        padding-bottom: 20px;
+    }
+
+    #project-detail-view .page-heading {
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    #project-detail-view .project-detail-header {
+        padding: 20px;
+    }
+
+    #project-detail-view .project-detail-description {
+        padding: 18px 20px 6px;
+    }
+
+    #project-detail-view .project-meta {
+        grid-template-columns: 1fr;
+        padding: 16px 20px 20px;
+    }
+
+    #project-detail-view .project-detail-tabs {
+        margin: 0 10px;
+    }
+
+    #project-detail-view .project-tab-panel {
+        margin: 12px 10px;
+        padding: 16px;
+        border-radius: 18px;
+    }
+
+}
+
+
+
+
+/* =========================================================
+   FEEMAAS PROJECT VIEW — POPUP WORKSPACE
+   ========================================================= */
+
+#project-detail-view {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 5000 !important;
+
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 34px !important;
+
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    direction: rtl;
+
+    background:
+        radial-gradient(
+            circle at 15% 15%,
+            rgba(37,99,235,.10),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(139,92,246,.09),
+            transparent 30%
+        ),
+        rgba(248,250,252,.88);
+
+    backdrop-filter: blur(18px);
+
+    animation:
+        feemaasProjectPopupIn .28s ease both;
+}
+
+
+/* dark glass layer */
+
+#project-detail-view::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+
+    background:
+        rgba(15,23,42,.18);
+
+    backdrop-filter:
+        blur(7px);
+}
+
+
+/* popup width */
+
+#project-detail-view > .page-heading,
+#project-detail-view > .project-detail-card {
+    width: min(1500px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* popup heading */
+
+#project-detail-view > .page-heading {
+    flex: 0 0 auto;
+
+    margin-bottom: 14px;
+
+    padding: 18px 24px;
+
+    border-radius: 22px;
+
+    background:
+        rgba(255,255,255,.96);
+
+    border:
+        1px solid rgba(255,255,255,.9);
+
+    box-shadow:
+        0 18px 45px rgba(15,23,42,.14);
+}
+
+
+/* main popup body */
+
+#project-detail-view > .project-detail-card {
+    flex: 0 0 auto;
+
+    margin-bottom: 30px;
+
+    border-radius: 28px;
+
+    overflow: hidden;
+
+    background:
+        rgba(255,255,255,.97);
+
+    border:
+        1px solid rgba(255,255,255,.95);
+
+    box-shadow:
+        0 30px 90px rgba(15,23,42,.20);
+}
+
+
+/* smoother popup animation */
+
+@keyframes feemaasProjectPopupIn {
+
+    from {
+        opacity: 0;
+        transform: scale(.97) translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+
+}
+
+
+/* =========================================================
+   PROJECT TYPOGRAPHY
+   ========================================================= */
+
+#project-detail-view,
+#project-detail-view button,
+#project-detail-view input,
+#project-detail-view textarea {
+    font-family:
+        "Segoe UI",
+        Tahoma,
+        Arial,
+        sans-serif;
+}
+
+#project-detail-view .page-heading h2 {
+    font-size: clamp(22px, 2.2vw, 30px);
+    font-weight: 700;
+    letter-spacing: -.3px;
+}
+
+#project-detail-view .page-heading p {
+    font-size: 13px;
+    font-weight: 400;
+}
+
+#project-detail-view .eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+#project-detail-view .project-detail-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+#project-detail-view .project-meta-item strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   STANDARDIZATION — KEEP SCROLL INSIDE ITS OWN AREA
+   ========================================================= */
+
+#project-detail-view
+.standardization-customer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0 !important;
+
+    overflow: hidden !important;
+}
+
+
+/* table wrapper */
+
+#project-detail-view
+.standardization-customer-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+
+    border-radius: 16px;
+}
+
+
+/*
+   Some existing markup may use another wrapper.
+   Keep the actual table itself from expanding the popup.
+*/
+
+#project-detail-view
+.standardization-customer-table {
+    max-width: none;
+}
+
+
+/* =========================================================
+   STANDARDIZATION PANEL — COMPACT
+   ========================================================= */
+
+#project-detail-view
+#project-standardization-panel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    box-sizing: border-box;
+
+    padding: 14px !important;
+
+    overflow: hidden !important;
+}
+
+
+/* =========================================================
+   STANDARDIZATION GRID
+   ========================================================= */
+
+#project-detail-view
+.standardization-customer-head,
+#project-detail-view
+.standardization-customer-row {
+
+    width: max-content;
+    min-width: 1120px;
+
+}
+
+
+/* =========================================================
+   STANDARDIZATION REVIEW COLUMN
+   ========================================================= */
+
+#project-detail-view
+.standardization-customer-review-actions {
+
+    min-width: 165px;
+    width: 165px;
+
+    box-sizing: border-box;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    justify-content: center !important;
+    align-items: stretch !important;
+
+    gap: 5px !important;
+
+    padding: 6px !important;
+
+}
+
+
+#project-detail-view
+.standardization-row-review-button {
+
+    min-height: 30px !important;
+
+    padding:
+        5px 8px !important;
+
+    border-radius:
+        9px !important;
+
+    font-size:
+        11px !important;
+
+    line-height:
+        1.2 !important;
+
+}
+
+
+/* =========================================================
+   PROJECT POPUP RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    #project-detail-view {
+        padding: 16px !important;
+    }
+
+    #project-detail-view > .page-heading {
+        border-radius: 18px;
+    }
+
+    #project-detail-view > .project-detail-card {
+        border-radius: 20px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    #project-detail-view {
+        padding: 10px !important;
+    }
+
+    #project-detail-view .project-meta {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #project-detail-view .project-detail-tabs {
+        margin: 0 10px;
+    }
+
+}
+
+
+
+
+/* =========================================================
+   FEEMAAS PROJECT POPUP — DARK GLASS FINISH
+   ========================================================= */
+
+#project-detail-view {
+
+    background:
+        radial-gradient(
+            circle at 12% 8%,
+            rgba(0,255,210,.09),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 88% 18%,
+            rgba(90,80,255,.10),
+            transparent 28%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(8,13,24,.97),
+            rgba(14,20,32,.96)
+        ) !important;
+
+    color: #e5edf5;
+
+}
+
+
+/* darker glass layer */
+
+#project-detail-view::before {
+
+    background:
+        rgba(2,6,14,.68) !important;
+
+    backdrop-filter:
+        blur(14px);
+
+}
+
+
+/* popup heading */
+
+#project-detail-view > .page-heading {
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20,29,43,.96),
+            rgba(12,19,31,.94)
+        ) !important;
+
+    border:
+        1px solid rgba(255,255,255,.08) !important;
+
+    box-shadow:
+        0 18px 50px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.035) !important;
+
+}
+
+
+#project-detail-view .page-heading h2 {
+
+    color: #f4f8fb !important;
+
+}
+
+
+#project-detail-view .page-heading p {
+
+    color: #91a1b5 !important;
+
+}
+
+
+#project-detail-view .page-heading .eyebrow {
+
+    color: #55e6d0 !important;
+
+}
+
+
+/* main project shell */
+
+#project-detail-view > .project-detail-card {
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,26,39,.97),
+            rgba(10,17,28,.97)
+        ) !important;
+
+    border:
+        1px solid rgba(255,255,255,.075) !important;
+
+    box-shadow:
+        0 30px 90px rgba(0,0,0,.48),
+        inset 0 1px 0 rgba(255,255,255,.025) !important;
+
+}
+
+
+/* header */
+
+#project-detail-view .project-detail-header {
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.025),
+            rgba(0,255,210,.025)
+        ) !important;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.07) !important;
+
+}
+
+
+#project-detail-view .project-detail-header h3 {
+
+    color: #f2f7fb !important;
+
+}
+
+
+#project-detail-view .project-detail-header .eyebrow {
+
+    color: #718298 !important;
+
+}
+
+
+/* project status */
+
+#project-detail-view .project-status {
+
+    background:
+        rgba(0,255,210,.08) !important;
+
+    border:
+        1px solid rgba(0,255,210,.20) !important;
+
+    color:
+        #57e8d2 !important;
+
+}
+
+
+/* description */
+
+#project-detail-view .project-detail-description {
+
+    color: #d7e0e9;
+
+}
+
+
+#project-detail-view .project-detail-description .eyebrow {
+
+    color: #718298 !important;
+
+}
+
+
+#project-detail-view .project-detail-description p {
+
+    color: #aebccc !important;
+
+}
+
+
+/* meta cards */
+
+#project-detail-view .project-meta-item {
+
+    background:
+        rgba(255,255,255,.025) !important;
+
+    border:
+        1px solid rgba(255,255,255,.065) !important;
+
+}
+
+
+#project-detail-view .project-meta-item span {
+
+    color: #718298 !important;
+
+}
+
+
+#project-detail-view .project-meta-item strong {
+
+    color: #e9f0f6 !important;
+
+}
+
+
+/* tabs */
+
+#project-detail-view .project-detail-tabs {
+
+    background:
+        rgba(5,11,20,.72) !important;
+
+    border:
+        1px solid rgba(255,255,255,.055) !important;
+
+}
+
+
+#project-detail-view .project-detail-tab {
+
+    color: #8190a4 !important;
+
+}
+
+
+#project-detail-view .project-detail-tab:hover {
+
+    color: #dce8f0 !important;
+
+    background:
+        rgba(255,255,255,.045) !important;
+
+}
+
+
+#project-detail-view .project-detail-tab.active {
+
+    color: #55e6d0 !important;
+
+    background:
+        rgba(0,255,210,.075) !important;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(0,255,210,.12),
+        0 0 20px rgba(0,255,210,.05) !important;
+
+}
+
+
+/* tab panels */
+
+#project-detail-view .project-tab-panel {
+
+    background:
+        rgba(255,255,255,.022) !important;
+
+    border:
+        1px solid rgba(255,255,255,.065) !important;
+
+}
+
+
+#project-detail-view .project-tab-panel h3 {
+
+    color: #edf4f8 !important;
+
+}
+
+
+#project-detail-view .project-tab-panel p {
+
+    color: #9eafbf !important;
+
+}
+
+
+#project-detail-view .project-tab-panel > .eyebrow {
+
+    color: #55e6d0 !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE BUTTON
+--------------------------------------------------------- */
+
+#project-detail-view .project-view-close {
+
+    position: fixed;
+
+    top: 18px;
+    left: 20px;
+
+    z-index: 5100;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    background:
+        rgba(10,17,28,.82);
+
+    color:
+        #dce8f0;
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    font-size: 27px;
+    font-weight: 300;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 28px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+    backdrop-filter:
+        blur(12px);
+
+    transition:
+        transform .18s ease,
+        color .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
+
+}
+
+
+#project-detail-view .project-view-close:hover {
+
+    transform:
+        rotate(90deg)
+        scale(1.06);
+
+    color:
+        #ff6b8a;
+
+    border-color:
+        rgba(255,107,138,.45);
+
+    background:
+        rgba(255,107,138,.08);
+
+    box-shadow:
+        0 0 24px rgba(255,107,138,.15);
+
+}
+
+
+/* standardization background */
+
+#project-detail-view
+#project-standardization-panel {
+
+    background:
+        rgba(3,9,17,.34) !important;
+
+}
+
+
+/* mobile */
+
+@media (max-width: 600px) {
+
+    #project-detail-view .project-view-close {
+
+        top: 10px;
+        left: 10px;
+
+        width: 38px;
+        height: 38px;
+
+        font-size: 24px;
+
+    }
+
+}
+
+
+
+/* ============================================================
+   PROJECT VIEW — NEON PROGRESS BAR
+   ============================================================ */
+
+#project-detail-view .project-progress-section {
+    margin: 18px 0 20px;
+    padding: 18px 20px 20px;
+    border-radius: 18px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.035),
+            rgba(0,255,210,.018)
+        );
+    border: 1px solid rgba(255,255,255,.065);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025),
+        0 12px 35px rgba(0,0,0,.20);
+}
+
+#project-detail-view .project-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+#project-detail-view .project-progress-header .eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #55e6d0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+#project-detail-view .project-progress-header h3 {
+    margin: 0;
+    color: #edf4f8;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+#project-detail-view .project-progress-status {
+    padding: 7px 12px;
+    border-radius: 999px;
+    color: #55e6d0;
+    background: rgba(0,255,210,.065);
+    border: 1px solid rgba(0,255,210,.16);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#project-detail-view .project-progress-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    min-height: 72px;
+    direction: rtl;
+}
+
+#project-detail-view .project-progress-track::before {
+    content: "";
+    position: absolute;
+    top: 17px;
+    left: 8%;
+    right: 8%;
+    height: 2px;
+    background: rgba(255,255,255,.09);
+    box-shadow: 0 0 8px rgba(255,255,255,.025);
+}
+
+#project-detail-view .project-progress-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+#project-detail-view .project-progress-node {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-sizing: border-box;
+    color: #617083;
+    background: #101925;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow:
+        0 5px 16px rgba(0,0,0,.30),
+        inset 0 1px 0 rgba(255,255,255,.035);
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease,
+        color .2s ease;
+}
+
+#project-detail-view .project-progress-node span {
+    font-size: 13px;
+    line-height: 1;
+}
+
+#project-detail-view .project-progress-label {
+    color: #68788c;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+}
+
+#project-detail-view .project-progress-step.completed .project-progress-node {
+    color: #061713;
+    background: #55e6d0;
+    border-color: #55e6d0;
+    box-shadow:
+        0 0 14px rgba(0,255,210,.30),
+        0 0 30px rgba(0,255,210,.10);
+}
+
+#project-detail-view .project-progress-step.completed .project-progress-label {
+    color: #a9bbb9;
+}
+
+#project-detail-view .project-progress-step.current .project-progress-node {
+    color: #55e6d0;
+    background: rgba(0,255,210,.08);
+    border-color: #55e6d0;
+    box-shadow:
+        0 0 0 5px rgba(0,255,210,.055),
+        0 0 20px rgba(0,255,210,.32);
+    animation: projectProgressPulse 2s ease-in-out infinite;
+}
+
+#project-detail-view .project-progress-step.current .project-progress-label {
+    color: #55e6d0;
+    font-weight: 700;
+}
+
+#project-detail-view .project-progress-step.pending .project-progress-node {
+    opacity: .75;
+}
+
+#project-detail-view .project-progress-cancelled {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 7px 11px;
+    border-radius: 10px;
+    color: #ff879e;
+    background: rgba(255,90,120,.06);
+    border: 1px solid rgba(255,90,120,.18);
+    font-size: 11px;
+}
+
+#project-detail-view .project-progress-cancelled-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff718c;
+    box-shadow: 0 0 10px rgba(255,90,120,.65);
+}
+
+@keyframes projectProgressPulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 5px rgba(0,255,210,.045),
+            0 0 16px rgba(0,255,210,.22);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 7px rgba(0,255,210,.075),
+            0 0 28px rgba(0,255,210,.38);
+    }
+}
+
+@media (max-width: 760px) {
+
+    #project-detail-view .project-progress-section {
+        padding: 15px;
+    }
+
+    #project-detail-view .project-progress-track {
+        min-height: 64px;
+    }
+
+    #project-detail-view .project-progress-node {
+        width: 29px;
+        height: 29px;
+    }
+
+    #project-detail-view .project-progress-label {
+        font-size: 9px;
+    }
+
+    #project-detail-view .project-progress-header h3 {
+        font-size: 15px;
+    }
+
+    #project-detail-view .project-progress-status {
+        font-size: 10px;
+        padding: 6px 9px;
+    }
+}
+/* =========================================================
+   PROJECT FILE CENTER — ROLE CARDS
+   ========================================================= */
+
+#project-detail-view .project-files-center {
+    width: 100%;
+    direction: rtl;
+}
+
+#project-detail-view .project-files-center-head {
+    margin-bottom: 18px;
+}
+
+#project-detail-view .project-files-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #55e6d0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+#project-detail-view .project-files-center-head h3 {
+    margin: 0;
+    color: #eef5f8;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+#project-detail-view .project-files-center-head p {
+    margin: 6px 0 0;
+    color: #8191a5;
+    font-size: 11px;
+}
+
+
+/* ---------------------------------------------------------
+   ROLE GRID
+   --------------------------------------------------------- */
+
+#project-detail-view .project-files-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   ROLE CARD
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-role-card {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+
+    padding: 14px;
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.012)
+        );
+
+    border: 1px solid rgba(255,255,255,.07);
+
+    box-shadow:
+        0 12px 32px rgba(0,0,0,.20),
+        inset 0 1px 0 rgba(255,255,255,.025);
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+#project-detail-view .project-file-role-card:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 16px 38px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+
+/* ---------------------------------------------------------
+   ROLE HEADER
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-role-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 42px;
+    margin-bottom: 11px;
+    padding-bottom: 10px;
+
+    border-bottom: 1px solid rgba(255,255,255,.055);
+}
+
+#project-detail-view .project-file-role-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+#project-detail-view .project-file-role-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 31px;
+    height: 31px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+#project-detail-view .project-file-role-title strong {
+    display: block;
+
+    color: #edf4f8;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#project-detail-view .project-file-role-title small {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #68788c;
+    font-size: 9px;
+}
+
+
+/* ---------------------------------------------------------
+   ROLE COUNT — SMALL NEON CIRCLE
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-role-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 27px;
+    height: 27px;
+
+    flex: 0 0 27px;
+
+    border-radius: 50%;
+
+    color: #718195;
+    background: rgba(255,255,255,.025);
+
+    border: 1px solid rgba(255,255,255,.09);
+
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+#project-detail-view .project-file-role-count.has-files {
+    color: #55e6d0;
+
+    border-color: rgba(85,230,208,.38);
+
+    background: rgba(0,255,210,.055);
+
+    box-shadow:
+        0 0 0 3px rgba(0,255,210,.025),
+        0 0 13px rgba(0,255,210,.20);
+
+    animation: projectFileCountPulse 2.6s ease-in-out infinite;
+}
+
+
+/* ---------------------------------------------------------
+   ROLE ACCENTS
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-role-customer {
+    border-color: rgba(85,230,208,.13);
+}
+
+#project-detail-view .project-file-role-customer
+.project-file-role-icon {
+    color: #55e6d0;
+}
+
+#project-detail-view .project-file-role-consultant {
+    border-color: rgba(130,110,255,.16);
+}
+
+#project-detail-view .project-file-role-consultant
+.project-file-role-icon {
+    color: #9b8cff;
+}
+
+#project-detail-view .project-file-role-workshop {
+    border-color: rgba(255,185,80,.15);
+}
+
+#project-detail-view .project-file-role-workshop
+.project-file-role-icon {
+    color: #ffc66d;
+}
+
+#project-detail-view .project-file-role-designer {
+    border-color: rgba(255,105,190,.15);
+}
+
+#project-detail-view .project-file-role-designer
+.project-file-role-icon {
+    color: #ff83c8;
+}
+
+#project-detail-view .project-file-role-company {
+    border-color: rgba(90,170,255,.15);
+}
+
+#project-detail-view .project-file-role-company
+.project-file-role-icon {
+    color: #78b9ff;
+}
+
+
+/* ---------------------------------------------------------
+   FILE ITEM
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-item {
+    display: grid;
+
+    grid-template-columns:
+        27px
+        30px
+        minmax(0, 1fr)
+        31px;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-height: 54px;
+
+    margin-bottom: 7px;
+    padding: 7px 8px;
+
+    border-radius: 11px;
+
+    background: rgba(4,10,18,.38);
+
+    border: 1px solid rgba(255,255,255,.045);
+
+    transition:
+        background .16s ease,
+        border-color .16s ease,
+        transform .16s ease;
+}
+
+#project-detail-view .project-file-item:last-child {
+    margin-bottom: 0;
+}
+
+#project-detail-view .project-file-item:hover {
+    background: rgba(255,255,255,.035);
+    border-color: rgba(85,230,208,.13);
+    transform: translateX(-2px);
+}
+
+
+/* ---------------------------------------------------------
+   FILE NUMBER
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+
+    border-radius: 50%;
+
+    color: #8b9bad;
+
+    background: rgba(255,255,255,.025);
+
+    border: 1px solid rgba(255,255,255,.07);
+
+    font-size: 8px;
+    font-weight: 700;
+}
+
+#project-detail-view .project-file-item:hover
+.project-file-number {
+    color: #55e6d0;
+
+    border-color: rgba(85,230,208,.32);
+
+    box-shadow:
+        0 0 10px rgba(85,230,208,.16);
+
+    animation: projectFileNumberPulse 1.8s ease-in-out infinite;
+}
+
+
+/* ---------------------------------------------------------
+   FILE ICON
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 29px;
+    height: 29px;
+
+    border-radius: 9px;
+
+    color: #8ea0b5;
+
+    background: rgba(255,255,255,.025);
+
+    border: 1px solid rgba(255,255,255,.06);
+
+    font-size: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   FILE INFO
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-info {
+    min-width: 0;
+}
+
+#project-detail-view .project-file-info strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #dce7ee;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#project-detail-view .project-file-info small {
+    display: block;
+
+    margin-top: 3px;
+
+    overflow: hidden;
+
+    color: #64758a;
+
+    font-size: 8px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+/* ---------------------------------------------------------
+   VIEW BUTTON
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 29px;
+    height: 29px;
+
+    border-radius: 9px;
+
+    color: #8798aa;
+
+    background: rgba(255,255,255,.025);
+
+    border: 1px solid rgba(255,255,255,.065);
+
+    text-decoration: none;
+
+    font-size: 13px;
+
+    transition:
+        color .16s ease,
+        background .16s ease,
+        border-color .16s ease,
+        box-shadow .16s ease;
+}
+
+#project-detail-view .project-file-view:hover {
+    color: #55e6d0;
+
+    background: rgba(0,255,210,.06);
+
+    border-color: rgba(85,230,208,.30);
+
+    box-shadow:
+        0 0 14px rgba(85,230,208,.14);
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY
+   --------------------------------------------------------- */
+
+#project-detail-view .project-file-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 48px;
+
+    color: #536276;
+
+    font-size: 10px;
+}
+
+#project-detail-view .project-file-empty span {
+    color: #596a7e;
+    font-size: 16px;
+}
+
+
+/* ---------------------------------------------------------
+   ANIMATION
+   --------------------------------------------------------- */
+
+@keyframes projectFileCountPulse {
+
+    0%, 100% {
+        box-shadow:
+            0 0 0 3px rgba(0,255,210,.02),
+            0 0 10px rgba(0,255,210,.12);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 4px rgba(0,255,210,.045),
+            0 0 17px rgba(0,255,210,.25);
+    }
+
+}
+
+@keyframes projectFileNumberPulse {
+
+    0%, 100% {
+        box-shadow:
+            0 0 7px rgba(85,230,208,.08);
+    }
+
+    50% {
+        box-shadow:
+            0 0 13px rgba(85,230,208,.22);
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+
+    #project-detail-view .project-files-role-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 560px) {
+
+    #project-detail-view .project-file-role-card {
+        padding: 11px;
+    }
+
+    #project-detail-view .project-file-item {
+        grid-template-columns:
+            25px
+            28px
+            minmax(0, 1fr)
+            29px;
+
+        gap: 7px;
+    }
+
+}

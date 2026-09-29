@@ -40,6 +40,7 @@ class ProjectAttachmentSerializer(serializers.ModelSerializer):
             "version",
             "created_at",
             "uploaded_by",
+			"owner_role",
         ]
 
         read_only_fields = [
@@ -47,6 +48,7 @@ class ProjectAttachmentSerializer(serializers.ModelSerializer):
             "version",
             "created_at",
             "uploaded_by",
+            "owner_role",
         ]
 
 
@@ -62,11 +64,13 @@ class ProjectAttachmentCreateSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "uploaded_by",
+            "owner_role",
         ]
 
         read_only_fields = [
             "id",
             "uploaded_by",
+            "owner_role",
         ]
 
 class SpecificationAttachmentProjectSerializer(

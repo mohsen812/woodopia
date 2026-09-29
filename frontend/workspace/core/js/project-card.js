@@ -541,7 +541,67 @@ function openProjectDetail(project) {
     --------------------------------------------------------
     */
 
+    const projectProgressStages = [
+        { key: "draft", label: "ایجاد پروژه" },
+        { key: "consulting", label: "مشاوره" },
+        { key: "tender", label: "مناقصه" },
+        { key: "production", label: "تولید" },
+        { key: "completed", label: "تکمیل" }
+    ];
+
+    const projectCurrentStatus = project.status || "draft";
+    const projectCurrentIndex =
+        projectProgressStages.findIndex(
+            stage => stage.key === projectCurrentStatus
+        );
+
+    const projectProgressHtml =
+        projectProgressStages.map((stage, index) => {
+            const isCompleted =
+                projectCurrentIndex >= 0 &&
+                index < projectCurrentIndex;
+
+            const isCurrent =
+                projectCurrentIndex === index;
+
+            const stateClass =
+                isCurrent
+                    ? "current"
+                    : (isCompleted ? "completed" : "pending");
+
+            return `
+                <div class="project-progress-step ${stateClass}">
+                    <div class="project-progress-node">
+                        <span>${isCompleted ? "✓" : (isCurrent ? "●" : "")}</span>
+                    </div>
+                    <div class="project-progress-label">
+                        ${stage.label}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+    const projectProgressCancelledHtml =
+        projectCurrentStatus === "cancelled"
+            ? `
+                <div class="project-progress-cancelled">
+                    <span class="project-progress-cancelled-dot"></span>
+                    پروژه لغو شده
+                </div>
+              `
+            : "";
+
     projectView.innerHTML = `
+
+        <button
+            type="button"
+            class="project-view-close"
+            id="project-view-close"
+            aria-label="بستن پروژه"
+            title="بستن"
+        >
+            ×
+        </button>
 
         <div class="page-heading">
 
@@ -595,7 +655,26 @@ function openProjectDetail(project) {
             </div>
 
 
-            <div class="project-detail-description">
+            <div class="project-progress-section">
+    <div class="project-progress-header">
+        <div>
+            <span class="eyebrow">PROJECT PROGRESS</span>
+            <h3>روند اجرای پروژه</h3>
+        </div>
+
+        <div class="project-progress-status">
+            ${escapeHtml(projectCurrentStatus)}
+        </div>
+    </div>
+
+    <div class="project-progress-track">
+        ${projectProgressHtml}
+    </div>
+
+    ${projectProgressCancelledHtml}
+</div>
+
+<div class="project-detail-description">
 
                 <span class="eyebrow">
                     DESCRIPTION
@@ -861,26 +940,20 @@ function openProjectDetail(project) {
 
             </div>
             <div
-                class="project-detail-tab-content hidden"
+	            class="project-detail-tab-content hidden"
                 data-project-tab-content="files"
-            >
+			>
 
-                <div class="project-tab-panel">
+			    <div
+			        class="project-tab-panel"
+                    id="project-files-panel"
+                >
 
-                    <span class="eyebrow">
-                        FILES & DESIGN
-                    </span>
-
-                    <h3>
-                        فایل‌ها و طراحی
-                    </h3>
-
-                    <p>
-                        نقشه‌ها، فایل‌های طراحی، تصاویر،
-                        مدارک فنی و سایر فایل‌های پروژه در این بخش قرار می‌گیرند.
-                    </p>
+                    در حال دریافت فایل‌ها...
 
                 </div>
+
+            </div>
 
             </div>
 
@@ -1067,12 +1140,43 @@ if (
     );
 
 }
+if (
+    target === "files"
+) {
+
+    loadProjectFiles(
+        project.id
+    );
+
+}
                     }
                 );
 
             }
         );
 
+
+    /*
+    --------------------------------------------------------
+    PROJECT VIEW CLOSE
+    --------------------------------------------------------
+    */
+
+    const closeProjectViewButton =
+        document.getElementById("project-view-close");
+
+    if (closeProjectViewButton) {
+
+        closeProjectViewButton.addEventListener(
+            "click",
+            function () {
+
+                projectView.classList.add("hidden");
+
+            }
+        );
+
+    }
 
     /*
     --------------------------------------------------------
@@ -1857,6 +1961,7 @@ async function loadProjectStandardization(projectId){
         projectId
     );
 
+
     try {
 
         const data =
@@ -1871,25 +1976,89 @@ async function loadProjectStandardization(projectId){
             );
 
 
-        if(!panel){
+        if (!panel) {
             return;
         }
 
 
         const items =
-            data.items || [];
+            Array.isArray(data.items)
+                ? data.items
+                : [];
+
+
+        const globalStatus =
+            data.standardization_status || "pending";
+
+
+        const globalStatusText =
+            globalStatus === "approved"
+                ? "تایید شده"
+                : globalStatus === "revision_requested"
+                ? "نیازمند اصلاح"
+                : "در انتظار بررسی";
+
+
+        const globalStatusClass =
+            globalStatus === "approved"
+                ? "approved"
+                : globalStatus === "revision_requested"
+                ? "revision"
+                : "pending";
 
 
         panel.innerHTML = `
 
-            <span class="eyebrow">
-                STANDARDIZATION
-            </span>
+            <div class="standardization-customer-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        STANDARDIZATION
+                    </span>
+
+                    <h3>
+                        استانداردسازی مشاور
+                    </h3>
+
+                    <p class="standardization-customer-subtitle">
+                        مشخصات فنی و آیتم‌های استانداردشده پروژه
+                    </p>
+
+                </div>
 
 
-            <h3>
-                استانداردسازی مشاور
-            </h3>
+                <div class="standardization-customer-status">
+
+                    <span
+                        class="
+                            standardization-status-dot
+                            ${globalStatusClass}
+                        "
+                    ></span>
+
+                    ${globalStatusText}
+
+                </div>
+
+            </div>
+
+
+            <div class="standardization-customer-review-timer">
+
+                <span class="timer-icon">
+                    ◷
+                </span>
+
+                <span>
+                    زمان بررسی مشتری:
+                </span>
+
+                <strong>
+                    60 دقیقه
+                </strong>
+
+            </div>
 
 
             ${
@@ -1899,88 +2068,339 @@ async function loadProjectStandardization(projectId){
 
                 `
 
-                <table class="standardization-table">
+                <div class="standardization-customer-table-wrapper">
 
-                    <thead>
+                    <div class="standardization-customer-table">
 
-                        <tr>
+                        <div class="standardization-customer-head">
 
-                            <th>
-                                ردیف
-                            </th>
+                            <div>
+                                #
+                            </div>
 
-                            <th>
-                                عنوان
-                            </th>
+                            <div>
+                                نام آیتم
+                            </div>
 
-                            <th>
-                                توضیحات
-                            </th>
+                            <div>
+                                تعداد
+                            </div>
 
-                            <th>
+                            <div>
+                                ابعاد
+                            </div>
+
+                            <div>
+                                متریال
+                            </div>
+
+                            <div>
+                                مشخصات فنی
+                            </div>
+
+                            <div>
+                                فایل
+                            </div>
+
+                            <div>
                                 وضعیت
-                            </th>
+                            </div>
 
-                        </tr>
+                            <div>
+                                بررسی
+                            </div>
 
-                    </thead>
-
-
-                    <tbody>
-
-                    ${
-                        items.map(
-                            (item,index)=>`
-
-                            <tr>
-
-                                <td>
-                                    ${index + 1}
-                                </td>
+                        </div>
 
 
-                                <td>
-                                    ${item.title || "-"}
-                                </td>
+                        <div class="standardization-customer-body">
+
+                            ${
+                                items.map(
+                                    (item, index) => {
+
+                                        const name =
+                                            item.name ||
+                                            item.title ||
+                                            "-";
 
 
-                                <td>
-                                    ${item.description || "-"}
-                                </td>
+                                        const quantity =
+                                            item.quantity ??
+                                            "-";
 
 
-                                <td>
-                                    آماده بررسی
-                                </td>
+                                        const dimensions =
+                                            item.dimensions ||
+                                            "-";
 
 
-                            </tr>
-
-                            `
-                        ).join("")
-                    }
-
-                    </tbody>
-
-                </table>
+                                        const material =
+                                            item.material ||
+                                            "-";
 
 
-                <div class="standardization-actions">
-
-                    <button class="approve-standardization">
-                        تایید استانداردسازی
-                    </button>
-
-
-                    <button class="edit-standardization">
-                        درخواست اصلاح
-                    </button>
+                                        const technicalDetails =
+                                            item.technical_details ||
+                                            item.description ||
+                                            "-";
 
 
-                    <div class="standardization-timer">
+                                        const files =
+                                            Array.isArray(
+                                                item.files
+                                            )
+                                                ? item.files
+                                                : [];
 
-                        زمان بررسی مشتری:
-                        60 دقیقه
+
+                                        const reviewStatus =
+                                            item.customer_review_status ||
+                                            "pending";
+
+
+                                        let statusText =
+                                            "در انتظار";
+
+
+                                        let statusClass =
+                                            "pending";
+
+
+                                        if (
+                                            reviewStatus ===
+                                            "approved"
+                                        ) {
+
+                                            statusText =
+                                                "تایید مشتری";
+
+                                            statusClass =
+                                                "approved";
+
+                                        }
+                                        else if (
+                                            reviewStatus ===
+                                            "revise"
+                                        ) {
+
+                                            statusText =
+                                                "نیاز به اصلاح";
+
+                                            statusClass =
+                                                "revision";
+
+                                        }
+
+
+                                        return `
+
+                                            <div
+                                                class="standardization-customer-row"
+                                                data-standardization-row="${item.id}"
+                                            >
+
+                                                <div
+                                                    class="standardization-customer-number"
+                                                >
+                                                    ${String(
+                                                        index + 1
+                                                    ).padStart(
+                                                        2,
+                                                        "0"
+                                                    )}
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-name"
+                                                >
+                                                    ${escapeHtml(
+                                                        String(name)
+                                                    )}
+                                                </div>
+
+
+                                                <div>
+                                                    ${escapeHtml(
+                                                        String(quantity)
+                                                    )}
+                                                </div>
+
+
+                                                <div>
+                                                    ${escapeHtml(
+                                                        String(dimensions)
+                                                    )}
+                                                </div>
+
+
+                                                <div>
+                                                    ${escapeHtml(
+                                                        String(material)
+                                                    )}
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-technical"
+                                                >
+                                                    ${escapeHtml(
+                                                        String(technicalDetails)
+                                                    )}
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-files"
+                                                >
+
+                                                    ${
+                                                        files.length
+
+                                                        ?
+
+                                                        `
+
+                                                        <button
+                                                            type="button"
+                                                            class="standardization-customer-file-button"
+                                                            title="مشاهده فایل‌ها"
+                                                            data-standardization-files
+                                                            data-files='${escapeHtml(
+                                                                JSON.stringify(
+                                                                    files
+                                                                )
+                                                            )}'
+                                                        >
+                                                            📎
+                                                            <span>
+                                                                ${files.length}
+                                                            </span>
+                                                        </button>
+
+                                                        `
+
+                                                        :
+
+                                                        `
+
+                                                        <span class="standardization-customer-no-file">
+                                                            —
+                                                        </span>
+
+                                                        `
+                                                    }
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span
+                                                        class="
+                                                            standardization-customer-status-badge
+                                                            ${statusClass}
+                                                        "
+                                                    >
+                                                        ${statusText}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-review-actions"
+                                                >
+
+                                                    <button
+                                                        type="button"
+                                                        class="standardization-row-review-button approve"
+                                                        data-specification-review="approved"
+                                                        data-specification-id="${item.id}"
+                                                    >
+                                                        ✓ تایید
+                                                    </button>
+
+
+                                                    <button
+                                                        type="button"
+                                                        class="standardization-row-review-button revise"
+                                                        data-specification-review="revise"
+                                                        data-specification-id="${item.id}"
+                                                    >
+                                                        ↻ درخواست اصلاح
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                        `;
+
+                                    }
+                                ).join("")
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="standardization-customer-global-review">
+
+                    <div class="standardization-customer-global-review-header">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                GLOBAL REVIEW
+                            </span>
+
+                            <h4>
+                                بررسی کلی استانداردسازی
+                            </h4>
+
+                            <p>
+                                این بخش مربوط به تایید یا درخواست اصلاح
+                                کل استانداردسازی پروژه است.
+                            </p>
+
+                        </div>
+
+
+                        <span
+                            class="
+                                standardization-customer-global-status
+                                ${globalStatusClass}
+                            "
+                        >
+                            ${globalStatusText}
+                        </span>
+
+                    </div>
+
+
+                    <div class="standardization-customer-global-actions">
+
+                        <button
+                            type="button"
+                            class="approve-standardization"
+                            data-project-standardization-action="approve"
+                        >
+                            ✓ تایید کل استانداردسازی
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="edit-standardization"
+                            data-project-standardization-action="revise"
+                        >
+                            ↻ درخواست اصلاح کل استانداردسازی
+                        </button>
 
                     </div>
 
@@ -1988,14 +2408,26 @@ async function loadProjectStandardization(projectId){
 
                 `
 
-
                 :
 
                 `
 
-                <p>
-                    هنوز استانداردسازی ثبت نشده است.
-                </p>
+                <div class="standardization-customer-empty">
+
+                    <div class="standardization-empty-icon">
+                        ◌
+                    </div>
+
+                    <h4>
+                        هنوز استانداردسازی ثبت نشده است
+                    </h4>
+
+                    <p>
+                        پس از ارسال استانداردسازی توسط مشاور،
+                        مشخصات اینجا نمایش داده می‌شود.
+                    </p>
+
+                </div>
 
                 `
 
@@ -2003,6 +2435,232 @@ async function loadProjectStandardization(projectId){
 
         `;
 
+
+        /*
+        ----------------------------------------------------
+        CUSTOMER STANDARDIZATION ROW REVIEW
+        ----------------------------------------------------
+        */
+
+        panel
+            .querySelectorAll(
+                "[data-specification-review]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        async function(){
+
+                            const specificationId =
+                                this.dataset.specificationId;
+
+
+                            const status =
+                                this.dataset.specificationReview;
+
+
+                            if (!specificationId || !status) {
+                                return;
+                            }
+
+
+                            const buttons =
+                                panel.querySelectorAll(
+                                    `[data-specification-id="${specificationId}"]`
+                                );
+
+
+                            buttons.forEach(
+                                actionButton => {
+                                    actionButton.disabled = true;
+                                }
+                            );
+
+
+                            try {
+
+                                await apiPost(
+                                    `/projects/specifications/${specificationId}/standardization/review/`,
+                                    {
+                                        status: status
+                                    }
+                                );
+
+
+                                await loadProjectStandardization(
+                                    projectId
+                                );
+
+                            }
+                            catch(error){
+
+                                console.error(
+                                    "STANDARDIZATION ROW REVIEW ERROR",
+                                    error
+                                );
+
+                                buttons.forEach(
+                                    actionButton => {
+                                        actionButton.disabled = false;
+                                    }
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        ----------------------------------------------------
+        CUSTOMER STANDARDIZATION GLOBAL REVIEW
+        ----------------------------------------------------
+        */
+
+        panel
+            .querySelectorAll(
+                "[data-project-standardization-action]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        async function(){
+
+                            const action =
+                                this.dataset
+                                    .projectStandardizationAction;
+
+
+                            const status =
+                                action === "approve"
+                                    ? "approved"
+                                    : "revision_requested";
+
+
+                            const actionButtons =
+                                panel.querySelectorAll(
+                                    "[data-project-standardization-action]"
+                                );
+
+
+                            actionButtons.forEach(
+                                actionButton => {
+                                    actionButton.disabled = true;
+                                }
+                            );
+
+
+                            try {
+
+                                await apiPost(
+                                    `/projects/${projectId}/standardization/global-review/`,
+                                    {
+                                        status: status
+                                    }
+                                );
+
+
+                                await loadProjectStandardization(
+                                    projectId
+                                );
+
+                            }
+                            catch(error){
+
+                                console.error(
+                                    "STANDARDIZATION GLOBAL REVIEW ERROR",
+                                    error
+                                );
+
+                                actionButtons.forEach(
+                                    actionButton => {
+                                        actionButton.disabled = false;
+                                    }
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        ----------------------------------------------------
+        CUSTOMER STANDARDIZATION FILE BUTTONS
+        ----------------------------------------------------
+        */
+
+        panel
+            .querySelectorAll(
+                "[data-standardization-files]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        function(){
+
+                            let files = [];
+
+
+                            try {
+
+                                files =
+                                    JSON.parse(
+                                        this.dataset.files
+                                    );
+
+                            }
+                            catch(error){
+
+                                console.error(
+                                    "STANDARDIZATION FILE DATA ERROR",
+                                    error
+                                );
+
+                            }
+
+
+                            if (!files.length) {
+                                return;
+                            }
+
+
+                            const firstFile =
+                                files[0];
+
+
+                            const fileUrl =
+                                firstFile.file ||
+                                firstFile.url ||
+                                "";
+
+
+                            if (fileUrl) {
+
+                                window.open(
+                                    fileUrl,
+                                    "_blank"
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
 
     }
     catch(error){
@@ -2012,6 +2670,336 @@ async function loadProjectStandardization(projectId){
             error
         );
 
+
+        const panel =
+            document.getElementById(
+                "project-standardization-panel"
+            );
+
+
+        if (panel) {
+
+            panel.innerHTML = `
+
+                <div class="standardization-customer-error">
+
+                    خطا در دریافت استانداردسازی پروژه.
+
+                </div>
+
+            `;
+
+        }
+
     }
+
+}
+/*
+============================================================
+ LOAD PROJECT FILE CENTER
+============================================================
+*/
+
+async function loadProjectFiles(projectId){
+
+    const container =
+        document.getElementById(
+            "project-files-panel"
+        );
+
+
+    if(!container){
+
+        console.warn(
+            "FEEMAAS: Project files panel not found."
+        );
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+
+        <div class="tender-loading">
+
+            در حال دریافت فایل‌ها...
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const data =
+            await apiGet(
+                `/projects/${projectId}/files/`
+            );
+
+
+        renderProjectFiles(
+            container,
+            data,
+            projectId
+        );
+
+
+    } catch(error){
+
+        console.error(
+            "FEEMAAS FILE CENTER ERROR",
+            error
+        );
+
+
+        container.innerHTML = `
+
+            <div class="project-tab-panel">
+
+                خطا در دریافت فایل‌ها
+
+            </div>
+
+        `;
+
+    }
+
+}
+function renderProjectFiles(
+    container,
+    files,
+    projectId
+){
+
+    const roles = [
+
+        {
+            key: "customer",
+            title: "مشتری",
+            icon: "👤",
+            accent: "customer"
+        },
+
+        {
+            key: "consultant",
+            title: "مشاور",
+            icon: "✦",
+            accent: "consultant"
+        },
+
+        {
+            key: "workshop",
+            title: "کارگاه",
+            icon: "🏭",
+            accent: "workshop"
+        },
+
+        {
+            key: "designer",
+            title: "طراح",
+            icon: "◆",
+            accent: "designer"
+        },
+
+        {
+            key: "company",
+            title: "FEEMAAS",
+            icon: "⚙",
+            accent: "company"
+        }
+
+    ];
+
+
+    container.innerHTML = `
+
+        <div class="project-files-center">
+
+            <div class="project-files-center-head">
+
+                <div>
+
+                    <span class="project-files-eyebrow">
+                        PROJECT FILE CENTER
+                    </span>
+
+                    <h3>
+                        فایل‌های پروژه
+                    </h3>
+
+                    <p>
+                        فایل‌های پروژه بر اساس نقش مالک فایل تفکیک شده‌اند.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="project-files-role-grid">
+
+                ${roles.map(role => {
+
+                    const items =
+                        files[role.key] || [];
+
+
+                    return `
+
+                        <section
+                            class="
+                                project-file-role-card
+                                project-file-role-${role.accent}
+                            "
+                        >
+
+                            <header
+                                class="project-file-role-header"
+                            >
+
+                                <div
+                                    class="project-file-role-title"
+                                >
+
+                                    <span
+                                        class="project-file-role-icon"
+                                    >
+                                        ${role.icon}
+                                    </span>
+
+                                    <div>
+
+                                        <strong>
+                                            ${role.title}
+                                        </strong>
+
+                                        <small>
+                                            فایل‌های این نقش
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <span
+                                    class="project-file-role-count
+                                           ${items.length ? "has-files" : ""}"
+                                >
+                                    ${String(items.length).padStart(2, "0")}
+                                </span>
+
+                            </header>
+
+
+                            <div class="project-file-list">
+
+                                ${
+                                    items.length
+
+                                    ?
+
+                                    items.map((file, index) => `
+
+                                        <article
+                                            class="project-file-item"
+                                        >
+
+                                            <span
+                                                class="project-file-number"
+                                            >
+                                                ${String(index + 1).padStart(2, "0")}
+                                            </span>
+
+
+                                            <div
+                                                class="project-file-icon"
+                                            >
+                                                ${
+                                                    file.file_type === "image"
+                                                        ? "▧"
+                                                        :
+                                                    file.file_type === "design"
+                                                        ? "◇"
+                                                        :
+                                                    "▤"
+                                                }
+                                            </div>
+
+
+                                            <div
+                                                class="project-file-info"
+                                            >
+
+                                                <strong>
+                                                    ${
+                                                        file.title ||
+                                                        file.specification_title ||
+                                                        "بدون عنوان"
+                                                    }
+                                                </strong>
+
+                                                <small>
+
+                                                    ${
+                                                        file.source === "standardization"
+                                                            ? "استانداردسازی مشاور"
+                                                            : "نسخه " + (file.version || 1)
+                                                    }
+
+                                                </small>
+
+                                            </div>
+
+
+                                            <a
+                                                class="project-file-view"
+                                                href="${file.file}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                title="مشاهده فایل"
+                                            >
+                                                ↗
+                                            </a>
+
+                                        </article>
+
+                                    `).join("")
+
+                                    :
+
+                                    `
+
+                                        <div
+                                            class="project-file-empty"
+                                        >
+
+                                            <span>
+                                                —
+                                            </span>
+
+                                            <small>
+                                                فایلی ثبت نشده
+                                            </small>
+
+                                        </div>
+
+                                    `
+                                }
+
+                            </div>
+
+                        </section>
+
+                    `;
+
+                }).join("")}
+
+            </div>
+
+        </div>
+
+    `;
 
 }

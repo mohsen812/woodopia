@@ -28,6 +28,8 @@ from .models import (
     ProjectItem,
 )
 
+from tenders.models import SpecificationAttachment
+
 from tenders.models import ConsultantSpecification
 
 from .services import send_project_to_consultant
@@ -1027,6 +1029,7 @@ class CustomerStandardizationGlobalReviewView(
                     tender.standardization_status,
             }
         )   
+
 # =====================================
 # PROJECT ATTACHMENTS
 # =====================================
@@ -1041,17 +1044,21 @@ class ProjectAttachmentListCreateView(
         IsAuthenticated
     ]
 
+
     def get_project_queryset(self):
 
         return get_visible_projects(
             self.request.user
         )
+
+
     def get_project(self):
 
         return get_object_or_404(
             self.get_project_queryset(),
             id=self.kwargs["pk"]
         )
+
 
     def get_queryset(self):
 
@@ -1061,15 +1068,235 @@ class ProjectAttachmentListCreateView(
             project=project
         ).order_by("-created_at")
 
+
     def perform_create(self, serializer):
 
         project = self.get_project()
 
+        user = self.request.user
+
+
+        # FEEMAAS internal users
+        if user.is_superuser or user.is_staff:
+
+            owner_role = "company"
+
+        else:
+
+            assignment = (
+                project.assignments
+                .filter(
+                    membership__user=user,
+                    membership__status="active",
+                    status="active",
+                )
+                .select_related(
+                    "membership__role_fk",
+                    "membership__organization",
+                )
+                .first()
+            )
+
+
+            if assignment:
+
+                role_name = (
+                    assignment.membership.role_fk.name
+                    if assignment.membership.role_fk
+                    else ""
+                )
+
+
+                role_map = {
+                    "customer": "customer",
+                    "consultant": "consultant",
+                    "workshop": "workshop",
+                    "designer": "designer",
+                    "company": "company",
+                }
+
+
+                owner_role = role_map.get(
+                    role_name,
+                    "customer",
+                )
+
+            else:
+
+                # Project customer who is not represented
+                # by a project assignment.
+                owner_role = "customer"
+
+
         serializer.save(
             project=project,
-            uploaded_by=self.request.user
+            uploaded_by=user,
+            owner_role=owner_role,
         )
 
+class ProjectFileCenterView(
+    generics.ListAPIView
+):
+
+    serializer_class = ProjectAttachmentSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_queryset(self):
+
+        project = get_object_or_404(
+            get_visible_projects(
+                self.request.user
+            ),
+            id=self.kwargs["pk"]
+        )
+
+        return ProjectAttachment.objects.filter(
+            project=project
+        ).select_related(
+            "uploaded_by"
+        ).order_by(
+            "-created_at"
+        )
+
+    def list(
+        self,
+        request,
+        *args,
+        **kwargs
+    ):
+
+        project = get_object_or_404(
+            get_visible_projects(
+                request.user
+            ),
+            id=kwargs["pk"]
+        )
+
+        queryset = self.get_queryset()
+
+        data = {
+            "customer": [],
+            "consultant": [],
+            "workshop": [],
+            "designer": [],
+            "company": [],
+        }
+
+        # -----------------------------------------
+        # PROJECT ATTACHMENTS
+        # -----------------------------------------
+
+        serializer = self.get_serializer(
+            queryset,
+            many=True
+        )
+
+        for item, obj in zip(
+            serializer.data,
+            queryset
+        ):
+
+            role = obj.owner_role
+
+            if role in data:
+
+                item["source"] = "project"
+
+                data[role].append(
+                    item
+                )
+
+        # -----------------------------------------
+        # CONSULTANT STANDARDIZATION FILES
+        # -----------------------------------------
+
+        specification_attachments = (
+            SpecificationAttachment.objects
+            .filter(
+                specification__tender__project=project
+            )
+            .select_related(
+                "uploaded_by",
+                "specification",
+            )
+            .order_by(
+                "-created_at"
+            )
+        )
+
+        for attachment in specification_attachments:
+
+            data["consultant"].append({
+
+                "id":
+                    attachment.id,
+
+                "file":
+                    attachment.file.url
+                    if attachment.file
+                    else "",
+
+                "file_type":
+                    "document",
+
+                "title":
+                    attachment.title or "",
+
+                "description":
+                    "",
+
+                "version":
+                    1,
+
+                "created_at":
+                    attachment.created_at,
+
+                "uploaded_by":
+                    attachment.uploaded_by_id,
+
+                "owner_role":
+                    "consultant",
+
+                "source":
+                    "standardization",
+
+                "specification_title":
+                    attachment.specification.title
+                    if attachment.specification
+                    else "",
+
+            })
+
+        # -----------------------------------------
+        # RETURN ROLE-BASED FILE CENTER
+        # -----------------------------------------
+
+        return Response(
+            data
+        )
+# =====================================
+# PROJECT ATTACHMENT DELETE
+# =====================================
+
+class ProjectAttachmentDeleteView(
+    generics.DestroyAPIView
+):
+
+    serializer_class = ProjectAttachmentSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def get_queryset(self):
+
+        return ProjectAttachment.objects.filter(
+            uploaded_by=self.request.user
+        )
 # =====================================
 # PROJECT TENDER
 # =====================================
