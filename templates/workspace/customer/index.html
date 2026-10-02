@@ -20,6 +20,11 @@
 >
 
 <link 
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap"
+>
+
+<link 
     rel="stylesheet" 
     href="{% static 'workspace/customer/css/customer.css' %}" 
 >
@@ -287,25 +292,49 @@
 
             <div class="welcome-panel">
 
-                <div>
+<div class="welcome-panel-content">
 
-                    <span class="eyebrow">
-                        FEEMAAS WORKSPACE
-                    </span>
+    <span class="eyebrow">
+        FEEMAAS WORKSPACE
+    </span>
 
-                    <h2>
-                        به فضای کاری خود خوش آمدید
-                    </h2>
+    <h2>
+        به فضای کاری خود خوش آمدید
+    </h2>
 
-                    <p>
-                        تمام پروژه‌ها، مناقصه‌ها،
-                        قراردادها و فعالیت‌های شما
-                        از اینجا قابل مدیریت است.
-                    </p>
+    <p>
+        تمام پروژه‌ها، مناقصه‌ها،
+        قراردادها و فعالیت‌های شما
+        از اینجا قابل مدیریت است.
+    </p>
 
-                </div>
+</div>
 
-            </div>
+
+<div class="welcome-panel-action">
+
+    <span class="welcome-panel-action-label">
+        شروع یک پروژه جدید
+    </span>
+
+    <button
+        type="button"
+        class="primary-button dashboard-create-project-button"
+        id="dashboard-create-project-button"
+    >
+        <span class="dashboard-create-project-icon">
+            ✦
+        </span>
+
+        <span>
+            ایجاد پروژه جدید
+        </span>
+    </button>
+
+</div>
+
+</div>
+
 
 
             <!-- STATISTICS -->
@@ -651,6 +680,101 @@
 
 </div>
 
+
+
+<!-- =========================
+     CREATE PROJECT MODAL
+========================== -->
+
+<div
+    id="create-project-modal"
+    class="project-modal hidden"
+>
+
+    <div class="project-modal-box">
+
+        <button
+            type="button"
+            id="close-create-project-modal"
+            class="modal-close"
+            aria-label="بستن"
+        >
+            ×
+        </button>
+
+        <h2>
+            ایجاد پروژه جدید
+        </h2>
+
+        <input
+            id="project-title"
+            type="text"
+            placeholder="عنوان پروژه"
+            autocomplete="off"
+        >
+
+        <textarea
+            id="project-description"
+            placeholder="توضیحات پروژه"
+        ></textarea>
+
+        <input
+            id="project-budget"
+            type="number"
+            min="0"
+            placeholder="بودجه تقریبی"
+        >
+
+        <input
+            id="project-days"
+            type="number"
+            min="1"
+            placeholder="زمان تحویل (روز)"
+        >
+<!-- INITIAL PROJECT FILES -->
+
+<div class="project-initial-files">
+
+    <h3>
+        فایل‌های اولیه پروژه
+    </h3>
+
+
+    <input
+        id="project-initial-file-input"
+        type="file"
+        multiple
+        hidden
+    >
+
+
+    <button
+        type="button"
+        id="project-add-file-button"
+        class="secondary-button"
+    >
+        + افزودن فایل
+    </button>
+
+
+    <div
+        id="project-initial-file-list"
+        class="project-initial-file-list"
+    >
+    </div>
+
+
+</div>
+        <button
+            type="button"
+            id="save-project-button"
+        >
+            ثبت پروژه
+        </button>
+
+    </div>
+
+</div>
 
 
 <!-- =========================

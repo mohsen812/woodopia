@@ -3383,3 +3383,1692 @@ body {
     }
 
 }
+/* =====================================
+   FEEMAAS PROJECT GRID
+===================================== */
+
+#projects,
+#projects-list {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fill,minmax(280px,1fr));
+
+    gap:20px;
+
+    align-items:start;
+
+}
+
+
+
+/* =====================================
+   PROJECT CARD
+===================================== */
+
+/* =====================================
+   PREMIUM PROJECT CARD
+===================================== */
+
+
+.project-card {
+
+    position:relative;
+
+    min-height:240px;
+
+    padding:22px;
+
+    border-radius:24px;
+
+
+    background:
+    linear-gradient(
+        145deg,
+        rgba(40,50,70,.95),
+        rgba(15,20,35,.98)
+    );
+
+
+    border:
+    1px solid rgba(255,255,255,.10);
+
+
+    box-shadow:
+
+    0 12px 30px
+    rgba(0,0,0,.35),
+
+    inset 0 1px 0
+    rgba(255,255,255,.08);
+
+
+    cursor:pointer;
+
+
+    transition:
+
+    transform .25s ease,
+    box-shadow .25s ease,
+    border-color .25s ease;
+
+}
+
+
+
+.project-card:hover {
+
+
+    transform:
+
+    translateY(-10px);
+
+
+    border-color:
+
+    rgba(0,255,220,.45);
+
+
+
+    box-shadow:
+
+
+    0 30px 60px
+    rgba(0,0,0,.55),
+
+
+    0 0 25px
+    rgba(0,255,220,.22);
+
+}
+
+
+
+.project-card-footer {
+
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+
+    margin-top:25px;
+
+}
+
+
+
+.project-hint {
+
+
+    font-size:12px;
+
+    color:#8f9bad;
+
+}
+
+
+
+.project-arrow {
+
+
+    font-size:20px;
+
+    color:#00ffd5;
+
+}
+/* =====================================
+   FEEMAAS 2026 PROJECT CARD DESIGN
+===================================== */
+
+
+#projects,
+#projects-list {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fill,minmax(320px,1fr));
+
+    gap:24px;
+
+}
+
+
+/* CARD */
+
+.project-card {
+
+    position:relative;
+
+    min-height:270px;
+
+    padding:22px;
+
+    border-radius:26px;
+
+
+    background:
+    linear-gradient(
+        145deg,
+        rgba(30,40,60,.95),
+        rgba(12,18,32,.98)
+    );
+
+
+    border:
+    1px solid rgba(255,255,255,.12);
+
+
+    box-shadow:
+
+    0 18px 40px rgba(0,0,0,.35),
+
+    inset 0 1px 0 rgba(255,255,255,.08);
+
+
+    transition:
+
+    transform .3s ease,
+    box-shadow .3s ease,
+    border-color .3s ease;
+
+
+    cursor:pointer;
+
+}
+
+
+
+.project-card:hover {
+
+
+    transform:
+
+    translateY(-12px)
+    scale(1.015);
+
+
+    border-color:
+
+    rgba(0,255,210,.55);
+
+
+    box-shadow:
+
+
+    0 35px 70px rgba(0,0,0,.55),
+
+    0 0 35px rgba(0,255,210,.22);
+
+}
+
+
+
+/* HEADER */
+
+.project-card-header {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+
+
+.project-status {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:12px;
+
+}
+
+
+
+.project-status-light {
+
+    width:9px;
+
+    height:9px;
+
+    border-radius:50%;
+
+
+    background:#00ffd5;
+
+
+    box-shadow:
+
+    0 0 12px #00ffd5;
+
+
+    animation:
+    statusPulse 2s infinite;
+
+}
+
+
+@keyframes statusPulse {
+
+    50%{
+
+        opacity:.45;
+
+        transform:scale(1.5);
+
+    }
+
+}
+
+
+
+.project-number {
+
+    color:#9aa7bd;
+
+    font-size:13px;
+
+}
+
+
+
+/* TITLE */
+
+.project-card-title {
+
+    margin-top:22px;
+
+    font-size:20px;
+
+    color:white;
+
+}
+
+
+
+.project-description {
+
+    margin-top:10px;
+
+    color:#aeb8ca;
+
+    line-height:1.9;
+
+    font-size:13px;
+
+    min-height:50px;
+
+}
+
+
+
+/* METRICS */
+
+.project-card-info-grid {
+
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(4,1fr);
+
+
+    gap:10px;
+
+
+    margin-top:22px;
+
+}
+
+
+
+.project-info-box {
+
+
+    position:relative;
+
+
+    padding:12px 8px;
+
+
+    border-radius:18px;
+
+
+    background:
+
+    rgba(255,255,255,.05);
+
+
+    border:
+
+    1px solid rgba(255,255,255,.08);
+
+
+    text-align:center;
+
+
+    transition:.25s;
+
+}
+
+
+
+.project-info-box:hover {
+
+
+    transform:
+
+    translateY(-5px);
+
+
+    background:
+
+    rgba(255,255,255,.09);
+
+
+}
+
+/* BOTTOM */
+
+.project-card-bottom {
+
+
+    margin-top:22px;
+
+
+    padding-top:12px;
+
+
+    border-top:
+
+    1px solid rgba(255,255,255,.08);
+
+
+    color:#7f8ba0;
+
+
+    font-size:11px;
+
+}
+/* =====================================
+   PROJECT METRIC CLEAN DESIGN
+===================================== */
+
+
+.project-info-box {
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-height:85px;
+
+}
+
+/* =====================================
+   PROJECT KPI METRICS CLEAN V3
+===================================== */
+
+
+.metric-value {
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:white;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    background:
+    rgba(255,255,255,.04);
+
+    transition:.3s ease;
+
+}
+
+
+/* hover مشترک */
+
+.project-info-box:hover .metric-value {
+
+    transform:
+    translateY(-4px);
+
+}
+
+
+/* =====================
+   ITEMS
+   circle
+===================== */
+
+.project-info-box:nth-child(1) .metric-value {
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:50%;
+
+    border:
+    2px solid #00ffd5;
+
+    box-shadow:
+    0 0 14px rgba(0,255,213,.45);
+
+}
+
+
+
+/* =====================
+   FILES
+   square
+===================== */
+
+
+.project-info-box:nth-child(2) .metric-value {
+
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:10px;
+
+
+    border:
+    2px solid #60a5fa;
+
+
+    box-shadow:
+    0 0 14px rgba(96,165,250,.45);
+
+
+}
+
+
+
+/* =====================
+   BUDGET
+   rectangle
+===================== */
+
+
+.project-info-box:nth-child(3) .metric-value {
+
+
+    min-width:90px;
+
+    height:38px;
+
+
+    padding:
+    0 14px;
+
+
+    border-radius:12px;
+
+
+    border:
+    2px solid #fbbf24;
+
+
+    box-shadow:
+    0 0 14px rgba(251,191,24,.4);
+
+
+    font-size:13px;
+
+
+}
+
+
+/* =====================
+   DELIVERY
+   triangle
+===================== */
+
+.project-info-box:nth-child(4) .metric-value {
+
+    width:52px;
+
+    height:46px;
+
+
+    clip-path:
+    polygon(
+        50% 0%,
+        100% 100%,
+        0% 100%
+    );
+
+
+    background:
+    linear-gradient(
+        135deg,
+        #e9d5ff,
+        #a855f7
+    );
+
+
+    color:white;
+
+
+    filter:
+    drop-shadow(
+        0 0 14px rgba(192,132,252,.9)
+    );
+
+
+    font-size:13px;
+
+}
+
+
+/* labels */
+
+.project-info-label {
+
+
+    margin-top:8px;
+
+    font-size:11px;
+
+    color:#9aa7bd;
+
+
+}
+/* =====================================
+   REMOVE OLD KPI DOT GLOW
+===================================== */
+
+.project-info-box::before,
+.project-info-box::after,
+.metric-value::before,
+.metric-value::after {
+
+    content:none !important;
+
+    display:none !important;
+
+}
+/* =====================================
+   PROJECT FILE CENTER
+   Clean / Minimal / Compact
+===================================== */
+
+.project-files-center {
+    width: 100%;
+}
+
+.project-file-role-card {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.07);
+    box-shadow:
+        0 10px 28px rgba(0,0,0,.18),
+        inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.project-file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+}
+
+.project-file-card {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 76px;
+    padding: 8px 10px;
+    border-radius: 13px;
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,.045),
+        rgba(255,255,255,.018)
+    );
+    border: 1px solid rgba(255,255,255,.07);
+    box-shadow:
+        0 7px 18px rgba(0,0,0,.18),
+        inset 0 1px 0 rgba(255,255,255,.025);
+    overflow: hidden;
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
+}
+
+.project-file-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0,255,213,.30);
+    background: linear-gradient(
+        145deg,
+        rgba(0,255,213,.055),
+        rgba(255,255,255,.022)
+    );
+    box-shadow:
+        0 12px 24px rgba(0,0,0,.24),
+        0 0 16px rgba(0,255,213,.07);
+}
+
+
+/* ---------- visual / thumbnail ---------- */
+
+.project-file-card-preview {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.project-file-card-visual {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.22);
+}
+
+.project-file-card-preview-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+
+/* ---------- non-image file ---------- */
+
+.project-file-card-type {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+.project-file-card-type-icon {
+    font-size: 20px;
+    line-height: 1;
+    opacity: .82;
+}
+
+.project-file-card-type-label {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: rgba(255,255,255,.48);
+}
+
+
+/* ---------- file information ---------- */
+
+.project-file-card-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding-right: 20px;
+}
+
+.project-file-card-title {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255,255,255,.90);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.project-file-card-meta {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: rgba(255,255,255,.38);
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.project-file-card-dot {
+    opacity: .45;
+}
+
+
+/* ---------- menu ---------- */
+
+.project-file-card-menu {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: rgba(0,0,0,.16);
+    color: rgba(255,255,255,.40);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: .65;
+    transition:
+        opacity .15s ease,
+        background .15s ease,
+        color .15s ease;
+}
+
+.project-file-card-menu:hover {
+    opacity: 1;
+    color: #ffffff;
+    background: rgba(255,255,255,.08);
+}
+
+
+/* ---------- role sections ---------- */
+
+.project-file-role-card .project-file-grid {
+    margin-top: 12px;
+}
+
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+
+    .project-file-grid {
+        grid-template-columns: repeat(
+            auto-fill,
+            minmax(190px, 1fr)
+        );
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .project-file-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-file-role-card {
+        padding: 12px;
+    }
+
+}
+
+/* =====================================
+   PROJECT FILE CENTER — FINAL CARD UI
+===================================== */
+
+.project-file-grid {
+    max-height: 330px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 3px 4px 8px 2px;
+    scrollbar-width: thin;
+}
+
+.project-file-card {
+    min-height: 70px;
+}
+
+.project-file-card-body {
+    padding-right: 2px;
+}
+
+.project-file-card-title {
+    max-width: 100%;
+}
+
+.project-file-card-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 4;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,.28);
+    color: rgba(255,255,255,.42);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition:
+        opacity .16s ease,
+        color .16s ease,
+        background .16s ease,
+        transform .16s ease;
+}
+
+.project-file-card:hover .project-file-card-delete,
+.project-file-card-delete:focus-visible {
+    opacity: 1;
+}
+
+.project-file-card-delete:hover {
+    color: #fff;
+    background: rgba(239,68,68,.78);
+    transform: scale(1.08);
+}
+
+.project-file-card-delete.is-deleting {
+    opacity: 1;
+    pointer-events: none;
+    color: rgba(255,255,255,.55);
+}
+
+.project-file-card-preview {
+    flex: 0 0 56px;
+}
+
+.project-file-card-visual {
+    width: 56px;
+    height: 56px;
+}
+
+/* =====================================
+   PROJECT FILE CENTER — UPLOAD PROGRESS
+===================================== */
+
+.project-file-upload-progress {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(0,255,213,.12);
+    box-shadow:
+        0 6px 16px rgba(0,0,0,.14),
+        inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.project-file-upload-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255,255,255,.82);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.project-file-upload-bar {
+    width: 100%;
+    height: 5px;
+    margin-top: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255,255,255,.10);
+}
+
+.project-file-upload-bar span {
+    display: block;
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: #00ffd5;
+    box-shadow:
+        0 0 8px rgba(0,255,213,.55),
+        0 0 16px rgba(0,255,213,.25);
+    transition: width .18s ease;
+}
+
+.project-file-upload-percent {
+    margin-top: 5px;
+    color: rgba(0,255,213,.85);
+    font-size: 9px;
+    font-weight: 700;
+    text-align: left;
+    direction: ltr;
+}
+
+.project-file-upload-progress.upload-complete {
+    border-color: rgba(0,255,213,.30);
+}
+
+.project-file-upload-progress.upload-complete
+.project-file-upload-percent {
+    color: #00ffd5;
+}
+
+/* =====================================
+   PROJECT FILE CENTER — PREVIEW MODAL
+===================================== */
+
+body.project-file-center-preview-open {
+    overflow: hidden;
+}
+
+.project-file-center-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity .16s ease;
+}
+
+.project-file-center-preview-modal.is-open {
+    opacity: 1;
+}
+
+.project-file-center-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2,6,18,.82);
+    backdrop-filter: blur(8px);
+}
+
+.project-file-center-preview-dialog {
+    position: relative;
+    z-index: 2;
+    width: min(1100px, 94vw);
+    height: min(760px, 90vh);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.10);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(27,35,54,.98),
+            rgba(9,13,25,.99)
+        );
+    box-shadow:
+        0 35px 90px rgba(0,0,0,.62),
+        0 0 35px rgba(0,255,213,.08);
+    transform: translateY(8px) scale(.985);
+    transition: transform .16s ease;
+}
+
+.project-file-center-preview-modal.is-open
+.project-file-center-preview-dialog {
+    transform: translateY(0) scale(1);
+}
+
+.project-file-center-preview-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    background: rgba(255,255,255,.025);
+}
+
+.project-file-center-preview-heading {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.project-file-center-preview-heading span {
+    font-size: 8px;
+    letter-spacing: 1.6px;
+    color: rgba(0,255,213,.65);
+}
+
+.project-file-center-preview-heading strong {
+    max-width: min(720px, 70vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255,255,255,.90);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.project-file-center-preview-close {
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 9px;
+    background: rgba(255,255,255,.035);
+    color: rgba(255,255,255,.62);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.project-file-center-preview-close:hover {
+    color: #fff;
+    background: rgba(239,68,68,.22);
+    border-color: rgba(239,68,68,.35);
+}
+
+.project-file-center-preview-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 18px;
+}
+
+.project-file-center-preview-image-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.project-file-center-preview-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+
+.project-file-center-preview-frame {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    border: 0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.project-file-center-preview-text {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 18px;
+    border-radius: 10px;
+    background: rgba(0,0,0,.24);
+    color: rgba(255,255,255,.82);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    direction: ltr;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.project-file-center-preview-generic {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 260px;
+    padding: 42px;
+    text-align: center;
+}
+
+.project-file-center-preview-generic-icon {
+    min-width: 80px;
+    height: 80px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    border: 1px solid rgba(0,255,213,.18);
+    background: rgba(0,255,213,.055);
+    color: rgba(0,255,213,.82);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.project-file-center-preview-generic strong {
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255,255,255,.90);
+    font-size: 13px;
+}
+
+.project-file-center-preview-generic span {
+    color: rgba(255,255,255,.38);
+    font-size: 10px;
+}
+
+.project-file-center-preview-download {
+    margin-top: 8px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    border: 1px solid rgba(0,255,213,.20);
+    background: rgba(0,255,213,.055);
+    color: rgba(0,255,213,.82);
+    font-size: 10px;
+    text-decoration: none;
+}
+
+.project-file-center-preview-download:hover {
+    background: rgba(0,255,213,.10);
+    color: #fff;
+}
+
+@media (max-width: 700px) {
+
+    .project-file-center-preview-modal {
+        padding: 8px;
+    }
+
+    .project-file-center-preview-dialog {
+        width: 100%;
+        height: 94vh;
+        border-radius: 15px;
+    }
+
+    .project-file-grid {
+        max-height: 280px;
+    }
+
+}
+
+/* =====================================
+   PROJECT FILE CENTER — CLEAN CARD
+===================================== */
+
+.project-file-card {
+    position: relative;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    overflow: hidden;
+}
+
+.project-file-card-preview {
+    position: relative;
+    flex: 0 0 54px;
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.project-file-card-folder {
+    position: relative;
+    display: block;
+    width: 48px;
+    height: 40px;
+    margin-top: 7px;
+}
+
+.project-file-card-folder-tab {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    width: 20px;
+    height: 8px;
+    border-radius: 5px 5px 0 0;
+    background: rgba(0,255,213,.22);
+    border: 1px solid rgba(0,255,213,.28);
+    border-bottom: 0;
+}
+
+.project-file-card-folder-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px 7px 7px 7px;
+    border: 1px solid rgba(0,255,213,.28);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(0,255,213,.14),
+            rgba(0,80,100,.12)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 0 12px rgba(0,255,213,.06);
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
+}
+
+.project-file-card-eye {
+    position: relative;
+    width: 22px;
+    height: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid rgba(255,255,255,.62);
+    border-radius: 70% 20%;
+    transform: rotate(45deg);
+    transition:
+        border-color .18s ease,
+        filter .18s ease,
+        transform .18s ease;
+}
+
+.project-file-card-eye-pupil {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.78);
+    box-shadow: 0 0 7px rgba(0,255,213,.45);
+    transform: rotate(-45deg);
+}
+
+.project-file-card-preview:hover
+.project-file-card-folder-body {
+    border-color: rgba(0,255,213,.62);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(0,255,213,.22),
+            rgba(0,120,145,.16)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        0 0 18px rgba(0,255,213,.16);
+    transform: translateY(-1px);
+}
+
+.project-file-card-preview:hover
+.project-file-card-eye {
+    border-color: #fff;
+    filter: drop-shadow(0 0 5px rgba(0,255,213,.65));
+    transform: rotate(45deg) scale(1.06);
+}
+
+.project-file-card-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 22px 0 0;
+}
+
+.project-file-card-title {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+    text-align: right;
+    color: rgba(255,255,255,.90);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.project-file-card-meta {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: rgba(255,255,255,.38);
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.project-file-card-meta span {
+    flex: 0 0 auto;
+}
+
+.project-file-card-dot {
+    opacity: .45;
+}
+
+.project-file-card-delete {
+    position: absolute;
+    top: 50%;
+    left: 7px;
+    right: auto;
+    z-index: 5;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(255,255,255,.34);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition:
+        opacity .16s ease,
+        color .16s ease,
+        background .16s ease,
+        transform .16s ease;
+}
+
+.project-file-card:hover
+.project-file-card-delete,
+.project-file-card-delete:focus-visible {
+    opacity: 1;
+}
+
+.project-file-card-delete:hover {
+    color: #fff;
+    background: rgba(239,68,68,.72);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.project-file-card-delete.is-deleting {
+    opacity: 1;
+    pointer-events: none;
+    color: rgba(255,255,255,.55);
+}
+
+/* =====================================
+   PROJECT FILE CENTER — FINAL THUMBNAIL
+===================================== */
+
+.project-file-card {
+    min-height: 68px;
+    padding: 8px 10px;
+    gap: 9px;
+}
+
+.project-file-card-preview {
+    position: relative;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.project-file-card-visual {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,.09);
+    background: rgba(0,0,0,.24);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.04);
+    transition:
+        border-color .16s ease,
+        box-shadow .16s ease,
+        transform .16s ease;
+}
+
+.project-file-card-preview-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.project-file-card-preview-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.24);
+    opacity: 0;
+    transition: opacity .16s ease;
+}
+
+.project-file-card-preview:hover
+.project-file-card-preview-overlay {
+    opacity: 1;
+}
+
+.project-file-card-preview:hover
+.project-file-card-visual {
+    border-color: rgba(0,255,213,.48);
+    box-shadow:
+        0 0 14px rgba(0,255,213,.13),
+        inset 0 1px 0 rgba(255,255,255,.08);
+    transform: scale(1.02);
+}
+
+.project-file-card-preview-eye {
+    position: relative;
+    width: 17px;
+    height: 11px;
+    border: 1.5px solid rgba(255,255,255,.88);
+    border-radius: 70% 20%;
+    transform: rotate(45deg);
+    filter:
+        drop-shadow(0 0 5px rgba(0,255,213,.45));
+}
+
+.project-file-card-preview-pupil {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    transform:
+        translate(-50%,-50%)
+        rotate(-45deg);
+}
+
+.project-file-card-type {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-file-card-type-icon {
+    max-width: 38px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(0,255,213,.70);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .4px;
+}
+
+.project-file-card-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 21px 0 0;
+}
+
+.project-file-card-title {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255,255,255,.90);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.55;
+    direction: rtl;
+    text-align: right;
+}
+
+.project-file-card-meta {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: rgba(255,255,255,.38);
+    font-size: 8px;
+    line-height: 1.4;
+}
+
+.project-file-card-meta span {
+    flex: 0 0 auto;
+}
+
+.project-file-card-delete {
+    top: 50%;
+    left: 6px;
+    right: auto;
+    width: 18px;
+    height: 18px;
+    font-size: 14px;
+    color: rgba(255,255,255,.28);
+    background: transparent;
+    transform: translateY(-50%);
+}
+
+.project-file-card:hover
+.project-file-card-delete,
+.project-file-card-delete:focus-visible {
+    opacity: 1;
+}
+
+.project-file-card-delete:hover {
+    color: #fff;
+    background: rgba(239,68,68,.70);
+    transform: translateY(-50%) scale(1.08);
+}
+
+/* =====================================
+   PROJECT FILE CENTER — UX REFINEMENT
+===================================== */
+
+.project-file-card {
+    min-height: 66px;
+    padding: 7px 9px;
+    gap: 8px;
+}
+
+.project-file-card-preview {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+}
+
+.project-file-card-visual {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+}
+
+.project-file-card-body {
+    padding-right: 18px;
+    gap: 2px;
+}
+
+.project-file-card-title {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.project-file-card-meta {
+    gap: 4px;
+    font-size: 8px;
+    opacity: .88;
+}
+
+.project-file-card-delete {
+    left: 5px;
+    width: 17px;
+    height: 17px;
+    font-size: 13px;
+    color: rgba(255,255,255,.25);
+}
+
+.project-file-card-delete:hover {
+    background: rgba(239,68,68,.65);
+    box-shadow: 0 0 8px rgba(239,68,68,.18);
+}

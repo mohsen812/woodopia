@@ -14,60 +14,172 @@
 
 function createProjectCard(project) {
 
-    const div =
-        document.createElement("div");
+    const div = document.createElement("div");
 
+    div.className = "project-card";
+    div.dataset.projectId = project.id;
 
-    div.className =
-        "project-card";
+    const itemsCount = Array.isArray(project.items)
+        ? project.items.length
+        : 0;
 
+    const filesCount =
+        (Array.isArray(project.attachments)
+            ? project.attachments.length
+            : 0)
+        +
+        (Array.isArray(project.specification_attachments)
+            ? project.specification_attachments.length
+            : 0);
 
-    div.dataset.projectId =
-        project.id;
+    const statusLabels = {
+        draft: "پیش‌نویس",
+        consulting: "در حال مشاوره",
+        tender: "در مناقصه",
+        production: "در حال تولید",
+        completed: "تکمیل شده",
+        cancelled: "لغو شده"
+    };
 
+    const statusLabel =
+        statusLabels[project.status] ||
+        project.status ||
+        "در انتظار";
+
+    const budget = Number(project.estimated_budget || 0);
+
+    const formattedBudget = budget > 0
+        ? new Intl.NumberFormat("fa-IR").format(budget)
+        : "تعیین نشده";
+
+    let lastActivity = "اطلاعات موجود نیست";
+
+    if (project.updated_at) {
+        const updated = new Date(project.updated_at);
+
+        if (!Number.isNaN(updated.getTime())) {
+            lastActivity = updated.toLocaleDateString(
+                "fa-IR",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            );
+        }
+    }
 
     div.innerHTML = `
 
-        <div class="project-card-header">
+        <div class="project-card-glow"></div>
 
-            <span class="eyebrow">
-                PROJECT #${project.id}
-            </span>
+        <div class="project-card-top">
 
-            <span class="project-status">
-                ${escapeHtml(project.status || "—")}
+            <div class="project-card-identity">
+
+                <span class="project-status-light"></span>
+
+                <span class="project-status-label">
+                    ${escapeHtml(statusLabel)}
+                </span>
+
+            </div>
+
+            <span class="project-number">
+                #${project.id}
             </span>
 
         </div>
 
 
-        <h3>
-            ${escapeHtml(project.title || "بدون عنوان")}
-        </h3>
+        <div class="project-card-main">
 
+            <h3 class="project-card-title">
+                ${escapeHtml(
+                    project.title ||
+                    "بدون عنوان"
+                )}
+            </h3>
 
-        <div class="project-description">
-
-            ${escapeHtml(
-                project.description ||
-                "بدون توضیحات"
-            )}
+            <p class="project-description">
+                ${escapeHtml(
+                    project.description ||
+                    "برای این پروژه توضیحی ثبت نشده است."
+                )}
+            </p>
 
         </div>
 
 
-        <div class="project-card-footer">
+        <div class="project-card-divider"></div>
 
-            <button
-                type="button"
-                class="project-details-button"
-                data-project-id="${project.id}"
-            >
-                مشاهده جزئیات
-            </button>
 
-            <span class="project-arrow">
-                ←
+        <div class="project-card-info-grid">
+
+            <div class="project-info-box">
+
+                <div class="metric-value">
+                    ${itemsCount}
+                </div>
+
+
+                <span class="project-info-label">
+                    آیتم‌ها
+                </span>
+
+
+            </div>
+
+
+            <div class="project-info-box">
+
+                <span class="project-info-label">
+                    فایل‌ها
+                </span>
+
+                <div class="metric-value">
+                    ${filesCount}
+                </div>
+
+            </div>
+
+
+            <div class="project-info-box">
+
+                <span class="project-info-label">
+                    بودجه
+                </span>
+
+                <div class="metric-value project-budget">
+                    ${escapeHtml(formattedBudget)}
+                </div>
+
+            </div>
+
+
+            <div class="project-info-box">
+
+                <span class="project-info-label">
+                    تحویل
+                </span>
+
+                <div class="metric-value">
+                    ${
+                        project.required_delivery_days
+                        ? `${project.required_delivery_days}`
+                        : "—"
+                    }
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="project-card-bottom">
+
+            <span class="project-last-update">
+                آخرین تغییر: ${escapeHtml(lastActivity)}
             </span>
 
         </div>
@@ -77,68 +189,24 @@ function createProjectCard(project) {
 
     /*
     --------------------------------------------------------
-    CARD CLICK
+    CARD INTERACTION
     --------------------------------------------------------
     */
 
-    div.addEventListener(
-        "click",
-        function(event) {
+    div.addEventListener("click", function() {
 
-            if (
-                event.target.closest(
-                    ".project-details-button"
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            showProject(project);
-
-        }
-    );
-
-
-    /*
-    --------------------------------------------------------
-    DETAILS BUTTON
-    --------------------------------------------------------
-    */
-
-    const detailsButton =
-        div.querySelector(
-            ".project-details-button"
+        console.log(
+            "CARD CLICKED",
+            project.id
         );
 
+        showProject(project);
 
-    if (detailsButton) {
-
-        detailsButton.addEventListener(
-            "click",
-            function(event) {
-
-                event.preventDefault();
-
-                event.stopPropagation();
-
-
-                openProjectDetail(
-                    project
-                );
-
-            }
-        );
-
-    }
+    });
 
 
     return div;
-
 }
-
 
 /*
 ============================================================
@@ -339,6 +407,10 @@ function showProject(project) {
         "hidden"
     );
 
+    modal.classList.add(
+        "active"
+    );
+
 
     /*
     --------------------------------------------------------
@@ -478,18 +550,129 @@ function showProject(project) {
 
         consultantButton.addEventListener(
             "click",
-            function(event) {
+            async function(event) {
 
                 event.preventDefault();
 
+                if (
+                    !project ||
+                    project.status !== "draft"
+                ) {
+                    return;
+                }
 
-                console.log(
-                    "FEEMAAS: Send project to consultant",
-                    project
-                );
+                const confirmed =
+                    window.confirm(
+                        "آیا می‌خواهید این پروژه برای مشاور ارسال شود؟"
+                    );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                consultantButton.disabled = true;
+
+                const originalText =
+                    consultantButton.textContent;
+
+                consultantButton.textContent =
+                    "در حال ارسال...";
+
+                try {
+
+                    const csrfToken =
+                        typeof getCookie === "function"
+                            ? getCookie("csrftoken")
+                            : null;
+
+                    const response =
+                        await fetch(
+                            `/api/projects/${project.id}/send-to-consultant/`,
+                            {
+                                method: "POST",
+                                credentials: "same-origin",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    ...(csrfToken
+                                        ? {
+                                            "X-CSRFToken":
+                                                csrfToken
+                                        }
+                                        : {})
+                                },
+
+                                body:
+                                    JSON.stringify({})
+                            }
+                        );
+
+                    const data =
+                        await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            data.error ||
+                            data.detail ||
+                            "ارسال پروژه برای مشاور انجام نشد."
+                        );
+                    }
+
+                    project.status =
+                        data.status ||
+                        "consulting";
+
+
+                    const statusElement =
+                        detail.querySelector(
+                            ".project-summary-status strong"
+                        );
+
+
+                    if(statusElement){
+
+                        statusElement.textContent =
+                            "consulting";
+
+                    }
+
+
+                    consultantButton.remove();
+
+                    if (
+                        typeof loadCustomerProjects ===
+                        "function"
+                    ) {
+                        await loadCustomerProjects();
+                    }
+
+                    alert(
+                        "پروژه با موفقیت برای مشاور ارسال شد."
+                    );
+
+                } catch(error) {
+
+                    console.error(
+                        "FEEMAAS: Summary send project failed",
+                        error
+                    );
+
+                    consultantButton.disabled = false;
+
+                    consultantButton.textContent =
+                        originalText;
+
+                    alert(
+                         error.message ||
+                         "خطا در ارسال پروژه برای مشاور."
+                    );
+
+                }
 
             }
-        );
+       );
 
     }
 
@@ -671,10 +854,46 @@ function openProjectDetail(project) {
         ${projectProgressHtml}
     </div>
 
-    ${projectProgressCancelledHtml}
-</div>
+                ${projectProgressCancelledHtml}
+        </div>
 
-<div class="project-detail-description">
+
+        ${
+            projectCurrentStatus === "draft"
+                ? `
+                    <div class="project-consultant-action">
+
+                        <div class="project-consultant-action-content">
+
+                            <span class="eyebrow">
+                                NEXT STEP
+                            </span>
+
+                            <strong>
+                                پروژه آماده ارسال برای مشاور است
+                            </strong>
+
+                            <span>
+                                پس از ارسال، پروژه وارد مرحله مشاوره خواهد شد.
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="project-consultant-action-button"
+                            id="project-send-to-consultant"
+                        >
+                            ✦ ارسال پروژه به مشاور
+                        </button>
+
+                    </div>
+                `
+                : ""
+        }
+
+
+        <div class="project-detail-description">
 
                 <span class="eyebrow">
                     DESCRIPTION
@@ -1155,8 +1374,174 @@ if (
             }
         );
 
+/*
+--------------------------------------------------------
+SEND PROJECT TO CONSULTANT
+--------------------------------------------------------
+*/
 
-    /*
+const sendToConsultantButton =
+    document.getElementById(
+        "project-send-to-consultant"
+    );
+
+if (sendToConsultantButton) {
+
+    sendToConsultantButton.addEventListener(
+        "click",
+        async function(event) {
+
+            event.preventDefault();
+
+            if (
+                !project ||
+                project.status !== "draft"
+            ) {
+                return;
+            }
+
+
+            /*
+            ------------------------------------------------
+            CONFIRM ACTION
+            ------------------------------------------------
+            */
+
+            const confirmed =
+                window.confirm(
+                    "آیا می‌خواهید این پروژه برای مشاور ارسال شود؟"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            /*
+            ------------------------------------------------
+            LOADING STATE
+            ------------------------------------------------
+            */
+
+            sendToConsultantButton.disabled =
+                true;
+
+            sendToConsultantButton.dataset.originalText =
+                sendToConsultantButton.textContent;
+
+            sendToConsultantButton.textContent =
+                "در حال ارسال...";
+
+
+            try {
+
+                /*
+                ------------------------------------------------
+                SEND TO BACKEND
+                ------------------------------------------------
+                */
+
+                const response =
+                    await fetch(
+                        `/api/projects/${project.id}/send-to-consultant/`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                ...(typeof getCookie === "function" && getCookie("csrftoken")
+                                    ? {
+                                        "X-CSRFToken": getCookie("csrftoken")
+                                    }
+                                    : {})
+                            },
+                            credentials: "same-origin",
+                            body: JSON.stringify({})
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "ارسال پروژه برای مشاور انجام نشد."
+                    );
+
+                }
+
+
+                /*
+                ------------------------------------------------
+                UPDATE LOCAL PROJECT STATE
+                ------------------------------------------------
+                */
+
+                project.status =
+                    data.status ||
+                    "consulting";
+
+
+                /*
+                ------------------------------------------------
+                RE-RENDER PROJECT VIEW
+                ------------------------------------------------
+                */
+
+                openProjectDetail(
+                    project
+                );
+
+
+                /*
+                ------------------------------------------------
+                USER FEEDBACK
+                ------------------------------------------------
+                */
+
+                setTimeout(
+                    function() {
+
+                        alert(
+                            "پروژه با موفقیت برای مشاور ارسال شد."
+                        );
+
+                    },
+                    100
+                );
+
+
+            } catch(error) {
+
+                console.error(
+                    "FEEMAAS: Send project to consultant failed",
+                    error
+                );
+
+
+                sendToConsultantButton.disabled =
+                    false;
+
+                sendToConsultantButton.textContent =
+                    sendToConsultantButton.dataset.originalText ||
+                    "✦ ارسال پروژه به مشاور";
+
+
+                alert(
+                    error.message ||
+                    "خطا در ارسال پروژه برای مشاور."
+                );
+
+            }
+
+        }
+    );
+
+}
+	/*
     --------------------------------------------------------
     PROJECT VIEW CLOSE
     --------------------------------------------------------
@@ -1168,16 +1553,22 @@ if (
     if (closeProjectViewButton) {
 
         closeProjectViewButton.addEventListener(
-            "click",
+	        "click",
             function () {
 
                 projectView.classList.add("hidden");
+
+                const projectsView =
+                    document.getElementById("projects-view");
+
+                if (projectsView) {
+                    projectsView.classList.remove("hidden");
+                }
 
             }
         );
 
     }
-
     /*
     --------------------------------------------------------
     SCROLL TOP
@@ -2694,6 +3085,210 @@ async function loadProjectStandardization(projectId){
     }
 
 }
+/* =========================================================
+   FILE CENTER — UPLOAD
+========================================================= */
+
+function uploadProjectFileCenterFile(
+    projectId,
+    file,
+    onProgress
+){
+
+    return new Promise(
+        function(resolve, reject){
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "file",
+                file
+            );
+
+
+            formData.append(
+                "title",
+                file.name
+            );
+
+
+            const xhr =
+                new XMLHttpRequest();
+
+
+            xhr.open(
+                "POST",
+                `/api/projects/${projectId}/attachments/`,
+                true
+            );
+
+
+            xhr.withCredentials =
+                true;
+
+
+            const csrfToken =
+                getCookie(
+                    "csrftoken"
+                );
+
+
+            if(csrfToken){
+
+                xhr.setRequestHeader(
+                    "X-CSRFToken",
+                    csrfToken
+                );
+
+            }
+
+
+            xhr.upload.addEventListener(
+                "progress",
+                function(event){
+
+                    if(
+                        !event.lengthComputable
+                    ){
+                        return;
+                    }
+
+
+                    const percent =
+                        Math.round(
+                            (
+                                event.loaded /
+                                event.total
+                            ) * 100
+                        );
+
+
+                    if(
+                        typeof onProgress ===
+                        "function"
+                    ){
+
+                        onProgress(
+                            percent
+                        );
+
+                    }
+
+                }
+            );
+
+
+            xhr.addEventListener(
+                "load",
+                function(){
+
+                    if(
+                        xhr.status >= 200 &&
+                        xhr.status < 300
+                    ){
+
+                        let responseData = {};
+
+
+                        try{
+
+                            responseData =
+                                xhr.responseText
+                                    ? JSON.parse(
+                                        xhr.responseText
+                                    )
+                                    : {};
+
+                        }
+                        catch(error){
+
+                            responseData = {};
+
+                        }
+
+
+                        resolve(
+                            responseData
+                        );
+
+                        return;
+
+                    }
+
+
+                    let detail =
+                        "خطا در آپلود فایل.";
+
+
+                    try{
+
+                        const response =
+                            JSON.parse(
+                                xhr.responseText
+                            );
+
+
+                        detail =
+                            response.detail ||
+                            response.error ||
+                            detail;
+
+                    }
+                    catch(error){
+
+                        /* Ignore invalid JSON */
+
+                    }
+
+
+                    reject(
+                        new Error(
+                            detail
+                        )
+                    );
+
+                }
+            );
+
+
+            xhr.addEventListener(
+                "error",
+                function(){
+
+                    reject(
+                        new Error(
+                            "ارتباط با سرور هنگام آپلود فایل قطع شد."
+                        )
+                    );
+
+                }
+            );
+
+
+            xhr.addEventListener(
+                "abort",
+                function(){
+
+                    reject(
+                        new Error(
+                            "آپلود فایل لغو شد."
+                        )
+                    );
+
+                }
+            );
+
+
+            xhr.send(
+                formData
+            );
+
+        }
+    );
+
+}
 /*
 ============================================================
  LOAD PROJECT FILE CENTER
@@ -2701,6 +3296,8 @@ async function loadProjectStandardization(projectId){
 */
 
 async function loadProjectFiles(projectId){
+
+    console.log("FEEMAAS FILE CENTER: loadProjectFiles START", projectId);
 
     const container =
         document.getElementById(
@@ -2738,11 +3335,15 @@ async function loadProjectFiles(projectId){
             );
 
 
-        renderProjectFiles(
+        console.log("FEEMAAS FILE CENTER: API DATA", data);
+
+        renderProjectFileCenter(
             container,
             data,
             projectId
         );
+
+        console.log("FEEMAAS FILE CENTER: RENDER COMPLETE");
 
 
     } catch(error){
@@ -2766,7 +3367,7 @@ async function loadProjectFiles(projectId){
     }
 
 }
-function renderProjectFiles(
+function renderProjectFileCenter(
     container,
     files,
     projectId
@@ -2812,32 +3413,534 @@ function renderProjectFiles(
     ];
 
 
+    const allFiles = roles.flatMap(
+        role => files[role.key] || []
+    );
+
+
+    function getExtension(file){
+
+        const source =
+            file.file ||
+            file.title ||
+            "";
+
+        const clean =
+            source
+                .split("?")[0]
+                .split("#")[0];
+
+        const parts =
+            clean
+                .split(".")
+                .filter(Boolean);
+
+        return parts.length
+            ? parts.pop().toLowerCase()
+            : "";
+
+    }
+
+
+    function getFileKind(file){
+
+        const extension =
+            getExtension(file);
+
+
+        if(
+            file.file_type === "image" ||
+            [
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "webp",
+                "bmp",
+                "svg"
+            ].includes(extension)
+        ){
+
+            return "image";
+
+        }
+
+
+        if(
+            extension === "pdf" ||
+            file.file_type === "document"
+        ){
+
+            return "document";
+
+        }
+
+
+        if(
+            [
+                "dwg",
+                "dxf",
+                "step",
+                "stp",
+                "iges",
+                "igs",
+                "skp",
+                "obj",
+                "fbx"
+            ].includes(extension) ||
+            file.file_type === "design"
+        ){
+
+            return "design";
+
+        }
+
+
+        if(
+            [
+                "doc",
+                "docx",
+                "xls",
+                "xlsx",
+                "ppt",
+                "pptx",
+                "txt",
+                "csv"
+            ].includes(extension)
+        ){
+
+            return "document";
+
+        }
+
+
+        return "other";
+
+    }
+
+
+    function getKindLabel(kind, extension){
+
+        if(kind === "image"){
+            return extension
+                ? extension.toUpperCase()
+                : "IMAGE";
+        }
+
+
+        if(kind === "document"){
+
+            return extension === "pdf"
+                ? "PDF"
+                : extension
+                    ? extension.toUpperCase()
+                    : "DOC";
+
+        }
+
+
+        if(kind === "design"){
+
+            return extension
+                ? extension.toUpperCase()
+                : "CAD";
+
+        }
+
+
+        return extension
+            ? extension.toUpperCase()
+            : "FILE";
+
+    }
+
+
+    function getKindIcon(kind){
+
+        if(kind === "image"){
+            return "▧";
+        }
+
+
+        if(kind === "document"){
+            return "▤";
+        }
+
+
+        if(kind === "design"){
+            return "◇";
+        }
+
+
+        return "◆";
+
+    }
+
+
+    function escapeHtml(value){
+
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    function getFileTitle(file){
+
+        return (
+            file.title ||
+            file.specification_title ||
+            "بدون عنوان"
+        );
+
+    }
+
+
+    function getFileMeta(file){
+
+        const extension =
+            getExtension(file);
+
+        const kind =
+            getFileKind(file);
+
+        const label =
+            getKindLabel(
+                kind,
+                extension
+            );
+
+
+        const source =
+            file.source === "standardization"
+                ? "استانداردسازی مشاور"
+                : `نسخه ${file.version || 1}`;
+
+
+        return `${label} · ${source}`;
+
+    }
+
+
+    function renderFileCard(
+        file,
+        role,
+        index
+    ){
+
+        const kind =
+            getFileKind(file);
+
+        const extension =
+            getExtension(file);
+
+        const title =
+            getFileTitle(file);
+
+        const label =
+            getKindLabel(
+                kind,
+                extension
+            );
+
+        const fileUrl =
+            file.file || "";
+
+        const isImage =
+            kind === "image";
+
+        const source =
+            file.source === "standardization"
+                ? "مشاور"
+                : `نسخه ${file.version || 1}`;
+
+
+        const previewMarkup =
+            isImage && fileUrl
+
+                ? `
+
+                    <img
+                        class="project-file-card-preview-image"
+                        src="${escapeHtml(fileUrl)}"
+                        alt="${escapeHtml(title)}"
+                        loading="lazy"
+                    >
+
+                    <span
+                        class="project-file-card-preview-overlay"
+                        aria-hidden="true"
+                    >
+                        <span
+                            class="project-file-card-preview-eye"
+                        >
+                            <span
+                                class="project-file-card-preview-pupil"
+                            ></span>
+                        </span>
+                    </span>
+
+                `
+
+                : `
+
+                    <span
+                        class="
+                            project-file-card-type
+                            project-file-card-type-${kind}
+                        "
+                    >
+
+                        <span
+                            class="project-file-card-type-icon"
+                        >
+                            ${escapeHtml(label)}
+                        </span>
+
+                    </span>
+
+                `;
+
+
+        return `
+
+            <article
+                class="
+                    project-file-card
+                    project-file-card-${kind}
+                "
+                data-file-id="${escapeHtml(file.id)}"
+                data-project-id="${escapeHtml(projectId)}"
+                data-role="${escapeHtml(role.key)}"
+                data-file-url="${escapeHtml(fileUrl)}"
+                data-file-title="${escapeHtml(title)}"
+                data-file-kind="${escapeHtml(kind)}"
+                data-file-extension="${escapeHtml(extension)}"
+            >
+
+                <button
+                    type="button"
+                    class="project-file-card-delete"
+                    title="حذف فایل"
+                    aria-label="حذف فایل"
+                >
+                    ×
+                </button>
+
+
+                <button
+                    type="button"
+                    class="project-file-card-preview"
+                    title="مشاهده فایل"
+                    aria-label="مشاهده فایل"
+                >
+
+                    <span
+                        class="project-file-card-visual"
+                    >
+
+                        ${previewMarkup}
+
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="project-file-card-body"
+                >
+
+                    <div
+                        class="project-file-card-title"
+                        title="${escapeHtml(title)}"
+                    >
+                        ${escapeHtml(title)}
+                    </div>
+
+
+                    <div
+                        class="project-file-card-meta"
+                    >
+
+                        <span>
+                            ${escapeHtml(label)}
+                        </span>
+
+                        <span
+                            class="project-file-card-dot"
+                        >
+                            ·
+                        </span>
+
+                        <span>
+                            ${escapeHtml(source)}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        `;
+
+    }
+
+
     container.innerHTML = `
 
-        <div class="project-files-center">
+        <div
+            class="project-files-center"
+            data-project-id="${escapeHtml(projectId)}"
+        >
 
-            <div class="project-files-center-head">
+            <header
+                class="project-files-center-head"
+            >
 
-                <div>
+                <div
+                    class="project-files-center-heading"
+                >
 
-                    <span class="project-files-eyebrow">
+                    <span
+                        class="project-files-eyebrow"
+                    >
                         PROJECT FILE CENTER
                     </span>
 
+
                     <h3>
                         فایل‌های پروژه
+                        <span
+                            class="project-files-total"
+                        >
+                            ${allFiles.length}
+                        </span>
                     </h3>
 
+
                     <p>
-                        فایل‌های پروژه بر اساس نقش مالک فایل تفکیک شده‌اند.
+                        فایل‌های پروژه در فضای اختصاصی هر نقش نگهداری می‌شوند.
                     </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="project-files-add-button"
+                    title="افزودن فایل"
+                >
+
+                    <span>
+                        +
+                    </span>
+
+                    افزودن فایل
+
+                </button>
+
+            </header>
+
+
+            <div
+                class="project-files-toolbar"
+            >
+
+                <div
+                    class="project-files-search"
+                >
+
+                    <span
+                        class="project-files-search-icon"
+                    >
+                        ⌕
+                    </span>
+
+                    <input
+                        type="search"
+                        class="project-files-search-input"
+                        placeholder="جستجو در فایل‌ها..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <div
+                    class="project-files-filters"
+                    role="tablist"
+                >
+
+                    <button
+                        type="button"
+                        class="
+                            project-files-filter
+                            is-active
+                        "
+                        data-file-filter="all"
+                    >
+                        همه
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="project-files-filter"
+                        data-file-filter="image"
+                    >
+                        تصاویر
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="project-files-filter"
+                        data-file-filter="document"
+                    >
+                        اسناد
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="project-files-filter"
+                        data-file-filter="design"
+                    >
+                        طراحی
+                    </button>
 
                 </div>
 
             </div>
 
 
-            <div class="project-files-role-grid">
+            <div
+                class="project-files-empty-search hidden"
+            >
+
+                <span>
+                    ⌕
+                </span>
+
+                <strong>
+                    فایلی پیدا نشد
+                </strong>
+
+                <small>
+                    عبارت جستجو یا فیلتر انتخابی را تغییر دهید.
+                </small>
+
+            </div>
+
+
+            <div
+                class="project-files-role-grid"
+            >
 
                 ${roles.map(role => {
 
@@ -2852,6 +3955,7 @@ function renderProjectFiles(
                                 project-file-role-card
                                 project-file-role-${role.accent}
                             "
+                            data-role-section="${escapeHtml(role.key)}"
                         >
 
                             <header
@@ -2868,6 +3972,7 @@ function renderProjectFiles(
                                         ${role.icon}
                                     </span>
 
+
                                     <div>
 
                                         <strong>
@@ -2875,7 +3980,9 @@ function renderProjectFiles(
                                         </strong>
 
                                         <small>
-                                            فایل‌های این نقش
+                                            ${items.length
+                                                ? `${items.length} فایل`
+                                                : "فایلی ثبت نشده"}
                                         </small>
 
                                     </div>
@@ -2884,8 +3991,12 @@ function renderProjectFiles(
 
 
                                 <span
-                                    class="project-file-role-count
-                                           ${items.length ? "has-files" : ""}"
+                                    class="
+                                        project-file-role-count
+                                        ${items.length
+                                            ? "has-files"
+                                            : ""}
+                                    "
                                 >
                                     ${String(items.length).padStart(2, "0")}
                                 </span>
@@ -2893,79 +4004,23 @@ function renderProjectFiles(
                             </header>
 
 
-                            <div class="project-file-list">
+                            <div
+                                class="project-file-grid"
+                            >
 
                                 ${
                                     items.length
 
                                     ?
 
-                                    items.map((file, index) => `
-
-                                        <article
-                                            class="project-file-item"
-                                        >
-
-                                            <span
-                                                class="project-file-number"
-                                            >
-                                                ${String(index + 1).padStart(2, "0")}
-                                            </span>
-
-
-                                            <div
-                                                class="project-file-icon"
-                                            >
-                                                ${
-                                                    file.file_type === "image"
-                                                        ? "▧"
-                                                        :
-                                                    file.file_type === "design"
-                                                        ? "◇"
-                                                        :
-                                                    "▤"
-                                                }
-                                            </div>
-
-
-                                            <div
-                                                class="project-file-info"
-                                            >
-
-                                                <strong>
-                                                    ${
-                                                        file.title ||
-                                                        file.specification_title ||
-                                                        "بدون عنوان"
-                                                    }
-                                                </strong>
-
-                                                <small>
-
-                                                    ${
-                                                        file.source === "standardization"
-                                                            ? "استانداردسازی مشاور"
-                                                            : "نسخه " + (file.version || 1)
-                                                    }
-
-                                                </small>
-
-                                            </div>
-
-
-                                            <a
-                                                class="project-file-view"
-                                                href="${file.file}"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                title="مشاهده فایل"
-                                            >
-                                                ↗
-                                            </a>
-
-                                        </article>
-
-                                    `).join("")
+                                    items.map(
+                                        (file, index) =>
+                                            renderFileCard(
+                                                file,
+                                                role,
+                                                index
+                                            )
+                                    ).join("")
 
                                     :
 
@@ -2976,11 +4031,11 @@ function renderProjectFiles(
                                         >
 
                                             <span>
-                                                —
+                                                +
                                             </span>
 
                                             <small>
-                                                فایلی ثبت نشده
+                                                هنوز فایلی برای این بخش ثبت نشده
                                             </small>
 
                                         </div>
@@ -3002,4 +4057,1062 @@ function renderProjectFiles(
 
     `;
 
+
+    /*
+    ---------------------------------------------------------
+    FILE CENTER — SEARCH
+    ---------------------------------------------------------
+    */
+
+    const searchInput =
+        container.querySelector(
+            ".project-files-search-input"
+        );
+
+
+    const filterButtons =
+        container.querySelectorAll(
+            ".project-files-filter"
+        );
+
+
+    const emptySearch =
+        container.querySelector(
+            ".project-files-empty-search"
+        );
+
+
+    const fileCards =
+        Array.from(
+            container.querySelectorAll(
+                ".project-file-card"
+            )
+        );
+
+
+    function applyFileFilters(){
+
+        const query =
+            (
+                searchInput
+                    ? searchInput.value
+                    : ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const activeFilterButton =
+            container.querySelector(
+                ".project-files-filter.is-active"
+            );
+
+
+        const activeFilter =
+            activeFilterButton
+                ? activeFilterButton.dataset.fileFilter
+                : "all";
+
+
+        let visibleCount = 0;
+
+
+        fileCards.forEach(card => {
+
+            const title =
+                (
+                    card.dataset.fileTitle || ""
+                ).toLowerCase();
+
+
+            const extension =
+                (
+                    card.dataset.fileExtension || ""
+                ).toLowerCase();
+
+
+            const kind =
+                card.dataset.fileKind || "other";
+
+
+            const matchesSearch =
+                !query ||
+                title.includes(query) ||
+                extension.includes(query);
+
+
+            const matchesFilter =
+                activeFilter === "all" ||
+                kind === activeFilter;
+
+
+            const visible =
+                matchesSearch &&
+                matchesFilter;
+
+
+            card.classList.toggle(
+                "is-filtered-out",
+                !visible
+            );
+
+
+            if(visible){
+                visibleCount++;
+            }
+
+        });
+
+
+        container
+            .querySelectorAll(
+                ".project-file-role-card"
+            )
+            .forEach(section => {
+
+                const visibleCards =
+                    section.querySelectorAll(
+                        ".project-file-card:not(.is-filtered-out)"
+                    );
+
+
+                const emptyState =
+                    section.querySelector(
+                        ".project-file-empty"
+                    );
+
+
+                if(
+                    emptyState &&
+                    fileCards.length
+                ){
+                    emptyState.classList.add(
+                        "is-filter-context"
+                    );
+                }
+
+
+                section.classList.toggle(
+                    "is-filter-empty",
+                    visibleCards.length === 0
+                );
+
+            });
+
+
+        if(emptySearch){
+
+            emptySearch.classList.toggle(
+                "hidden",
+                visibleCount !== 0
+            );
+
+        }
+
+    }
+
+
+    if(searchInput){
+
+        searchInput.addEventListener(
+            "input",
+            applyFileFilters
+        );
+
+    }
+
+
+    filterButtons.forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                function(){
+
+                    filterButtons.forEach(
+                        item =>
+                            item.classList.remove(
+                                "is-active"
+                            )
+                    );
+
+
+                    this.classList.add(
+                        "is-active"
+                    );
+
+
+                    applyFileFilters();
+
+                }
+            );
+
+        }
+    );
+
+
+    /*
+    ---------------------------------------------------------
+    FILE CENTER — PREVIEW + DELETE HOOK
+    ---------------------------------------------------------
+    */
+
+    container
+        .querySelectorAll(
+            ".project-file-card-preview"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    function(event){
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const card =
+                            this.closest(
+                                ".project-file-card"
+                            );
+
+                        if(!card){
+                            return;
+                        }
+
+                        openProjectFileCenterPreview({
+                            url: card.dataset.fileUrl || "",
+                            title: card.dataset.fileTitle || "فایل",
+                            kind: card.dataset.fileKind || "other",
+                            extension: card.dataset.fileExtension || "",
+                            projectId: card.dataset.projectId || "",
+                            fileId: card.dataset.fileId || ""
+                        });
+
+                    }
+                );
+
+            }
+        );
+
+
+    container
+        .querySelectorAll(
+            ".project-file-card-delete"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    async function(event){
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const card =
+                            this.closest(
+                                ".project-file-card"
+                            );
+
+                        if(!card){
+                            return;
+                        }
+
+                        const fileId =
+                            card.dataset.fileId || "";
+
+                        const projectId =
+                            card.dataset.projectId || "";
+
+                        const title =
+                            card.dataset.fileTitle || "این فایل";
+
+                        if(!fileId || !projectId){
+                            return;
+                        }
+
+                        const confirmed =
+                            window.confirm(
+                                `آیا از حذف «${title}» مطمئن هستید؟`
+                            );
+
+                        if(!confirmed){
+                            return;
+                        }
+
+                        button.disabled = true;
+                        button.classList.add("is-deleting");
+
+                        try {
+
+                            const csrfToken =
+                                typeof getCookie === "function"
+                                    ? getCookie("csrftoken")
+                                    : null;
+
+                            const response =
+							    await fetch(
+						            `/api/projects/${projectId}/attachments/${fileId}/delete/`,
+					                {
+						                method: "DELETE",
+					                    credentials: "include",
+
+						                headers: csrfToken
+						                    ? {
+						                        "X-CSRFToken":
+						                            csrfToken
+					                        }
+				                            : {}
+					               	}
+			                    );
+
+                            if(!response.ok){
+
+                                let detail = "";
+
+                                try {
+                                    const data =
+                                        await response.json();
+
+                                    detail =
+                                        data.detail ||
+                                        data.error ||
+                                        "";
+                                } catch(e) {}
+
+                                if(response.status === 403){
+                                    throw new Error(
+                                        "شما اجازه حذف این فایل را ندارید."
+                                    );
+                                }
+
+                                if(response.status === 404){
+                                    throw new Error(
+                                        "فایل پیدا نشد یا قبلاً حذف شده است."
+                                    );
+                                }
+
+                                throw new Error(
+                                    detail ||
+                                    `حذف فایل ناموفق بود. (${response.status})`
+                                );
+
+                            }
+
+                            const projectFilesContainer =
+                                container;
+
+                            await loadProjectFiles(
+                                projectId
+                            );
+
+                            console.info(
+                                "FEEMAAS: File deleted successfully.",
+                                fileId
+                            );
+
+                        } catch(error){
+
+                            console.error(
+                                "FEEMAAS FILE DELETE ERROR",
+                                error
+                            );
+
+                            alert(
+                                error.message ||
+                                "حذف فایل انجام نشد."
+                            );
+
+                            button.disabled = false;
+                            button.classList.remove(
+                                "is-deleting"
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+/*
+---------------------------------------------------------
+FILE CENTER — ADD FILE HOOK
+---------------------------------------------------------
+*/
+
+const addButton =
+    container.querySelector(
+        ".project-files-add-button"
+    );
+
+
+if(addButton){
+
+    addButton.addEventListener(
+        "click",
+        function(){
+
+            let fileInput =
+                document.getElementById(
+                    "project-file-center-input"
+                );
+
+
+            if(!fileInput){
+
+                fileInput =
+                    document.createElement(
+                        "input"
+                    );
+
+                fileInput.type =
+                    "file";
+
+                fileInput.id =
+                    "project-file-center-input";
+
+                fileInput.multiple =
+                    true;
+
+                fileInput.hidden =
+                    true;
+
+                document.body.appendChild(
+                    fileInput
+                );
+
+            }
+
+
+            if(
+                !fileInput.dataset.bound
+            ){
+
+                fileInput.dataset.bound =
+                    "true";
+
+
+                fileInput.addEventListener(
+                    "change",
+                    async function(event){
+
+                        const files =
+                            Array.from(
+                                event.target.files || []
+                            );
+
+
+                        if(!files.length){
+
+                            return;
+
+                        }
+
+
+                        event.target.value =
+                            "";
+
+
+                        for(
+                            const file of files
+                        ){
+                          const uploadId =
+    "upload-" + Date.now();
+
+
+const uploadBox =
+    document.createElement("div");
+
+
+uploadBox.id =
+    uploadId;
+
+
+uploadBox.className =
+    "project-file-upload-progress";
+
+
+uploadBox.innerHTML = `
+
+    <div class="project-file-upload-name">
+        ${file.name}
+    </div>
+
+    <div class="project-file-upload-bar">
+        <span></span>
+    </div>
+
+    <div class="project-file-upload-percent">
+        0%
+    </div>
+
+`;
+
+container.prepend(
+    uploadBox
+);
+
+
+try {
+
+    await uploadProjectFileCenterFile(
+        projectId,
+        file,
+        function(percent){
+
+            const box =
+                document.getElementById(
+                    uploadId
+                );
+
+
+            if(!box){
+                return;
+            }
+
+
+            const bar =
+                box.querySelector(
+                    ".project-file-upload-bar span"
+                );
+
+
+            const text =
+                box.querySelector(
+                    ".project-file-upload-percent"
+                );
+
+
+            if(bar){
+
+                bar.style.width =
+                    percent + "%";
+
+            }
+
+
+            if(text){
+
+                text.textContent =
+                    percent + "%";
+
+            }
+
+        }
+    );
+
+
+    const box =
+        document.getElementById(
+            uploadId
+        );
+
+
+    if(box){
+
+        box.classList.add(
+            "upload-complete"
+        );
+
+
+        const percent =
+            box.querySelector(
+                ".project-file-upload-percent"
+            );
+
+
+        if(percent){
+
+            percent.textContent =
+                "✓";
+
+        }
+
+
+        setTimeout(
+            function(){
+
+                box.remove();
+
+            },
+            800
+        );
+
+    }
+
+
 }
+catch(error){
+
+    console.error(
+        "FEEMAAS FILE CENTER UPLOAD ERROR",
+        error
+    );
+
+
+    const box =
+        document.getElementById(
+            uploadId
+        );
+
+
+    if(box){
+
+        box.classList.add(
+            "upload-error"
+        );
+
+    }
+
+
+    alert(
+        `خطا در آپلود «${file.name}»:\n${error.message}`
+    );
+
+}
+                        
+                        }
+
+
+                        await loadProjectFiles(
+                            projectId
+                        );
+
+                    }
+                );
+
+            }
+
+
+            fileInput.click();
+
+        }
+    );
+
+}
+
+}
+/*
+============================================================
+ PROJECT FILE CENTER PREVIEW MODAL
+============================================================
+*/
+
+function openProjectFileCenterPreview(file){
+
+    if(!file || !file.url){
+        return;
+    }
+
+    closeProjectFileCenterPreview();
+
+    const extension =
+        (file.extension || "")
+            .toLowerCase();
+
+    const isImage =
+        file.kind === "image" ||
+        [
+            "jpg",
+            "jpeg",
+            "png",
+            "gif",
+            "webp",
+            "bmp",
+            "svg"
+        ].includes(extension);
+
+    const isPdf =
+        extension === "pdf";
+
+    const isText =
+        [
+            "txt",
+            "csv",
+            "rtf"
+        ].includes(extension);
+
+    let content = "";
+
+    if(isImage){
+
+        content = `
+            <div class="project-file-center-preview-image-wrap">
+                <img
+                    src="${escapeHtml(file.url)}"
+                    alt="${escapeHtml(file.title)}"
+                    class="project-file-center-preview-image"
+                >
+            </div>
+        `;
+
+    } else if(isPdf){
+
+        content = `
+            <iframe
+                class="project-file-center-preview-frame"
+                src="${escapeHtml(file.url)}"
+                title="${escapeHtml(file.title)}"
+            ></iframe>
+        `;
+
+    } else if(isText){
+
+        content = `
+            <div
+                class="project-file-center-preview-text"
+                data-preview-text-url="${escapeHtml(file.url)}"
+            >
+                در حال دریافت محتوای فایل...
+            </div>
+        `;
+
+    } else {
+
+        content = `
+            <div class="project-file-center-preview-generic">
+
+                <div class="project-file-center-preview-generic-icon">
+                    ${getFileCenterPreviewIcon(extension)}
+                </div>
+
+                <strong>
+                    ${escapeHtml(file.title)}
+                </strong>
+
+                <span>
+                    ${escapeHtml(
+                        extension
+                            ? extension.toUpperCase()
+                            : "FILE"
+                    )}
+                </span>
+
+                <a
+                    class="project-file-center-preview-download"
+                    href="${escapeHtml(file.url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                >
+                    دانلود فایل
+                </a>
+
+            </div>
+        `;
+
+    }
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "project-file-center-preview-modal";
+
+    modal.className =
+        "project-file-center-preview-modal";
+
+    modal.innerHTML = `
+
+        <div
+            class="project-file-center-preview-backdrop"
+            data-preview-close="true"
+        ></div>
+
+        <section
+            class="project-file-center-preview-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="پیش‌نمایش فایل"
+        >
+
+            <header
+                class="project-file-center-preview-header"
+            >
+
+                <div
+                    class="project-file-center-preview-heading"
+                >
+
+                    <span>
+                        FILE PREVIEW
+                    </span>
+
+                    <strong
+                        title="${escapeHtml(file.title)}"
+                    >
+                        ${escapeHtml(file.title)}
+                    </strong>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="project-file-center-preview-close"
+                    aria-label="بستن"
+                    title="بستن"
+                >
+                    ×
+                </button>
+
+            </header>
+
+            <div
+                class="project-file-center-preview-content"
+            >
+                ${content}
+            </div>
+
+        </section>
+
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeButton =
+        modal.querySelector(
+            ".project-file-center-preview-close"
+        );
+
+    if(closeButton){
+
+        closeButton.addEventListener(
+            "click",
+            closeProjectFileCenterPreview
+        );
+
+    }
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target.dataset.previewClose === "true"
+            ){
+                closeProjectFileCenterPreview();
+            }
+
+        }
+    );
+
+    document.addEventListener(
+        "keydown",
+        projectFileCenterPreviewEscapeHandler
+    );
+
+    document.body.classList.add(
+        "project-file-center-preview-open"
+    );
+
+    requestAnimationFrame(
+        function(){
+            modal.classList.add("is-open");
+        }
+    );
+
+
+    if(isText){
+
+        const textContainer =
+            modal.querySelector(
+                ".project-file-center-preview-text"
+            );
+
+        if(textContainer){
+
+            fetch(
+                file.url,
+                {
+                    credentials: "include"
+                }
+            )
+                .then(
+                    response => {
+
+                        if(!response.ok){
+                            throw new Error(
+                                "Unable to read file."
+                            );
+                        }
+
+                        return response.text();
+
+                    }
+                )
+                .then(
+                    text => {
+
+                        textContainer.textContent =
+                            text;
+
+                    }
+                )
+                .catch(
+                    function(){
+
+                        textContainer.textContent =
+                            "امکان نمایش محتوای این فایل وجود ندارد.";
+
+                    }
+                );
+
+        }
+
+    }
+
+}
+
+
+function closeProjectFileCenterPreview(){
+
+    const modal =
+        document.getElementById(
+            "project-file-center-preview-modal"
+        );
+
+    if(!modal){
+        return;
+    }
+
+    modal.classList.remove("is-open");
+
+    setTimeout(
+        function(){
+
+            if(modal.parentNode){
+                modal.parentNode.removeChild(modal);
+            }
+
+        },
+        160
+    );
+
+    document.body.classList.remove(
+        "project-file-center-preview-open"
+    );
+
+    document.removeEventListener(
+        "keydown",
+        projectFileCenterPreviewEscapeHandler
+    );
+
+}
+
+
+function projectFileCenterPreviewEscapeHandler(event){
+
+    if(event.key === "Escape"){
+
+        closeProjectFileCenterPreview();
+
+    }
+
+}
+
+
+function getFileCenterPreviewIcon(extension){
+
+    const icons = {
+        pdf: "PDF",
+        doc: "DOC",
+        docx: "DOC",
+        xls: "XLS",
+        xlsx: "XLS",
+        csv: "CSV",
+        dwg: "CAD",
+        dxf: "CAD",
+        step: "3D",
+        stp: "3D",
+        skp: "3D",
+        zip: "ZIP",
+        rar: "RAR"
+    };
+
+    return icons[extension] || "FILE";
+
+}
+
+
+/*
+============================================================
+ PROJECT SUMMARY MODAL CLOSE
+============================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const modal =
+            document.getElementById(
+                "project-modal"
+            );
+
+        const closeButton =
+            document.getElementById(
+                "close-project-modal"
+            );
+
+
+        if (!modal || !closeButton) {
+            return;
+        }
+
+
+        function closeProjectSummary() {
+
+            modal.classList.remove(
+                "active"
+            );
+
+            modal.classList.add(
+                "hidden"
+            );
+
+        }
+
+
+        closeButton.addEventListener(
+            "click",
+            closeProjectSummary
+        );
+
+
+        const backdrop =
+            modal.querySelector(
+                ".modal-backdrop"
+            );
+
+
+        if (backdrop) {
+
+            backdrop.addEventListener(
+                "click",
+                closeProjectSummary
+            );
+
+        }
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    !modal.classList.contains("hidden")
+                ) {
+
+                    closeProjectSummary();
+
+                }
+
+            }
+        );
+
+    }
+);
