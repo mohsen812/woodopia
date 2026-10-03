@@ -253,7 +253,7 @@
 
 
                         if (
-                            target === "tender" &&
+                            target === "standardization" &&
                             window.WorkshopTender
                         ) {
 
@@ -261,12 +261,14 @@
                             const tenderId =
                                 this.currentProject.tender_id ||
                                 this.currentProject.tender;
-
+                            const bidId =
+                                this.currentProject.bid_id ||
+                                null;
 
 
                             console.log(
                                 "Loading tender:",
-                                tenderId
+                                    tenderId,
                             );
 
 
@@ -292,7 +294,8 @@
 
 
                             WorkshopTender.loadTender(
-                                tenderId
+                                    tenderId,
+								bidId
                             );
 
 

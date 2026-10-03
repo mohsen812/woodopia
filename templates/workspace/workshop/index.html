@@ -624,8 +624,8 @@
             <button
                 type="button"
                 class="project-tab"
-                data-project-tab="tender">
-                پیشنهاد مناقصه
+                data-project-tab="standardization">
+                استانداردسازی
             </button>
 
             <button
@@ -688,7 +688,7 @@
 
             <section
                 class="project-tab-content"
-                data-project-content="tender">
+                data-project-content="standardization">
 
                 <div
                     id="workshop-tender-view"
@@ -709,9 +709,44 @@
 
                 <div class="workspace-panel">
 
-                    <div class="empty-state">
-                        فایل‌های پروژه در این بخش نمایش داده خواهند شد.
-                    </div>
+                    <div class="workspace-panel workshop-files-panel">
+
+    <div class="files-header">
+
+        <div>
+            <h3>
+                فایل‌های پروژه
+            </h3>
+
+            <p>
+                تصاویر، مدارک و فایل‌های مرتبط با پروژه
+            </p>
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-button"
+            id="workshop-upload-file-button">
+
+            + افزودن فایل
+
+        </button>
+
+    </div>
+
+
+    <div
+        id="workshop-project-files"
+        class="files-grid">
+
+        <div class="empty-state">
+            هنوز فایلی ثبت نشده است.
+        </div>
+
+    </div>
+
+</div>
 
                 </div>
 

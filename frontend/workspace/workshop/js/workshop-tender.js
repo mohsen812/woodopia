@@ -245,7 +245,7 @@
 
             const tenderTab =
                 document.querySelector(
-                    '[data-project-tab="tender"]'
+                    '[data-project-tab="standardization"]'
                 );
 
             if (tenderTab) {
@@ -518,17 +518,21 @@
 
                                 <th>عنوان</th>
 
-                                <th>توضیحات</th>
-
                                 <th>تعداد</th>
+
+                                <th>ابعاد</th>
+
+                                <th>متریال</th>
+
+                                <th>مشخصات فنی</th>
 
                                 <th>فایل</th>
 
                                 <th>قیمت واحد</th>
 
-                                <th>مبلغ ردیف</th>
+                                <th>مبلغ کل</th>
 
-                                <th>آمادگی</th>
+                                <th>قابلیت ساخت</th>
 
                                 <th>توضیحات کارگاه</th>
 
@@ -791,7 +795,7 @@
             const id =
                 item.id;
 
-            const quantity =
+		    const quantity =
                 Number(
                     item.quantity || 0
                 );
@@ -829,160 +833,165 @@
                         projectItemId
                     )}">
 
-                    <td class="spec-row-number">
+                <td class="spec-row-number">
 
-                        ${this.escape(
-                            item.row_number || "-"
-                        )}
+                    ${this.escape(
+                        item.row_number || "-"
+                    )}
 
-                    </td>
-
-
-                    <td>
-
-                        ${this.escape(
-                            item.title || "-"
-                        )}
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <div>
-                            ${this.escape(
-                                item.description || "-"
-                            )}
-                        </div>
+                    ${this.escape(
+                        item.title || "-"
+                    )}
 
-                        ${
-                            item.material
-                            ? `
-                            <small>
-                                متریال:
-                                ${this.escape(
-                                    item.material
-                                )}
-                            </small>
-                            `
-                            : ""
-                        }
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        ${this.escape(
-                            quantity
-                        )}
+                    ${this.escape(
+                        quantity
+                    )}
 
-                    </td>
-
-
-                    <td>
-
-                        <button
-                            type="button"
-                            class="file-count-button"
-                            data-specification-files
-                            data-specification-id="${id}"
-                            data-specification-title="${this.escapeAttribute(
-                                item.title || "ردیف"
-                            )}">
-
-                            📎 فایل‌ها
-
-                        </button>
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            class="spec-input"
-                            data-unit-price
-                            placeholder="قیمت"
-                            value="${this.escapeAttribute(
-                                unitPrice
-                            )}"
-                            ${this.isBidSubmitted() ? "disabled" : ""}
-                        >
+                    ${this.escape(
+                        item.dimensions || "-"
+                    )}
 
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <div
-                            class="line-total-field"
-                            data-line-total>
+                    ${this.escape(
+                        item.material || "-"
+                    )}
 
-                            0
-
-                        </div>
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <select
-                            class="spec-input"
-                            data-availability
-                            ${this.isBidSubmitted() ? "disabled" : ""}>
+                    ${this.escape(
+                        item.technical_details ||
+                        item.description ||
+                        "-"
+                    )}
 
-                            <option value="">
-                                انتخاب
-                            </option>
-
-                            <option
-                                value="available"
-                                ${availability === "available" ? "selected" : ""}>
-                                آماده
-                            </option>
-
-                            <option
-                                value="conditional"
-                                ${availability === "conditional" ? "selected" : ""}>
-                                مشروط
-                            </option>
-
-                            <option
-                                value="unavailable"
-                                ${availability === "unavailable" ? "selected" : ""}>
-                                غیرقابل انجام
-                            </option>
-
-                        </select>
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <input
-                            type="text"
-                            class="spec-input"
-                            data-technical-notes
-                            placeholder="توضیح"
-                            value="${this.escapeAttribute(
-                                technicalNotes
-                            )}"
-                            ${this.isBidSubmitted() ? "disabled" : ""}
-                        >
+                    <button
+                        type="button"
+                        class="file-count-button"
+                        data-specification-files
+                        data-specification-id="${id}"
+                        data-specification-title="${this.escapeAttribute(
+                            item.title || "ردیف"
+                        )}">
 
-                    </td>
+                        📎 فایل‌ها
 
-                </tr>
+                    </button>
 
-            `;
+                </td>
 
-        },
+
+                <td>
+
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="spec-input"
+                        data-unit-price
+                        placeholder="قیمت"
+                        value="${this.escapeAttribute(
+                            unitPrice
+                        )}"
+                        ${this.isBidSubmitted() ? "disabled" : ""}
+                    >
+
+                </td>
+
+
+                <td>
+
+                    <div
+                        class="line-total-field"
+                        data-line-total>
+
+                        0
+
+                    </div>
+
+                </td>
+
+
+                <td>
+
+                    <select
+                        class="spec-input"
+                        data-availability
+                        ${this.isBidSubmitted() ? "disabled" : ""}>
+
+                        <option value="">
+                            انتخاب
+                        </option>
+
+                        <option
+                            value="available"
+                            ${availability === "available" ? "selected" : ""}>
+                            قابل ساخت
+                        </option>
+
+                        <option
+                            value="conditional"
+                            ${availability === "conditional" ? "selected" : ""}>
+                            قابل ساخت مشروط
+                        </option>
+
+                        <option
+                            value="unavailable"
+                            ${availability === "unavailable" ? "selected" : ""}>
+                            غیرقابل ساخت
+                        </option>
+
+                    </select>
+
+                </td>
+
+
+                <td>
+
+                    <input
+                        type="text"
+                        class="spec-input"
+                        data-technical-notes
+                        placeholder="توضیح کارگاه"
+                        value="${this.escapeAttribute(
+                            technicalNotes
+                        )}"
+                        ${this.isBidSubmitted() ? "disabled" : ""}
+                    >
+
+                </td>
+
+            </tr>
+
+        `;
+
+    },
 
 
         bindSpecificationEvents: function () {
@@ -1098,11 +1107,13 @@
                 )
                 .forEach((row) => {
 
+                    const quantityCell =
+                        row.children[2];
+
                     const quantity =
                         Number(
-                            row
-                                .children[3]
-                                .textContent
+                            quantityCell &&
+                            quantityCell.textContent
                                 .trim()
                                 .replace(/,/g, "")
                         ) || 0;
@@ -1124,7 +1135,8 @@
                         ) || 0;
 
                     const total =
-                        quantity * unitPrice;
+                        quantity *
+                        unitPrice;
 
                     grandTotal += total;
 
@@ -1169,11 +1181,13 @@
                 )
                 .forEach((row) => {
 
+                    const quantityCell =
+                        row.children[2];
+
                     const quantity =
                         Number(
-                            row
-                                .children[3]
-                                .textContent
+                            quantityCell &&
+                            quantityCell.textContent
                                 .trim()
                                 .replace(/,/g, "")
                         ) || 0;
@@ -1198,7 +1212,6 @@
             return total;
 
         },
-
 
         updateFinalAmount: function () {
 
