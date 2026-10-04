@@ -38,6 +38,7 @@ class EvaluationEngineTests(TestCase):
             workshop_id=workshop_id,
             workshop=workshop,
             total_amount=Decimal(str(total_amount)),
+            final_amount=Decimal(str(total_amount)),
             production_days=production_days,
             delivery_days=delivery_days,
             warranty_months=warranty_months,
@@ -129,7 +130,59 @@ class EvaluationEngineTests(TestCase):
             result["rank"],
             1,
         )
+    def test_price_score_uses_final_amount_after_discount(self):
+        workshop_a = self.create_bid(
+            bid_id=10,
+            workshop_id=20,
+            workshop_name="Workshop A",
+            total_amount=100000000,
+            production_days=20,
+            delivery_days=10,
+            warranty_months=24,
+        )
 
+        workshop_b = self.create_bid(
+            bid_id=11,
+            workshop_id=21,
+            workshop_name="Workshop B",
+            total_amount=90000000,
+            production_days=20,
+            delivery_days=10,
+            warranty_months=24,
+        )
+
+        workshop_a.final_amount = Decimal("80000000")
+        workshop_b.final_amount = Decimal("90000000")
+
+        results = evaluate_bids(
+            [workshop_a, workshop_b]
+        )
+
+        self.assertEqual(
+            results[0]["workshop_name"],
+            "Workshop A",
+        )
+
+        self.assertEqual(
+            results[0]["amount"],
+            Decimal("80000000"),
+        )
+
+        self.assertEqual(
+            results[0]["price_score"],
+            100.0,
+        )
+
+        self.assertEqual(
+            results[1]["workshop_name"],
+            "Workshop B",
+        )
+
+        self.assertEqual(
+            results[1]["price_score"],
+            0.0,
+        ) 
+        
     def test_three_bids_are_ranked_correctly(self):
         alpha = self.create_bid(
             bid_id=4,
@@ -337,9 +390,11 @@ class EvaluationServiceTests(TestCase):
             tender_round=self.round,
             workshop=workshop,
             total_amount=total_amount,
+            final_amount=total_amount,
             production_days=production_days,
             delivery_days=delivery_days,
             warranty_months=warranty_months,
+            status="submitted",
         )
 
     def test_tender_without_bids_returns_no_bids(self):
