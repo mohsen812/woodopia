@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from decimal import Decimal
+
 from projects.models import Project, ProjectItem
 from organizations.models import Organization
 
@@ -455,10 +457,16 @@ class Bid(models.Model):
         ]
     def calculate_final_amount(self):
 
+        percentage = (
+            self.discount_percentage
+            if self.discount_percentage is not None
+            else Decimal("0")
+        )
+
         self.discount_amount = (
             self.total_amount *
-            self.discount_percentage /
-            100
+            percentage /
+            Decimal("100")
         )
 
         self.final_amount = (

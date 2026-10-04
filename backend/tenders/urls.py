@@ -16,6 +16,7 @@ from .views import (
     TenderEvaluationView,
     TenderReportView,
     TenderBidListView,
+    AnonymousTenderBidListView,
     TenderSelectBidView,
     TenderAwardView,
     ConsultantSpecificationListCreateView,
@@ -120,6 +121,11 @@ urlpatterns = [
         "<int:tender_id>/visible-bids/",
         TenderBidListView.as_view(),
         name="tender-visible-bids"
+    ),
+	path(
+        "<int:tender_id>/anonymous-bids/",
+        AnonymousTenderBidListView.as_view(),
+        name="tender-anonymous-bids"
     ),
     path(
         "<int:tender_id>/bids/",

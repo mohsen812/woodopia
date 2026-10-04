@@ -210,7 +210,44 @@ class BidSerializer(serializers.ModelSerializer):
         ]
 
 
+class AnonymousBidSerializer(serializers.ModelSerializer):
 
+    items = BidItemSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    payment_schedules = PaymentScheduleSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+
+        model = Bid
+
+        fields = [
+            "id",
+            "tender_round",
+
+            "production_days",
+            "delivery_days",
+            "warranty_months",
+            "technical_notes",
+            "items",
+            "payment_schedules",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "tender_round",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
 
 class TenderRoundSerializer(serializers.ModelSerializer):
 

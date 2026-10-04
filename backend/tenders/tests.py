@@ -1570,3 +1570,258 @@ class TenderParticipantResponseTests(TestCase):
             response.data["bid_status"],
             "submitted",
         )
+
+class AnonymousTenderBidAPITests(TestCase):
+
+    def setUp(self):
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="anonymous_bid_api_user",
+            email="anonymous-bid-api@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Anonymous API Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshops = []
+
+        for index in range(3):
+
+            self.workshops.append(
+                Organization.objects.create(
+                    name=f"Secret Workshop {index}",
+                    organization_type="workshop",
+                    owner=self.user,
+                )
+            )
+
+        self.project = Project.objects.create(
+            title="Anonymous Reveal Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Anonymous Reveal Tender",
+            status="open",
+            reveal_at=timezone.now() + timedelta(hours=1),
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.submitted_bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshops[0],
+            total_amount=9000000,
+            production_days=10,
+            delivery_days=5,
+            warranty_months=12,
+            status="submitted",
+        )
+
+        self.draft_bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshops[1],
+            total_amount=8000000,
+            production_days=8,
+            delivery_days=4,
+            warranty_months=18,
+            status="draft",
+        )
+
+        self.client = APIClient()
+
+
+    def test_anonymous_bids_hidden_before_reveal(self):
+
+        response = self.client.get(
+            "/api/tenders/{}/anonymous-bids/".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.json(),
+            [],
+        )
+
+
+    def test_anonymous_bids_visible_after_reveal(self):
+
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(
+            update_fields=[
+                "status",
+                "revealed_at",
+            ]
+        )
+
+        response = self.client.get(
+            "/api/tenders/{}/anonymous-bids/".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            len(data),
+            1,
+        )
+
+        self.assertEqual(
+            data[0]["id"],
+            self.submitted_bid.id,
+        )
+
+
+    def test_anonymous_bid_does_not_expose_workshop_identity(self):
+
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(
+            update_fields=[
+                "status",
+                "revealed_at",
+            ]
+        )
+
+        response = self.client.get(
+            "/api/tenders/{}/anonymous-bids/".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            len(data),
+            1,
+        )
+
+        self.assertNotIn(
+            "workshop",
+            data[0],
+        )
+
+        self.assertNotIn(
+            "workshop_name",
+            data[0],
+        )
+
+
+    def test_anonymous_bids_exclude_drafts(self):
+
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(
+            update_fields=[
+                "status",
+                "revealed_at",
+            ]
+        )
+
+        response = self.client.get(
+            "/api/tenders/{}/anonymous-bids/".format(
+                self.tender.id
+            )
+        )
+
+        data = response.json()
+
+        bid_ids = [
+            item["id"]
+            for item in data
+        ]
+
+        self.assertIn(
+            self.submitted_bid.id,
+            bid_ids,
+        )
+
+        self.assertNotIn(
+            self.draft_bid.id,
+            bid_ids,
+        )
+
+    def test_anonymous_bids_use_latest_revealed_round_only(self):
+        older_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=2,
+            status="evaluated",
+        )
+
+        older_bid = Bid.objects.create(
+            tender_round=older_round,
+            workshop=self.workshops[2],
+            total_amount=7000000,
+            production_days=7,
+            delivery_days=3,
+            warranty_months=24,
+            status="submitted",
+        )
+
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(
+            update_fields=[
+                "status",
+                "revealed_at",
+            ]
+        )
+
+        response = self.client.get(
+            "/api/tenders/{}/anonymous-bids/".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        bid_ids = [
+            item["id"]
+            for item in data
+        ]
+
+        self.assertIn(
+            older_bid.id,
+            bid_ids,
+        )
+
+        self.assertNotIn(
+            self.submitted_bid.id,
+            bid_ids,
+        )

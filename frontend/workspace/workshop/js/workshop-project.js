@@ -253,7 +253,7 @@
 
 
                         if (
-                            target === "standardization" &&
+                            target === "proposal" &&
                             window.WorkshopTender
                         ) {
 

@@ -2,6 +2,8 @@ from django.db.models import Q
 from django.db import transaction
 from django.utils import timezone
 
+from decimal import Decimal, InvalidOperation
+
 
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -45,6 +47,7 @@ from .serializers import (
     TenderSerializer,
     TenderParticipantSerializer,
     BidSerializer,
+	AnonymousBidSerializer,
     TenderRoundCreateSerializer,
     BidItemSerializer,
     PaymentScheduleSerializer,
@@ -1248,11 +1251,18 @@ class BidDiscountUpdateView(
 
         try:
 
-            discount_percentage = float(
-                discount_percentage
+            discount_percentage = Decimal(
+                str(discount_percentage)
             )
 
-        except:
+        except (InvalidOperation, TypeError):
+
+            raise ValidationError(
+                {
+                     "discount_percentage":
+                     "Invalid value."
+                }
+            )
 
             raise ValidationError(
                 {
@@ -1419,6 +1429,53 @@ class TenderBidListView(
         return get_visible_bids(
             tender,
             viewer_type,
+        )
+
+class AnonymousTenderBidListView(
+    generics.ListAPIView
+):
+
+    serializer_class = AnonymousBidSerializer
+
+    def get_queryset(self):
+
+        tender_id = self.kwargs.get(
+            "tender_id"
+        )
+
+        tender = Tender.objects.get(
+            id=tender_id
+        )
+
+        if tender.status != "revealed":
+            return Bid.objects.none()
+
+        active_round = (
+            tender.rounds
+            .filter(
+                status__in=[
+                    "evaluated",
+                    "closed",
+                ]
+            )
+            .order_by(
+                "-round_number"
+            )
+            .first()
+        )
+
+        if not active_round:
+            return Bid.objects.none()
+
+        return (
+            Bid.objects
+            .filter(
+                tender_round=active_round,
+                status="submitted",
+            )
+            .order_by(
+                "id"
+            )
         )
 class TenderSelectBidView(
     generics.GenericAPIView

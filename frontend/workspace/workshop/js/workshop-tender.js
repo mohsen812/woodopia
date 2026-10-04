@@ -245,7 +245,7 @@
 
             const tenderTab =
                 document.querySelector(
-                    '[data-project-tab="standardization"]'
+                    '[data-project-tab="proposal"]'
                 );
 
             if (tenderTab) {
@@ -1620,7 +1620,7 @@
                     const quantity =
                         Number(
                             row
-                                .children[3]
+                                .children[2]
                                 .textContent
                                 .trim()
                                 .replace(/,/g, "")

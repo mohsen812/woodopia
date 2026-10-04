@@ -349,8 +349,9 @@ class ConsultantStandardizationView(
             Tender.objects
             .filter(
                 project=project,
-                status="draft",
+				specifications__isnull=False,
             )
+			.distinct()
             .order_by("-created_at")
             .first()
         )
@@ -713,7 +714,9 @@ class CustomerStandardizationView(
             Tender.objects
             .filter(
                 project=project,
+				specifications__isnull=False,
             )
+			.distinct()
             .order_by("-created_at")
             .first()
         )

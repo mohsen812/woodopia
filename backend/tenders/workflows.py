@@ -54,8 +54,8 @@ def reveal_tender(tender_id):
     )
 
     winner_bid_id = (
-        evaluation["winner"]["bid_id"]
-        if evaluation.get("winner")
+        evaluation["summary"]["winner_bid_id"]
+        if evaluation.get("summary")
         else None
     )
 
@@ -74,7 +74,7 @@ def reveal_tender(tender_id):
             tender_round=active_round,
             winner_bid=winner_bid,
             ranking=evaluation.get(
-                "ranking",
+                "results",
                 []
             ),
             summary=evaluation,
