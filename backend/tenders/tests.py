@@ -103,6 +103,7 @@ class TenderReportAPITests(TestCase):
             production_days=production_days,
             delivery_days=delivery_days,
             warranty_months=warranty_months,
+			status="submitted",
         )
 
     def test_report_endpoint_returns_200(self):
@@ -444,6 +445,7 @@ class TenderAwardServiceTests(TestCase):
             production_days=10,
             delivery_days=5,
             warranty_months=24,
+			status="submitted",
         )
 
 
@@ -537,6 +539,7 @@ class CustomerTenderSelectionServiceTests(TestCase):
             production_days=10,
             delivery_days=5,
             warranty_months=24,
+			status="submitted",
         )
 
         self.bid_beta = Bid.objects.create(
@@ -546,6 +549,7 @@ class CustomerTenderSelectionServiceTests(TestCase):
             production_days=12,
             delivery_days=6,
             warranty_months=18,
+			status="submitted",
         )
 
         self.bid_gamma = Bid.objects.create(
@@ -555,6 +559,7 @@ class CustomerTenderSelectionServiceTests(TestCase):
             production_days=14,
             delivery_days=7,
             warranty_months=12,
+			status="submitted",
         )
 
         self.bid_delta = Bid.objects.create(
@@ -564,6 +569,7 @@ class CustomerTenderSelectionServiceTests(TestCase):
             production_days=20,
             delivery_days=10,
             warranty_months=6,
+			status="submitted",
         )
 
 
@@ -731,6 +737,7 @@ class TenderAwardAPITests(TestCase):
             production_days=10,
             delivery_days=5,
             warranty_months=24,
+			status="submitted",
         )
 
         self.client = APIClient()
@@ -1190,6 +1197,7 @@ class TenderVisibleBidsTests(TestCase):
                     production_days=10,
                     delivery_days=5,
                     warranty_months=12,
+					status="submitted",
                 )
             )
 
@@ -1296,9 +1304,11 @@ class TenderVisibleBidsAPITests(TestCase):
                 tender_round=self.round,
                 workshop=workshop,
                 total_amount=1000000 - index * 10000,
+				final_amount=1000000 - index * 10000,
                 production_days=10,
                 delivery_days=5,
                 warranty_months=12,
+				status="submitted",
             )
 
 

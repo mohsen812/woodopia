@@ -1,4 +1,4 @@
-from django.db.models import Q
+﻿from django.db.models import Q
 from django.db import transaction
 from django.utils import timezone
 
@@ -27,6 +27,12 @@ from evaluation.reports import build_tender_report
 from projects.views import get_visible_projects
 
 from .visibility import tender_is_revealed
+from .authorization import (
+    get_participant_for_user,
+    has_consultant_tender_access,
+    has_customer_tender_access,
+    has_workshop_tender_access,
+)
 from .services import (
     award_tender,
     select_tender_bid,
@@ -632,9 +638,22 @@ class TenderParticipantResponseView(APIView):
     def post(self, request, pk):
 
         participant = get_object_or_404(
-            TenderParticipant,
+            TenderParticipant.objects.select_related(
+                "tender",
+                "organization",
+            ),
             id=pk,
         )
+
+        participant = get_participant_for_user(
+            request.user,
+            participant,
+        )
+
+        if participant is None:
+            raise NotFound(
+                "Tender participant not found."
+            )
 
         response_status = request.data.get(
             "response_status"
@@ -648,7 +667,6 @@ class TenderParticipantResponseView(APIView):
                 "وضعیت پاسخ معتبر نیست."
             )
 
-
         participant.response_status = response_status
         participant.responded_at = timezone.now()
 
@@ -659,9 +677,7 @@ class TenderParticipantResponseView(APIView):
             ]
         )
 
-
         bid_id = None
-
 
         if response_status == "accepted":
 
@@ -673,7 +689,6 @@ class TenderParticipantResponseView(APIView):
                 )
                 .first()
             )
-
 
             if active_round:
 
@@ -690,7 +705,6 @@ class TenderParticipantResponseView(APIView):
 
                 bid_id = bid.id
 
-
         return Response(
             {
                 "status": "ok",
@@ -699,6 +713,8 @@ class TenderParticipantResponseView(APIView):
                 "bid_id": bid_id,
             }
         )
+
+
 class WorkshopTenderInvitationListView(
     generics.ListAPIView
 ):
@@ -734,25 +750,52 @@ class TenderRoundListCreateView(
     generics.ListCreateAPIView
 ):
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
     serializer_class = TenderRoundCreateSerializer
 
-    def get_queryset(self):
+    def get_tender(self):
 
         tender_id = self.kwargs["tender_id"]
 
+        return get_object_or_404(
+            Tender.objects.select_related(
+                "project"
+            ),
+            id=tender_id,
+        )
+
+    def get_queryset(self):
+
+        tender = self.get_tender()
+
+        if not has_consultant_tender_access(
+            self.request.user,
+            tender,
+        ):
+            raise NotFound(
+                "Tender not found."
+            )
+
         return (
             TenderRound.objects
-            .filter(tender_id=tender_id)
+            .filter(tender=tender)
             .order_by("round_number")
         )
 
     def perform_create(self, serializer):
 
-        tender_id = self.kwargs["tender_id"]
+        tender = self.get_tender()
 
-        tender = Tender.objects.get(
-            id=tender_id
-        )
+        if not has_consultant_tender_access(
+            self.request.user,
+            tender,
+        ):
+            raise NotFound(
+                "Tender not found."
+            )
 
         serializer.save(
             tender=tender
@@ -764,32 +807,57 @@ class ConsultantSpecificationListCreateView(
 
     serializer_class = ConsultantSpecificationSerializer
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_tender(self):
+
+        tender_id = self.kwargs["tender_id"]
+
+        return get_object_or_404(
+            Tender.objects.select_related(
+                "project"
+            ),
+            id=tender_id,
+        )
 
     def get_queryset(self):
 
-        tender_id = self.kwargs["tender_id"]
+        tender = self.get_tender()
+
+        if not has_consultant_tender_access(
+            self.request.user,
+            tender,
+        ):
+            raise NotFound(
+                "Tender not found."
+            )
 
         return (
             ConsultantSpecification.objects
             .filter(
-                tender_id=tender_id
+                tender=tender
             )
             .order_by(
                 "row_number"
             )
         )
 
-
     def perform_create(
         self,
         serializer
     ):
 
-        tender_id = self.kwargs["tender_id"]
+        tender = self.get_tender()
 
-        tender = Tender.objects.get(
-            id=tender_id
-        )
+        if not has_consultant_tender_access(
+            self.request.user,
+            tender,
+        ):
+            raise NotFound(
+                "Tender not found."
+            )
 
         last_row = (
             ConsultantSpecification.objects
@@ -802,12 +870,10 @@ class ConsultantSpecificationListCreateView(
             .first()
         )
 
-
         next_row = 1
 
         if last_row:
             next_row = last_row.row_number + 1
-
 
         serializer.save(
             tender=tender,
@@ -1086,16 +1152,26 @@ class BidDetailView(
     generics.RetrieveAPIView
 ):
 
-    queryset = (
-        Bid.objects
-        .prefetch_related(
-            "items",
-            "payment_schedules",
-        )
-        .all()
-    )
+    permission_classes = [
+        IsAuthenticated
+    ]
 
     serializer_class = BidSerializer
+
+    def get_queryset(self):
+
+        return (
+            Bid.objects
+            .prefetch_related(
+                "items",
+                "payment_schedules",
+            )
+            .filter(
+                workshop__members__user=self.request.user,
+                workshop__members__status="active",
+            )
+            .distinct()
+        )
 class BidUpdateView(
     generics.UpdateAPIView
 ):
@@ -1122,6 +1198,21 @@ class BidUpdateView(
         # ------------------------------------------
         # BID MUST STILL BE EDITABLE
         # ------------------------------------------
+
+        participant_exists = (
+            TenderParticipant.objects.filter(
+                tender=bid.tender_round.tender,
+                organization=bid.workshop,
+            )
+            .exists()
+        )
+
+        if not participant_exists:
+
+            raise ValidationError(
+                "این کارگاه در این مناقصه شرکت داده نشده است."
+            )
+
 
         if bid.status != "draft":
 
@@ -1234,6 +1325,29 @@ class BidDiscountUpdateView(
         )
 
 
+        membership_exists = (
+            Membership.objects.filter(
+                user=request.user,
+                organization=bid.workshop,
+                status="active",
+            )
+            .exists()
+        )
+
+        if not membership_exists:
+
+            raise ValidationError(
+                "شما عضو فعال این کارگاه نیستید."
+            )
+
+
+        if bid.status != "draft":
+
+            raise ValidationError(
+                "این پیشنهاد دیگر قابل ویرایش نیست."
+            )
+
+
         discount_percentage = request.data.get(
             "discount_percentage"
         )
@@ -1316,6 +1430,10 @@ class BidItemCreateView(
 
     serializer_class = BidItemSerializer
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
 
     def perform_create(self, serializer):
 
@@ -1324,6 +1442,30 @@ class BidItemCreateView(
         bid = Bid.objects.get(
             id=bid_id
         )
+
+
+        if bid.status != "draft":
+
+            raise ValidationError(
+                "این پیشنهاد دیگر قابل ویرایش نیست."
+            )
+
+
+        membership_exists = (
+            Membership.objects.filter(
+                user=self.request.user,
+                organization=bid.workshop,
+                status="active",
+            )
+            .exists()
+        )
+
+        if not membership_exists:
+
+            raise ValidationError(
+                "شما عضو فعال این کارگاه نیستید."
+            )
+
 
         serializer.save(
             bid=bid
@@ -1367,12 +1509,39 @@ class PaymentScheduleListCreateView(generics.ListCreateAPIView):
 
     serializer_class = PaymentScheduleSerializer
 
-    def get_queryset(self):
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_bid(self):
 
         bid_id = self.kwargs.get("bid_id")
 
+        return get_object_or_404(
+            Bid,
+            id=bid_id,
+        )
+
+
+    def get_queryset(self):
+
+        bid = self.get_bid()
+
+        membership_exists = (
+            Membership.objects.filter(
+                user=self.request.user,
+                organization=bid.workshop,
+                status="active",
+            )
+            .exists()
+        )
+
+        if not membership_exists:
+
+            return PaymentSchedule.objects.none()
+
         return PaymentSchedule.objects.filter(
-            bid_id=bid_id
+            bid=bid
         )
 
 
@@ -1410,6 +1579,7 @@ class TenderBidListView(
 
     serializer_class = BidSerializer
 
+
     def get_queryset(self):
 
         from .visibility import get_visible_bids
@@ -1418,19 +1588,58 @@ class TenderBidListView(
             "tender_id"
         )
 
-        tender = Tender.objects.get(
-            id=tender_id
+        tender = get_object_or_404(
+            Tender,
+            id=tender_id,
         )
 
         viewer_type = self.request.query_params.get(
             "viewer_type"
         )
 
+        if not self.request.user.is_authenticated:
+            return get_visible_bids(
+                tender,
+                viewer_type,
+            )
+
+
+        if viewer_type == "consultant":
+
+            if not has_consultant_tender_access(
+                self.request.user,
+                tender,
+            ):
+                return Bid.objects.none()
+
+
+        elif viewer_type == "customer":
+
+            if not has_customer_tender_access(
+                self.request.user,
+                tender,
+            ):
+                return Bid.objects.none()
+
+
+        elif viewer_type == "workshop":
+
+            if not has_workshop_tender_access(
+                self.request.user,
+                tender,
+            ):
+                return Bid.objects.none()
+
+
+        else:
+
+            return Bid.objects.none()
+
+
         return get_visible_bids(
             tender,
             viewer_type,
         )
-
 class AnonymousTenderBidListView(
     generics.ListAPIView
 ):

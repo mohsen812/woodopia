@@ -47,15 +47,19 @@ def normalize_higher_is_better(value, minimum, maximum):
 
 
 def evaluate_bids(bids):
+
     bids = list(bids)
 
     if not bids:
         return []
 
     valid_price = [
-        bid.final_amount
+        (
+            bid.final_amount
+            if bid.final_amount
+            else bid.total_amount
+        )
         for bid in bids
-        if bid.final_amount is not None
     ]
 
     valid_production = [
@@ -79,9 +83,16 @@ def evaluate_bids(bids):
     results = []
 
     for bid in bids:
+
+        bid_price = (
+            bid.final_amount
+            if bid.final_amount
+            else bid.total_amount
+        )
+
         price_score = (
             normalize_lower_is_better(
-                bid.final_amount,
+                bid_price,
                 min(valid_price),
                 max(valid_price),
             )
@@ -131,7 +142,7 @@ def evaluate_bids(bids):
                 "bid_id": bid.id,
                 "workshop_id": bid.workshop_id,
                 "workshop_name": bid.workshop.name,
-                "amount": bid.final_amount,
+                "amount": bid_price,
                 "production_days": bid.production_days,
                 "delivery_days": bid.delivery_days,
                 "warranty_months": bid.warranty_months,

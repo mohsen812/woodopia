@@ -105,10 +105,12 @@ def award_tender(tender_id, bid_id, user):
         tender.id
     )
 
+
     allowed_bid_ids = [
         item["bid_id"]
         for item in evaluation["results"][:3]
     ]
+
 
     if bid.id not in allowed_bid_ids:
         raise ValueError(
