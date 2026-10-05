@@ -310,7 +310,7 @@
 
                 const response =
                     await fetch(
-                        `/api/tenders/${tenderId}/specifications/`,
+                        `/api/tenders/${tenderId}/workshop-specifications/`,
                         {
                             credentials: "same-origin",
                             headers: {

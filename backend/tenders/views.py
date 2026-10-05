@@ -879,6 +879,58 @@ class ConsultantSpecificationListCreateView(
             tender=tender,
             row_number=next_row,
         )
+
+class WorkshopSpecificationListView(
+    generics.ListAPIView
+):
+
+    serializer_class = ConsultantSpecificationSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get_tender(self):
+
+        tender_id = self.kwargs["tender_id"]
+
+        return get_object_or_404(
+            Tender.objects.select_related(
+                "project"
+            ),
+            id=tender_id,
+        )
+
+    def get_queryset(self):
+
+        tender = self.get_tender()
+
+        workshop_access = (
+            TenderParticipant.objects
+            .filter(
+                tender=tender,
+                organization__organization_type="workshop",
+                response_status="accepted",
+                organization__members__user=self.request.user,
+                organization__members__status="active",
+            )
+            .exists()
+        )
+
+        if not workshop_access:
+            raise NotFound(
+                "Tender not found."
+            )
+
+        return (
+            ConsultantSpecification.objects
+            .filter(
+                tender=tender
+            )
+            .order_by(
+                "row_number"
+            )
+        )
 class SpecificationAttachmentListCreateView(
     generics.ListCreateAPIView
 ):
