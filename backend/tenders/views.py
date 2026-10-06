@@ -486,7 +486,7 @@ class TenderCloseView(
         })
 
 
-            
+
 class TenderParticipantListCreateView(
     generics.ListCreateAPIView
 ):
@@ -745,7 +745,7 @@ class WorkshopTenderInvitationListView(
             .order_by(
                 "-invited_at"
             )
-        )    
+        )
 class TenderRoundListCreateView(
     generics.ListCreateAPIView
 ):
@@ -1051,7 +1051,7 @@ class SpecificationAttachmentDeleteView(
                 customer__members__status="active",
             )
         ).exists()
-    
+
         if project_access:
             return specification
 
@@ -1293,7 +1293,382 @@ class BidUpdateView(
             )
 
 
-        serializer.save()    
+        serializer.save()
+
+class BidDraftSaveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        with transaction.atomic():
+            bid = get_object_or_404(
+                Bid.objects.select_for_update(),
+                id=pk,
+            )
+
+            tender = bid.tender_round.tender
+
+            # فقط صاحب همین پیشنهاد مجاز به ذخیره Draft است.
+            membership_exists = Membership.objects.filter(
+                user=request.user,
+                organization=bid.workshop,
+                status="active",
+            ).exists()
+
+            if not membership_exists:
+                raise ValidationError(
+                    "شما عضو فعال این کارگاه نیستید."
+                )
+
+            # کارگاه باید در مناقصه شرکت داده شده باشد.
+            participant_exists = TenderParticipant.objects.filter(
+                tender=tender,
+                organization=bid.workshop,
+            ).exists()
+
+            if not participant_exists:
+                raise ValidationError(
+                    "این کارگاه در این مناقصه شرکت داده نشده است."
+                )
+
+            # فقط Draft قابل ذخیره مجدد است.
+            if bid.status != "draft":
+                raise ValidationError(
+                    "این پیشنهاد دیگر قابل ذخیره به عنوان پیش‌نویس نیست."
+                )
+
+            data = request.data
+
+            # -------------------------------------------------
+            # 1. اطلاعات اصلی Bid
+            # -------------------------------------------------
+
+            bid_fields = [
+                "production_days",
+                "delivery_days",
+                "warranty_months",
+                "technical_notes",
+            ]
+
+            for field in bid_fields:
+                if field in data:
+                    setattr(bid, field, data[field])
+
+            if "discount_percentage" in data:
+                discount_percentage = data["discount_percentage"]
+
+                try:
+                    discount_percentage = Decimal(
+                        str(discount_percentage)
+                    )
+                except (InvalidOperation, TypeError, ValueError):
+                    raise ValidationError({
+                        "discount_percentage": "Invalid value."
+                    })
+
+                if discount_percentage < 0 or discount_percentage > 100:
+                    raise ValidationError({
+                        "discount_percentage": (
+                            "Discount must be between 0 and 100."
+                        )
+                    })
+
+                bid.discount_percentage = discount_percentage
+
+            # -------------------------------------------------
+            # 2. Bid Items
+            # -------------------------------------------------
+
+            items_data = data.get("items", [])
+
+            if not isinstance(items_data, list):
+                raise ValidationError({
+                    "items": "Items must be a list."
+                })
+
+            project_item_ids = []
+
+            for item_data in items_data:
+                if not isinstance(item_data, dict):
+                    raise ValidationError({
+                        "items": "Each item must be an object."
+                    })
+
+                project_item_id = item_data.get("project_item")
+
+                if not project_item_id:
+                    raise ValidationError({
+                        "items": "project_item is required."
+                    })
+
+                try:
+                    project_item_id = int(project_item_id)
+                except (TypeError, ValueError):
+                    raise ValidationError({
+                        "items": "Invalid project_item."
+                    })
+
+                project_item_ids.append(project_item_id)
+
+            # جلوگیری از duplicate project_item در payload
+            if len(project_item_ids) != len(set(project_item_ids)):
+                raise ValidationError({
+                    "items": "Duplicate project_item is not allowed."
+                })
+
+            # فقط ProjectItemهای همین Tender قابل ثبت هستند.
+            valid_project_item_ids = set(
+                tender.project.items.values_list(
+                    "id",
+                    flat=True,
+                )
+            )
+
+            invalid_project_item_ids = [
+                item_id
+                for item_id in project_item_ids
+                if item_id not in valid_project_item_ids
+            ]
+
+            if invalid_project_item_ids:
+                raise ValidationError({
+                    "items": (
+                        "One or more project items do not belong "
+                        "to this tender."
+                    )
+                })
+
+            # Upsert
+            existing_items = {
+                item.project_item_id: item
+                for item in bid.items.all()
+            }
+
+            for item_data in items_data:
+                project_item_id = int(item_data["project_item"])
+
+                quantity = item_data.get("quantity", 0)
+                unit_price = item_data.get("unit_price", 0)
+
+                try:
+                    quantity = Decimal(str(quantity))
+                    unit_price = Decimal(str(unit_price))
+                except (InvalidOperation, TypeError, ValueError):
+                    raise ValidationError({
+                        "items": (
+                            "Invalid quantity or unit_price."
+                        )
+                    })
+
+                if quantity < 0:
+                    raise ValidationError({
+                        "items": "Quantity cannot be negative."
+                    })
+
+                if unit_price < 0:
+                    raise ValidationError({
+                        "items": "Unit price cannot be negative."
+                    })
+
+                item = existing_items.get(project_item_id)
+
+                if item is None:
+                    item = BidItem(
+                        bid=bid,
+                        project_item_id=project_item_id,
+                    )
+
+                item.quantity = quantity
+                item.unit_price = unit_price
+                item.availability = (
+                    item_data.get("availability")
+                    or "available"
+                )
+                item.technical_notes = (
+                    item_data.get("technical_notes")
+                    or ""
+                )
+
+                item.save()
+
+            # حذف آیتم‌هایی که دیگر در Draft نیستند.
+            bid.items.exclude(
+                project_item_id__in=project_item_ids
+            ).delete()
+
+            # -------------------------------------------------
+            # 3. Discount / Total
+            # -------------------------------------------------
+
+            # BidItem.save() مجموع قیمت آیتم‌ها را روی Bid
+            # محاسبه می‌کند، اما برای حالتی که items خالی باشد
+            # باید صریحاً total را صفر کنیم.
+            if project_item_ids:
+                bid.refresh_from_db(
+                    fields=[
+                        "total_amount",
+                        "discount_amount",
+                        "final_amount",
+                    ]
+                )
+            else:
+                bid.total_amount = Decimal("0")
+                bid.calculate_final_amount()
+
+            # -------------------------------------------------
+            # 4. Payment Schedules
+            # -------------------------------------------------
+
+            payment_data = data.get("payment_schedules", [])
+
+            if not isinstance(payment_data, list):
+                raise ValidationError({
+                    "payment_schedules": (
+                        "Payment schedules must be a list."
+                    )
+                })
+
+            stage_orders = []
+
+            for stage_data in payment_data:
+                if not isinstance(stage_data, dict):
+                    raise ValidationError({
+                        "payment_schedules": (
+                            "Each payment schedule must be an object."
+                        )
+                    })
+
+                stage_order = stage_data.get("stage_order")
+
+                if stage_order is None:
+                    raise ValidationError({
+                        "payment_schedules": (
+                            "stage_order is required."
+                        )
+                    })
+
+                try:
+                    stage_order = int(stage_order)
+                except (TypeError, ValueError):
+                    raise ValidationError({
+                        "payment_schedules": (
+                            "Invalid stage_order."
+                        )
+                    })
+
+                if stage_order <= 0:
+                    raise ValidationError({
+                        "payment_schedules": (
+                            "stage_order must be greater than zero."
+                        )
+                    })
+
+                stage_orders.append(stage_order)
+
+            if len(stage_orders) != len(set(stage_orders)):
+                raise ValidationError({
+                    "payment_schedules": (
+                        "Duplicate stage_order is not allowed."
+                    )
+                })
+
+            existing_schedules = {
+                schedule.stage_order: schedule
+                for schedule in bid.payment_schedules.all()
+            }
+
+            for stage_data in payment_data:
+                stage_order = int(stage_data["stage_order"])
+
+                percentage = stage_data.get("percentage", 0)
+
+                try:
+                    percentage = Decimal(str(percentage))
+                except (InvalidOperation, TypeError, ValueError):
+                    raise ValidationError({
+                        "payment_schedules": (
+                            "Invalid percentage."
+                        )
+                    })
+
+                if percentage < 0:
+                    raise ValidationError({
+                        "payment_schedules": (
+                            "Percentage cannot be negative."
+                        )
+                    })
+
+                schedule = existing_schedules.get(stage_order)
+
+                if schedule is None:
+                    schedule = PaymentSchedule(
+                        bid=bid,
+                        stage_order=stage_order,
+                    )
+
+                schedule.title = (
+                    stage_data.get("title")
+                    or ""
+                )
+                schedule.percentage = percentage
+                schedule.amount = (
+                    bid.final_amount * percentage / Decimal("100")
+                )
+                schedule.description = (
+                    stage_data.get("description")
+                    or ""
+                )
+
+                schedule.save()
+
+            # حذف Stageهایی که از Draft حذف شده‌اند.
+            bid.payment_schedules.exclude(
+                stage_order__in=stage_orders
+            ).delete()
+
+            # -------------------------------------------------
+            # 5. ذخیره نهایی Bid
+            # -------------------------------------------------
+
+            bid.calculate_final_amount()
+
+            bid.save(
+                update_fields=[
+                    "production_days",
+                    "delivery_days",
+                    "warranty_months",
+                    "technical_notes",
+                        "discount_percentage",
+                        "discount_percentage",
+                        "discount_amount",
+                    "final_amount",
+                    "total_amount",
+                    "updated_at",
+                ]
+            )
+
+            # بعد از محاسبه نهایی، amount پرداخت‌ها را sync می‌کنیم.
+            for schedule in bid.payment_schedules.all():
+                schedule.amount = (
+                    bid.final_amount *
+                    schedule.percentage /
+                    Decimal("100")
+                )
+                schedule.save(update_fields=["amount"])
+
+            return Response({
+                "status": "saved",
+                "bid_id": bid.id,
+                "bid_status": bid.status,
+                "total_amount": bid.total_amount,
+                "discount_percentage": bid.discount_percentage,
+                "discount_amount": bid.discount_amount,
+                "final_amount": bid.final_amount,
+                "items_count": bid.items.count(),
+                "payment_schedules_count": (
+                    bid.payment_schedules.count()
+                ),
+            })
+
 class BidSubmitView(APIView):
 
     permission_classes = [
@@ -1354,7 +1729,7 @@ class BidSubmitView(APIView):
                 "bid_id": bid.id,
                 "bid_status": bid.status,
             }
-        )    
+        )
 class BidDiscountUpdateView(
     generics.GenericAPIView
 ):
@@ -1458,7 +1833,6 @@ class BidDiscountUpdateView(
 
         bid.save(
             update_fields=[
-                "discount_percentage",
                 "discount_amount",
                 "final_amount",
             ]
@@ -1473,7 +1847,7 @@ class BidDiscountUpdateView(
                 "discount_amount": bid.discount_amount,
                 "final_amount": bid.final_amount,
             }
-        )    
+        )
 class BidItemCreateView(
     generics.CreateAPIView
 ):

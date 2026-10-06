@@ -11,6 +11,7 @@ from .views import (
     BidCreateView,
     BidDetailView,
     BidUpdateView,
+    BidDraftSaveView,
     BidItemCreateView,
     PaymentScheduleListCreateView,
     TenderEvaluationView,
@@ -147,6 +148,11 @@ urlpatterns = [
         "bids/<int:pk>/update/",
         BidUpdateView.as_view(),
         name="bid-update"
+    ),
+    path(
+        "bids/<int:pk>/draft/",
+        BidDraftSaveView.as_view(),
+        name="bid-draft-save",
     ),
     path(
         "bids/<int:pk>/submit/",

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 
@@ -28,6 +29,7 @@ from .models import (
     TenderAward,
     CustomerTenderSelection,
     TenderParticipant,
+	PaymentSchedule,
 
 )
 from .services import get_visible_bids
@@ -1579,6 +1581,562 @@ class TenderParticipantResponseTests(TestCase):
         self.assertEqual(
             response.data["bid_status"],
             "submitted",
+        )
+
+class BidDraftSaveAPITests(TestCase):
+
+    def setUp(self):
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="draft_save_test",
+			email="draft_save_test@example.com",
+            password="test-password",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="draft_save_other",
+			email="draft_save_other@example.com",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Draft Save Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Draft Save Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.other_workshop = Organization.objects.create(
+            name="Other Draft Workshop",
+            organization_type="workshop",
+            owner=self.other_user,
+        )
+
+        Membership.objects.create(
+            user=self.user,
+            organization=self.workshop,
+            status="active",
+        )
+
+        Membership.objects.create(
+            user=self.other_user,
+            organization=self.other_workshop,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Draft Save Project",
+            description="test",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.project_item_1 = ProjectItem.objects.create(
+            project=self.project,
+            name="Draft Item 1",
+            description="item 1",
+            quantity=2,
+        )
+
+        self.project_item_2 = ProjectItem.objects.create(
+            project=self.project,
+            name="Draft Item 2",
+            description="item 2",
+            quantity=3,
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Draft Save Tender",
+            status="open",
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="open",
+        )
+
+        TenderParticipant.objects.create(
+            tender=self.tender,
+            organization=self.workshop,
+        )
+
+        self.bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            status="draft",
+        )
+
+        self.client = APIClient()
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+    def test_draft_save_creates_items_and_payment_schedules(self):
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "production_days": 20,
+                "delivery_days": 5,
+                "warranty_months": 12,
+                "technical_notes": "draft technical notes",
+                "discount_percentage": "3.5",
+                "items": [
+                    {
+                        "project_item": self.project_item_1.id,
+                        "quantity": 2,
+                        "unit_price": "1500000",
+                        "availability": "available",
+                        "technical_notes": "item notes",
+                    },
+                    {
+                        "project_item": self.project_item_2.id,
+                        "quantity": 3,
+                        "unit_price": "2000000",
+                        "availability": "available",
+                        "technical_notes": "",
+                    },
+                ],
+                "payment_schedules": [
+                    {
+                        "stage_order": 1,
+                        "title": "پیش‌پرداخت",
+                        "percentage": "30",
+                    },
+                    {
+                        "stage_order": 2,
+                        "title": "تحویل",
+                        "percentage": "70",
+                    },
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.bid.refresh_from_db()
+
+        self.assertEqual(
+            self.bid.production_days,
+            20,
+        )
+        self.assertEqual(
+            self.bid.delivery_days,
+            5,
+        )
+        self.assertEqual(
+            self.bid.warranty_months,
+            12,
+        )
+        self.assertEqual(
+            self.bid.technical_notes,
+            "draft technical notes",
+        )
+        self.assertEqual(
+            self.bid.discount_percentage,
+            Decimal("3.5"),
+        )
+
+        self.assertEqual(
+            self.bid.items.count(),
+            2,
+        )
+
+        self.assertEqual(
+            self.bid.payment_schedules.count(),
+            2,
+        )
+
+        self.assertEqual(
+            self.bid.total_amount,
+            Decimal("9000000"),
+        )
+
+        self.assertEqual(
+            self.bid.discount_amount,
+            Decimal("315000"),
+        )
+
+        self.assertEqual(
+            self.bid.final_amount,
+            Decimal("8685000"),
+        )
+
+    def test_second_draft_save_updates_existing_records_without_duplicates(self):
+
+        first_payload = {
+            "items": [
+                {
+                    "project_item": self.project_item_1.id,
+                    "quantity": 2,
+                    "unit_price": "1000000",
+                    "availability": "available",
+                },
+                {
+                    "project_item": self.project_item_2.id,
+                    "quantity": 3,
+                    "unit_price": "2000000",
+                    "availability": "available",
+                },
+            ],
+            "payment_schedules": [
+                {
+                    "stage_order": 1,
+                    "title": "مرحله اول",
+                    "percentage": "30",
+                },
+                {
+                    "stage_order": 2,
+                    "title": "مرحله دوم",
+                    "percentage": "70",
+                },
+            ],
+        }
+
+        first_response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            first_payload,
+            format="json",
+        )
+
+        self.assertEqual(first_response.status_code, 200)
+
+        first_item_ids = set(
+            self.bid.items.values_list("id", flat=True)
+        )
+
+        first_schedule_ids = set(
+            self.bid.payment_schedules.values_list("id", flat=True)
+        )
+
+        second_response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "production_days": 25,
+                "items": [
+                    {
+                        "project_item": self.project_item_1.id,
+                        "quantity": 5,
+                        "unit_price": "1200000",
+                        "availability": "available",
+                    },
+                    {
+                        "project_item": self.project_item_2.id,
+                        "quantity": 1,
+                        "unit_price": "2500000",
+                        "availability": "unavailable",
+                    },
+                ],
+                "payment_schedules": [
+                    {
+                        "stage_order": 1,
+                        "title": "مرحله اول اصلاح‌شده",
+                        "percentage": "40",
+                    },
+                    {
+                        "stage_order": 2,
+                        "title": "مرحله دوم اصلاح‌شده",
+                        "percentage": "60",
+                    },
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(second_response.status_code, 200)
+
+        self.bid.refresh_from_db()
+
+        self.assertEqual(
+            self.bid.production_days,
+            25,
+        )
+
+        self.assertEqual(
+            self.bid.items.count(),
+            2,
+        )
+
+        self.assertEqual(
+            self.bid.payment_schedules.count(),
+            2,
+        )
+
+        second_item_ids = set(
+            self.bid.items.values_list("id", flat=True)
+        )
+
+        second_schedule_ids = set(
+            self.bid.payment_schedules.values_list("id", flat=True)
+        )
+
+        self.assertEqual(
+            first_item_ids,
+            second_item_ids,
+        )
+
+        self.assertEqual(
+            first_schedule_ids,
+            second_schedule_ids,
+        )
+
+        updated_item = self.bid.items.get(
+            project_item=self.project_item_1
+        )
+
+        self.assertEqual(
+            updated_item.quantity,
+            Decimal("5"),
+        )
+
+        self.assertEqual(
+            updated_item.unit_price,
+            Decimal("1200000"),
+        )
+
+        updated_schedule = self.bid.payment_schedules.get(
+            stage_order=1
+        )
+
+        self.assertEqual(
+            updated_schedule.title,
+            "مرحله اول اصلاح‌شده",
+        )
+
+        self.assertEqual(
+            updated_schedule.percentage,
+            Decimal("40"),
+        )
+
+    def test_draft_save_deletes_removed_items_and_payment_stages(self):
+
+        BidItem.objects.create(
+            bid=self.bid,
+            project_item=self.project_item_1,
+            quantity=1,
+            unit_price=1000000,
+        )
+
+        BidItem.objects.create(
+            bid=self.bid,
+            project_item=self.project_item_2,
+            quantity=1,
+            unit_price=2000000,
+        )
+
+        PaymentSchedule.objects.create(
+            bid=self.bid,
+            stage_order=1,
+            title="مرحله اول",
+            percentage=30,
+            amount=0,
+        )
+
+        PaymentSchedule.objects.create(
+            bid=self.bid,
+            stage_order=2,
+            title="مرحله دوم",
+            percentage=70,
+            amount=0,
+        )
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "items": [
+                    {
+                        "project_item": self.project_item_1.id,
+                        "quantity": 2,
+                        "unit_price": "500000",
+                        "availability": "available",
+                    }
+                ],
+                "payment_schedules": [
+                    {
+                        "stage_order": 1,
+                        "title": "فقط مرحله اول",
+                        "percentage": "100",
+                    }
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            self.bid.items.count(),
+            1,
+        )
+
+        self.assertTrue(
+            self.bid.items.filter(
+                project_item=self.project_item_1
+            ).exists()
+        )
+
+        self.assertFalse(
+            self.bid.items.filter(
+                project_item=self.project_item_2
+            ).exists()
+        )
+
+        self.assertEqual(
+            self.bid.payment_schedules.count(),
+            1,
+        )
+
+        self.assertTrue(
+            self.bid.payment_schedules.filter(
+                stage_order=1
+            ).exists()
+        )
+
+        self.assertFalse(
+            self.bid.payment_schedules.filter(
+                stage_order=2
+            ).exists()
+        )
+
+    def test_other_workshop_cannot_save_bid(self):
+
+        self.client.force_authenticate(
+            user=self.other_user
+        )
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "production_days": 50,
+                "items": [],
+                "payment_schedules": [],
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.bid.refresh_from_db()
+
+        self.assertEqual(
+            self.bid.production_days,
+            None,
+        )
+
+    def test_submitted_bid_cannot_be_draft_saved(self):
+
+        self.bid.status = "submitted"
+        self.bid.save(update_fields=["status"])
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "production_days": 50,
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+    def test_incomplete_draft_is_allowed(self):
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "production_days": 10,
+                "items": [],
+                "payment_schedules": [
+                    {
+                        "stage_order": 1,
+                        "title": "پیش‌پرداخت",
+                        "percentage": "70",
+                    }
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.bid.refresh_from_db()
+
+        self.assertEqual(
+            self.bid.total_amount,
+            Decimal("0"),
+        )
+
+        self.assertEqual(
+            self.bid.payment_schedules.count(),
+            1,
+        )
+
+        self.assertEqual(
+            self.bid.payment_schedules.first().percentage,
+            Decimal("70"),
+        )
+
+    def test_project_item_from_another_tender_is_rejected(self):
+
+        other_project = Project.objects.create(
+            title="Other Project",
+            description="other",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        other_item = ProjectItem.objects.create(
+            project=other_project,
+            name="Other Item",
+            description="other item",
+            quantity=1,
+        )
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "items": [
+                    {
+                        "project_item": other_item.id,
+                        "quantity": 1,
+                        "unit_price": "1000000",
+                        "availability": "available",
+                    }
+                ],
+                "payment_schedules": [],
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.assertEqual(
+            self.bid.items.count(),
+            0,
         )
 
 class AnonymousTenderBidAPITests(TestCase):
