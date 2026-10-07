@@ -15,6 +15,7 @@ from .models import (
     ProjectZone,
     ProjectVisual,
     ProjectAttachment,
+    ProjectActivity,
 )
 
 
@@ -1208,4 +1209,154 @@ class ProjectCreateTests(TestCase):
         self.assertEqual(
             attachment.uploaded_by,
             self.user,
+        )
+class ProjectActivityTests(TestCase):
+
+    def test_project_activity_can_be_created(self):
+
+        user = User.objects.create_user(
+            username="activity_test_user",
+            password="testpass123",
+        )
+
+        customer = Organization.objects.create(
+            name="Activity Customer",
+            organization_type="customer",
+            owner=user,
+        )
+
+        project = Project.objects.create(
+            title="Activity Test Project",
+            description="Testing activity log",
+            customer=customer,
+            created_by=user,
+            status="draft",
+        )
+
+        activity = ProjectActivity.objects.create(
+            project=project,
+            event_type="project.created",
+            metadata={
+                "source": "test"
+            },
+        )
+
+        self.assertEqual(
+            activity.project,
+            project,
+        )
+
+        self.assertEqual(
+            activity.event_type,
+            "project.created",
+        )
+
+        self.assertEqual(
+            activity.metadata["source"],
+            "test",
+        )
+
+class ProjectActivityAPITests(TestCase):
+
+    def setUp(self):
+
+        self.client = APIClient()
+
+        self.user = User.objects.create_user(
+            username="activity_customer",
+	    email="activity_customer@example.com",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="activity_other",
+	    email="other_activity@example.com",
+            password="testpass123",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Activity Customer",
+            organization_type="customer",
+            status="active",
+            owner=self.user,
+        )
+
+        self.customer_role = OrganizationRole.objects.create(
+            name="activity_owner",
+            organization_type="customer",
+        )
+
+        Membership.objects.create(
+            user=self.user,
+            organization=self.customer,
+            role_fk=self.customer_role,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Activity Project",
+            description="Activity Test",
+            customer=self.customer,
+            created_by=self.user,
+            status="draft",
+        )
+
+        ProjectActivity.objects.create(
+            project=self.project,
+            actor=self.user,
+            event_type="project.created",
+            metadata={
+                "source": "test"
+            },
+        )
+
+
+    def test_customer_can_view_project_activity(self):
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/activity/".format(
+                self.project.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            len(response.data),
+            1,
+        )
+
+        self.assertEqual(
+            response.data[0]["event_type"],
+            "project.created",
+        )
+
+
+    def test_other_user_cannot_view_project_activity(self):
+
+        self.client.force_authenticate(
+            user=self.other_user
+        )
+
+        response = self.client.get(
+            "/api/projects/{}/activity/".format(
+                self.project.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            len(response.data),
+            0,
         )

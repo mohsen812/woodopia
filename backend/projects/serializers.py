@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db import transaction
 
 from .models import (
     Project,
@@ -6,7 +7,10 @@ from .models import (
     ProjectVisual,
     ProjectItem,
     ProjectAttachment,
+    ProjectActivity,
 )
+
+from .activity_service import create_project_activity
 
 from tenders.models import SpecificationAttachment
 
@@ -234,7 +238,6 @@ class ProjectFullSerializer(serializers.ModelSerializer):
 # =====================================
 # PROJECT CREATE SERIALIZER
 # =====================================
-
 class ProjectCreateSerializer(serializers.ModelSerializer):
 
     # Internal workspace/visual-engine value.
@@ -262,6 +265,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             "id",
         ]
 
+    @transaction.atomic
     def create(self, validated_data):
 
         # capacity_slot belongs to the internal visual engine.
@@ -317,6 +321,13 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             created_by=request.user,
             status="draft",
             **validated_data
+        )
+
+
+        create_project_activity(
+            project=project,
+            event_type="project.created",
+            actor=request.user,
         )
 
         # ---------------------------------
@@ -421,3 +432,32 @@ class ConsultantStandardizationSerializer(
     is_required = serializers.BooleanField(
         default=True
     )
+
+class ProjectActivitySerializer(serializers.ModelSerializer):
+
+    actor_username = serializers.SerializerMethodField()
+
+    class Meta:
+
+        model = ProjectActivity
+
+        fields = [
+            "id",
+            "event_type",
+            "metadata",
+            "actor_username",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+        ]
+
+
+    def get_actor_username(self, obj):
+
+        if obj.actor:
+            return obj.actor.username
+
+        return None

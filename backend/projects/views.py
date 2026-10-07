@@ -26,6 +26,7 @@ from .models import (
     ProjectAttachment,
     ProjectAssignment,
     ProjectItem,
+    ProjectActivity,
 )
 
 from tenders.models import SpecificationAttachment
@@ -42,6 +43,7 @@ from .serializers import (
     ProjectAttachmentSerializer,
     ProjectAttachmentCreateSerializer,
     ConsultantStandardizationSerializer,
+    ProjectActivitySerializer,
 )
 def get_visible_projects(user):
     """
@@ -293,6 +295,41 @@ class ProjectDetailView(
         # keep existing visibility rules.
         return get_visible_projects(user)
 
+class ProjectActivityListView(
+    generics.ListAPIView
+):
+
+    serializer_class = ProjectActivitySerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+
+    def get_queryset(self):
+
+        user = self.request.user
+
+        project_id = self.kwargs["pk"]
+
+        visible_project = get_visible_projects(
+            user
+        ).filter(
+            id=project_id
+        ).first()
+
+        if not visible_project:
+            return ProjectActivity.objects.none()
+
+        return (
+            ProjectActivity.objects
+            .filter(
+                project=visible_project
+            )
+            .select_related(
+                "actor"
+            )
+        )
 # =====================================
 # CONSULTANT STANDARDIZATION
 # =====================================

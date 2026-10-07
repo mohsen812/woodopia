@@ -231,6 +231,81 @@ class ProjectAssignment(models.Model):
             f"{self.project.title} - "
             f"{self.membership.user.username}"
         )
+class ProjectActivity(models.Model):
+
+    EVENT_TYPES = [
+        (
+            "project.created",
+            "Project created",
+        ),
+        (
+            "project.sent_to_consultant",
+            "Project sent to consultant",
+        ),
+        (
+            "project.consultant_claimed",
+            "Project claimed by consultant",
+        ),
+    ]
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="activities",
+    )
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="project_activities",
+    )
+
+    event_type = models.CharField(
+        max_length=100,
+        choices=EVENT_TYPES,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+
+        ordering = [
+            "-created_at",
+            "-id",
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "project",
+                    "-created_at",
+                ]
+            ),
+            models.Index(
+                fields=[
+                    "event_type",
+                    "-created_at",
+                ]
+            ),
+        ]
+
+    def __str__(self):
+
+        return (
+            f"{self.project_id} - "
+            f"{self.event_type}"
+        )
+
+
 class SubProjectType(models.Model):
 
     name = models.CharField(

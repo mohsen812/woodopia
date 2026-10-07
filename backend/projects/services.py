@@ -3,6 +3,8 @@ from django.db import transaction
 from organizations.models import Membership
 
 from .models import Project, ProjectAssignment
+from .activity_service import create_project_activity
+
 
 
 def get_consultant_queue():
@@ -45,7 +47,15 @@ def send_project_to_consultant(project):
         ]
     )
 
+    create_project_activity(
+        project=project,
+        event_type="project.sent_to_consultant",
+    )
+
     return project
+
+
+
 @transaction.atomic
 def claim_project(project, membership):
     """
@@ -89,12 +99,22 @@ def claim_project(project, membership):
             "Project has already been claimed."
         )
 
-    return ProjectAssignment.objects.create(
+    assignment = ProjectAssignment.objects.create(
         project=project,
         membership=membership,
         assigned_by=None,
         status="active",
     )
+
+    create_project_activity(
+        project=project,
+        event_type="project.consultant_claimed",
+        actor=membership.user,
+    )
+
+    return assignment
+
+
 def get_consultant_projects(membership):
     """
     Return projects assigned to a consultant.

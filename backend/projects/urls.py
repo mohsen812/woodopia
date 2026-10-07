@@ -8,8 +8,9 @@ from .views import (
     ProjectTenderView,
     ProjectTenderSelectWinnerView,
     ProjectAttachmentListCreateView,
-	ProjectFileCenterView,
+    ProjectFileCenterView,
     ProjectAttachmentDeleteView,
+    ProjectActivityListView,
     SendProjectToConsultantView,
     ConsultantDashboardView,
     ConsultantQueueView,
@@ -111,6 +112,12 @@ urlpatterns = [
         "<int:pk>/send-to-consultant/",
         SendProjectToConsultantView.as_view(),
         name="project-send-consultant",
+    ),
+
+    path(
+        "<int:pk>/activity/",
+        ProjectActivityListView.as_view(),
+        name="project-activity",
     ),
     # =====================================
     # PROJECT DETAIL
