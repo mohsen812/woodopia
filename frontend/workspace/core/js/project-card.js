@@ -5,7 +5,239 @@
 ============================================================
 */
 
+/*
+============================================================
+ PROJECT PROGRESS HELPERS
+============================================================
+*/
 
+function getProjectProgressStage(progress) {
+
+    if (!progress || !Array.isArray(progress.stages)) {
+        return null;
+    }
+
+    return progress.stages.find(
+        stage => stage.key === progress.current_stage
+    ) || null;
+}
+
+
+function getProjectProgressStateClass(state) {
+
+    switch (state) {
+
+        case "current":
+            return "current";
+
+        case "completed":
+            return "completed";
+
+        case "attention":
+            return "attention";
+
+        case "blocked":
+            return "blocked";
+
+        case "upcoming":
+        default:
+            return "pending";
+    }
+}
+
+
+function getProjectProgressStateIcon(state) {
+
+    switch (state) {
+
+        case "completed":
+            return "✓";
+
+        case "current":
+            return "●";
+
+        case "attention":
+            return "!";
+
+        case "blocked":
+            return "×";
+
+        case "upcoming":
+        default:
+            return "";
+    }
+}
+
+
+function renderProjectProgress(progress) {
+
+    if (!progress || !Array.isArray(progress.stages)) {
+
+        return `
+            <div class="project-progress-empty">
+                اطلاعات روند پروژه در دسترس نیست.
+            </div>
+        `;
+    }
+
+
+    const currentStage =
+        getProjectProgressStage(progress);
+
+
+    const currentStageLabel =
+        currentStage
+            ? currentStage.label
+            : "وضعیت نامشخص";
+
+
+    const stagesHtml =
+        progress.stages.map(stage => {
+
+            const stateClass =
+                getProjectProgressStateClass(
+                    stage.state
+                );
+
+            const stateIcon =
+                getProjectProgressStateIcon(
+                    stage.state
+                );
+
+            return `
+                <div
+                    class="project-progress-step ${stateClass}"
+                    data-progress-stage="${escapeHtml(stage.key)}"
+                >
+
+                    <div class="project-progress-node">
+
+                        <span>
+                            ${stateIcon}
+                        </span>
+
+                    </div>
+
+                    <div class="project-progress-label">
+
+                        ${escapeHtml(
+                            stage.label || ""
+                        )}
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+
+
+    const nextAction =
+        progress.next_action &&
+        progress.next_action.required
+            ? progress.next_action
+            : null;
+
+
+    const nextActionHtml =
+        nextAction
+            ? `
+                <div class="project-progress-next-action">
+
+                    <span class="eyebrow">
+                        NEXT ACTION
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            nextAction.title ||
+                            "اقدام بعدی"
+                        )}
+                    </strong>
+
+                </div>
+            `
+            : "";
+
+
+    const timing =
+        progress.timing || null;
+
+
+    const timingHtml =
+        timing && timing.value
+            ? `
+                <div class="project-progress-timing">
+
+                    <span>
+                        ${escapeHtml(
+                            timing.label ||
+                            "زمان"
+                        )}
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            timing.value
+                        )}
+                    </strong>
+
+                </div>
+            `
+            : "";
+
+
+    return `
+        <div
+            class="project-progress"
+            data-current-stage="${escapeHtml(
+                progress.current_stage || ""
+            )}"
+        >
+
+            <div class="project-progress-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        PROJECT PROGRESS
+                    </span>
+
+                    <h3>
+                        ${escapeHtml(
+                            currentStageLabel
+                        )}
+                    </h3>
+
+                </div>
+
+                <div class="project-progress-health">
+                    ${escapeHtml(
+                        progress.health || "on_track"
+                    )}
+                </div>
+
+            </div>
+
+
+            <div class="project-progress-track">
+
+                ${stagesHtml}
+
+            </div>
+
+
+            <div class="project-progress-context">
+
+                ${nextActionHtml}
+
+                ${timingHtml}
+
+            </div>
+
+        </div>
+    `;
+}
 /*
 ============================================================
  CREATE PROJECT CARD
@@ -32,19 +264,15 @@ function createProjectCard(project) {
             ? project.specification_attachments.length
             : 0);
 
-    const statusLabels = {
-        draft: "پیش‌نویس",
-        consulting: "در حال مشاوره",
-        tender: "در مناقصه",
-        production: "در حال تولید",
-        completed: "تکمیل شده",
-        cancelled: "لغو شده"
-    };
+    const currentProgressStage =
+        getProjectProgressStage(
+            project.progress
+        );
 
     const statusLabel =
-        statusLabels[project.status] ||
-        project.status ||
-        "در انتظار";
+        currentProgressStage
+            ? currentProgressStage.label
+            : "وضعیت نامشخص";
 
     const budget = Number(project.estimated_budget || 0);
 
@@ -238,7 +466,15 @@ function showProject(project) {
 
     }
 
+    const summaryProgressStage =
+        getProjectProgressStage(
+            project.progress
+        );
 
+    const summaryStatusLabel =
+        summaryProgressStage
+            ? summaryProgressStage.label
+            : "وضعیت نامشخص";
     detail.innerHTML = `
 
         <div class="project-summary">
@@ -264,8 +500,7 @@ function showProject(project) {
 
                 <strong>
                     ${escapeHtml(
-                        project.status ||
-                        "نامشخص"
+                       summaryStatusLabel
                     )}
                 </strong>
 
@@ -298,22 +533,6 @@ function showProject(project) {
 
                     <strong>
                         #${project.id}
-                    </strong>
-
-                </div>
-
-
-                <div class="project-meta-item">
-
-                    <span>
-                        وضعیت
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            project.status ||
-                            "—"
-                        )}
                     </strong>
 
                 </div>
@@ -723,56 +942,10 @@ function openProjectDetail(project) {
     PROJECT DETAIL CONTENT
     --------------------------------------------------------
     */
-
-    const projectProgressStages = [
-        { key: "draft", label: "ایجاد پروژه" },
-        { key: "consulting", label: "مشاوره" },
-        { key: "tender", label: "مناقصه" },
-        { key: "production", label: "تولید" },
-        { key: "completed", label: "تکمیل" }
-    ];
-
-    const projectCurrentStatus = project.status || "draft";
-    const projectCurrentIndex =
-        projectProgressStages.findIndex(
-            stage => stage.key === projectCurrentStatus
-        );
-
-    const projectProgressHtml =
-        projectProgressStages.map((stage, index) => {
-            const isCompleted =
-                projectCurrentIndex >= 0 &&
-                index < projectCurrentIndex;
-
-            const isCurrent =
-                projectCurrentIndex === index;
-
-            const stateClass =
-                isCurrent
-                    ? "current"
-                    : (isCompleted ? "completed" : "pending");
-
-            return `
-                <div class="project-progress-step ${stateClass}">
-                    <div class="project-progress-node">
-                        <span>${isCompleted ? "✓" : (isCurrent ? "●" : "")}</span>
-                    </div>
-                    <div class="project-progress-label">
-                        ${stage.label}
-                    </div>
-                </div>
-            `;
-        }).join("");
-
-    const projectProgressCancelledHtml =
-        projectCurrentStatus === "cancelled"
-            ? `
-                <div class="project-progress-cancelled">
-                    <span class="project-progress-cancelled-dot"></span>
-                    پروژه لغو شده
-                </div>
-              `
-            : "";
+const projectProgressHtml =
+    renderProjectProgress(
+        project.progress
+    );
 
     projectView.innerHTML = `
 
@@ -815,51 +988,15 @@ function openProjectDetail(project) {
 
                 <div>
 
-                    <span class="eyebrow">
-                        PROJECT STATUS
-                    </span>
+                    <div class="project-progress-section">
 
-                    <h3>
-                        وضعیت پروژه
-                    </h3>
+                        ${projectProgressHtml}
 
-                </div>
+                    </div>
 
 
-                <span class="project-status">
-
-                    ${escapeHtml(
-                        project.status ||
-                        "نامشخص"
-                    )}
-
-                </span>
-
-            </div>
-
-
-            <div class="project-progress-section">
-    <div class="project-progress-header">
-        <div>
-            <span class="eyebrow">PROJECT PROGRESS</span>
-            <h3>روند اجرای پروژه</h3>
-        </div>
-
-        <div class="project-progress-status">
-            ${escapeHtml(projectCurrentStatus)}
-        </div>
-    </div>
-
-    <div class="project-progress-track">
-        ${projectProgressHtml}
-    </div>
-
-                ${projectProgressCancelledHtml}
-        </div>
-
-
-        ${
-            projectCurrentStatus === "draft"
+                ${
+                    project.status === "draft"
                 ? `
                     <div class="project-consultant-action">
 
@@ -922,22 +1059,6 @@ function openProjectDetail(project) {
 
                     <strong>
                         #${project.id}
-                    </strong>
-
-                </div>
-
-
-                <div class="project-meta-item">
-
-                    <span>
-                        وضعیت
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            project.status ||
-                            "—"
-                        )}
                     </strong>
 
                 </div>

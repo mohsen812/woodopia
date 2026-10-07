@@ -464,6 +464,12 @@ class TenderCloseView(
                     ]
                 )
 
+                Bid.objects.filter(
+                    tender_round=active_round,
+                    status="draft",
+                ).update(
+                    status="expired"
+                )
             # ---------------------------------
             # CLOSE TENDER
             # ---------------------------------
@@ -652,20 +658,38 @@ class TenderParticipantResponseView(APIView):
 
         if participant is None:
             raise NotFound(
-                "Tender participant not found."
-            )
+			    "Tender participant not found."
+				)
 
         response_status = request.data.get(
-            "response_status"
-        )
+		"response_status"
+		)
 
         if response_status not in [
-            "accepted",
-            "declined",
+		    "accepted",
+			"declined"
         ]:
             raise ValidationError(
                 "وضعیت پاسخ معتبر نیست."
             )
+
+        active_round = None
+
+        if response_status == "accepted":
+            active_round = (
+                TenderRound.objects
+                .filter(
+                    tender=participant.tender,
+                    status="open",
+                )
+                .order_by("round_number")
+                .first()
+            )
+
+            if active_round is None:
+                raise ValidationError(
+                    "مهلت پاسخ و ارسال پیشنهاد به پایان رسیده است."
+                )
 
         participant.response_status = response_status
         participant.responded_at = timezone.now()
@@ -681,39 +705,27 @@ class TenderParticipantResponseView(APIView):
 
         if response_status == "accepted":
 
-            active_round = (
-                TenderRound.objects
-                .filter(
-                    tender=participant.tender,
-                    status="open",
+            bid, created = (
+                Bid.objects
+                .get_or_create(
+                    tender_round=active_round,
+                    workshop=participant.organization,
+                    defaults={
+                        "status": "draft"
+                    },
                 )
-                .first()
             )
 
-            if active_round:
-
-                bid, created = (
-                    Bid.objects
-                    .get_or_create(
-                        tender_round=active_round,
-                        workshop=participant.organization,
-                        defaults={
-                            "status": "draft",
-                        }
-                    )
-                )
-
-                bid_id = bid.id
+            bid_id = bid.id
 
         return Response(
-            {
-                "status": "ok",
-                "participant_id": participant.id,
-                "response_status": participant.response_status,
-                "bid_id": bid_id,
+		    {
+            "status": "ok",
+            "participant_id": participant.id,
+            "response_status": participant.response_status,
+            "bid_id": bid_id,
             }
         )
-
 
 class WorkshopTenderInvitationListView(
     generics.ListAPIView
@@ -1336,6 +1348,12 @@ class BidDraftSaveView(APIView):
                     "این پیشنهاد دیگر قابل ذخیره به عنوان پیش‌نویس نیست."
                 )
 
+            # بعد از بسته‌شدن Round، Draft دیگر قابل ویرایش نیست.
+            if bid.tender_round.status != "open":
+                raise ValidationError(
+                    "مهلت ارسال پیشنهاد به پایان رسیده است."
+                )
+
             data = request.data
 
             # -------------------------------------------------
@@ -1705,7 +1723,11 @@ class BidSubmitView(APIView):
             raise ValidationError(
                 "این پیشنهاد قبلاً ارسال شده یا قابل ارسال نیست."
             )
+        if bid.tender_round.status != "open":
 
+            raise ValidationError(
+                "مهلت ارسال پیشنهاد به پایان رسیده است."
+            )
 
         if not bid.items.exists():
 

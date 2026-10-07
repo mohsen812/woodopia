@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.db import transaction
 
+from .services import get_project_progress
+
 from .models import (
     Project,
     ProjectZone,
@@ -191,6 +193,17 @@ class ProjectFullSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
+    progress = serializers.SerializerMethodField()
+
+    def get_progress(self, obj):
+        request = self.context.get("request")
+        user = request.user if request else None
+
+        return get_project_progress(
+            project=obj,
+            user=user,
+        )
+
     specification_attachments = serializers.SerializerMethodField()
     
     items = ProjectItemSerializer(
@@ -232,6 +245,7 @@ class ProjectFullSerializer(serializers.ModelSerializer):
             "zones",
             "attachments",
             "specification_attachments",
+			"progress",
         ]
 
 

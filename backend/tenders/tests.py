@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 
@@ -12,10 +12,12 @@ from rest_framework.test import APIClient
 from organizations.models import (
     Organization,
     Membership,
+    OrganizationRole,
 )
 from projects.models import (
     Project,
     ProjectItem,
+    ProjectAssignment,
 )
 
 from datetime import timedelta
@@ -1439,6 +1441,133 @@ class TenderRevealWorkflowTests(TestCase):
                 self.tender.id
             )
 
+class TenderCloseLifecycleTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.consultant_user = User.objects.create_user(
+            username="tender_close_consultant",
+            email="tender-close-consultant@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Tender Close Customer",
+            organization_type="customer",
+            owner=self.consultant_user,
+        )
+
+        self.company = Organization.objects.create(
+            name="FEEMAAS Internal",
+            organization_type="company",
+            owner=self.consultant_user,
+        )
+
+        self.workshop_draft = Organization.objects.create(
+            name="Workshop Draft",
+            organization_type="workshop",
+            owner=self.consultant_user,
+        )
+
+        self.workshop_submitted = Organization.objects.create(
+            name="Workshop Submitted",
+            organization_type="workshop",
+            owner=self.consultant_user,
+        )
+
+        consultant_role = OrganizationRole.objects.create(
+            name="consultant",
+            organization_type="company",
+        )
+
+        consultant_membership = Membership.objects.create(
+            user=self.consultant_user,
+            organization=self.company,
+            role_fk=consultant_role,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Tender Close Lifecycle Project",
+            description="Test project for tender close lifecycle.",
+            customer=self.customer,
+            created_by=self.consultant_user,
+            status="tender",
+        )
+
+        ProjectAssignment.objects.create(
+            project=self.project,
+            membership=consultant_membership,
+            assigned_by=self.consultant_user,
+            status="active",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Tender Close Lifecycle Tender",
+            description="Test tender close lifecycle.",
+            status="open",
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="open",
+            started_at=timezone.now(),
+        )
+
+        self.draft_bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop_draft,
+            status="draft",
+        )
+
+        self.submitted_bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop_submitted,
+            status="submitted",
+        )
+
+        self.client = APIClient()
+        self.client.force_authenticate(
+            user=self.consultant_user
+        )
+
+    def test_close_expires_draft_bids_but_keeps_submitted_bids(self):
+        response = self.client.post(
+            "/api/tenders/{}/close/".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.round.refresh_from_db()
+        self.tender.refresh_from_db()
+        self.draft_bid.refresh_from_db()
+        self.submitted_bid.refresh_from_db()
+
+        self.assertEqual(
+            self.round.status,
+            "closed",
+        )
+
+        self.assertEqual(
+            self.tender.status,
+            "closed",
+        )
+
+        self.assertEqual(
+            self.draft_bid.status,
+            "expired",
+        )
+
+        self.assertEqual(
+            self.submitted_bid.status,
+            "submitted",
+        )
+
 class TenderParticipantResponseTests(TestCase):
 
     def setUp(self):
@@ -1545,6 +1674,47 @@ class TenderParticipantResponseTests(TestCase):
             bid.status,
             "draft",
         )
+    def test_accept_fails_when_round_is_closed(self):
+
+        self.round.status = "closed"
+        self.round.closed_at = timezone.now()
+        self.round.save(
+            update_fields=[
+                "status",
+                "closed_at",
+            ]
+        )
+
+        response = self.client.post(
+            f"/api/tenders/participants/{self.participant.id}/respond/",
+            {
+                "response_status": "accepted"
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.participant.refresh_from_db()
+
+        self.assertIsNone(
+            self.participant.responded_at,
+        )
+
+        self.assertNotEqual(
+            self.participant.response_status,
+            "accepted",
+        )
+
+        self.assertFalse(
+            Bid.objects.filter(
+                tender_round=self.round,
+                workshop=self.workshop,
+            ).exists()
+        )
     def test_submit_draft_bid(self):
 
         bid = Bid.objects.create(
@@ -1581,6 +1751,47 @@ class TenderParticipantResponseTests(TestCase):
         self.assertEqual(
             response.data["bid_status"],
             "submitted",
+        )
+    def test_submit_draft_bid_fails_when_round_is_closed(self):
+
+        bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            status="draft",
+        )
+
+        BidItem.objects.create(
+            bid=bid,
+            project_item=self.project_item,
+            quantity=1,
+            unit_price=1000000,
+        )
+
+        self.round.status = "closed"
+        self.round.closed_at = timezone.now()
+        self.round.save(
+            update_fields=[
+                "status",
+                "closed_at",
+            ]
+        )
+
+        response = self.client.post(
+            f"/api/tenders/bids/{bid.id}/submit/",
+            {},
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        bid.refresh_from_db()
+
+        self.assertEqual(
+            bid.status,
+            "draft",
         )
 
 class BidDraftSaveAPITests(TestCase):
@@ -2138,6 +2349,43 @@ class BidDraftSaveAPITests(TestCase):
             self.bid.items.count(),
             0,
         )
+    def test_draft_save_fails_when_round_is_closed(self):
+
+        self.round.status = "closed"
+        self.round.closed_at = timezone.now()
+        self.round.save(
+            update_fields=[
+                "status",
+                "closed_at",
+            ]
+        )
+
+        response = self.client.patch(
+            f"/api/tenders/bids/{self.bid.id}/draft/",
+            {
+                "production_days": 30,
+                "technical_notes": "should not save",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.bid.refresh_from_db()
+
+        self.assertEqual(
+            self.bid.production_days,
+            None,
+        )
+
+        self.assertEqual(
+            self.bid.technical_notes,
+            "",
+        )
+
 
 class AnonymousTenderBidAPITests(TestCase):
 

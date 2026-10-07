@@ -424,6 +424,7 @@ class Bid(models.Model):
         ("under_review", "Under Review"),
         ("selected", "Selected"),
         ("rejected", "Rejected"),
+        ("expired", "Expired"),
     ]
 
     status = models.CharField(

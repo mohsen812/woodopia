@@ -7,6 +7,10 @@
 
         currentTender: null,
 
+        draftSaveTimer: null,
+
+        draftSaving: false,
+
         currentBidId: null,
 
         currentBid: null,
@@ -997,7 +1001,9 @@
         bindSpecificationEvents: function () {
 
             document
-                .querySelectorAll("[data-unit-price]")
+                .querySelectorAll(
+                    "[data-unit-price]"
+                )
                 .forEach((input) => {
 
                     input.addEventListener(
@@ -1007,6 +1013,43 @@
                             this.updateTotals();
                             this.updateFinalAmount();
                             this.updatePaymentAmounts();
+                            this.scheduleDraftSave();
+
+                        }
+                    );
+
+                });
+
+
+            document
+                .querySelectorAll(
+                    "[data-availability]"
+                )
+                .forEach((input) => {
+
+                    input.addEventListener(
+                        "change",
+                        () => {
+
+                            this.scheduleDraftSave();
+
+                        }
+                    );
+
+                });
+
+
+            document
+                .querySelectorAll(
+                    "[data-technical-notes]"
+                )
+                .forEach((input) => {
+
+                    input.addEventListener(
+                        "input",
+                        () => {
+
+                            this.scheduleDraftSave();
 
                         }
                     );
@@ -1027,6 +1070,83 @@
 
                         this.updateFinalAmount();
                         this.updatePaymentAmounts();
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const productionDays =
+                document.querySelector(
+                    "[data-production-days]"
+                );
+
+            if (productionDays) {
+
+                productionDays.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const deliveryDays =
+                document.querySelector(
+                    "[data-delivery-days]"
+                );
+
+            if (deliveryDays) {
+
+                deliveryDays.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const warrantyMonths =
+                document.querySelector(
+                    "[data-warranty-months]"
+                );
+
+            if (warrantyMonths) {
+
+                warrantyMonths.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const bidTechnicalNotes =
+                document.querySelector(
+                    "[data-bid-technical-notes]"
+                );
+
+            if (bidTechnicalNotes) {
+
+                bidTechnicalNotes.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
 
                     }
                 );
@@ -1070,6 +1190,8 @@
                             Number(stageCount.value) || 1
                         );
 
+                        this.scheduleDraftSave();
+
                     }
                 );
 
@@ -1095,7 +1217,6 @@
             }
 
         },
-
 
         updateTotals: function () {
 
@@ -1427,6 +1548,25 @@
                     )
                     .join("");
 
+
+            container
+                .querySelectorAll(
+                    "[data-payment-title]"
+                )
+                .forEach((input) => {
+
+                    input.addEventListener(
+                        "input",
+                        () => {
+
+                            this.scheduleDraftSave();
+
+                        }
+                    );
+
+                });
+
+
             container
                 .querySelectorAll(
                     "[data-payment-percentage]"
@@ -1438,16 +1578,17 @@
                         () => {
 
                             this.updatePaymentAmounts();
+                            this.scheduleDraftSave();
 
                         }
                     );
 
                 });
 
+
             this.updatePaymentAmounts();
 
         },
-
 
         updatePaymentAmounts: function () {
 
@@ -1678,6 +1819,157 @@
                 });
 
             return items;
+
+        },
+
+        scheduleDraftSave: function () {
+
+            clearTimeout(
+                this.draftSaveTimer
+            );
+
+            this.draftSaveTimer =
+                setTimeout(
+                    () => {
+                        this.saveDraft();
+                    },
+                    1500
+                );
+
+        },
+
+
+        saveDraft: async function () {
+
+            if (!this.currentBidId) {
+                return;
+            }
+
+            if (
+                this.currentBid &&
+                this.currentBid.status !== "draft"
+            ) {
+                return;
+            }
+
+            const discountInput =
+                document.querySelector(
+                    "[data-discount]"
+                );
+
+            const technicalNotesElement =
+                document.querySelector(
+                    "[data-bid-technical-notes]"
+                );
+
+            const payload = {
+
+                production_days:
+                    this.getNumberValue(
+                        "[data-production-days]"
+                    ),
+
+                delivery_days:
+                    this.getNumberValue(
+                        "[data-delivery-days]"
+                    ),
+
+                warranty_months:
+                    this.getNumberValue(
+                        "[data-warranty-months]"
+                    ),
+
+                technical_notes:
+                    technicalNotesElement
+                        ? technicalNotesElement.value.trim()
+                        : "",
+
+                discount_percentage:
+                    Number(
+                        discountInput &&
+                        discountInput.value
+                    ) || 0,
+
+                items:
+                    this.collectBidItems(),
+
+                payment_schedules:
+                    this.collectPaymentStages()
+
+            };
+
+            try {
+
+                this.draftSaving = true;
+
+                const response =
+                    await fetch(
+                        `/api/tenders/bids/${this.currentBidId}/draft/`,
+                        {
+                            method: "PATCH",
+
+                            credentials:
+                                "same-origin",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json",
+
+                                "X-CSRFToken":
+                                    this.getCSRFToken()
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+                        }
+                    );
+
+                const data =
+                    await this.readJSON(
+                        response
+                    );
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        this.extractError(
+                            data,
+                            "ذخیره پیش‌نویس انجام نشد."
+                        )
+                    );
+
+                }
+
+                this.currentBid =
+                    {
+                        ...this.currentBid,
+                        ...data
+                    };
+
+                console.log(
+                    "Workshop Tender Draft Saved:",
+                    data
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Workshop Tender Draft Save Error:",
+                    error
+                );
+
+            }
+            finally {
+
+                this.draftSaving = false;
+
+            }
 
         },
 
