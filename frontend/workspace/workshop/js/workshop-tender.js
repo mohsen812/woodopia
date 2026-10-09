@@ -11,6 +11,8 @@
 
         draftSaving: false,
 
+        draftSavePromise: null,
+
         currentBidId: null,
 
         currentBid: null,
@@ -1878,48 +1880,37 @@
         },
 
 
-        saveDraft: async function () {
+
+        saveDraft: function (throwOnError = false) {
 
             const bidId = this.currentBidId;
             const loadSequence = this.loadSequence;
 
-            if (!bidId) {
-                return;
-            }
-
             if (
-                this.currentBid &&
-                this.currentBid.status !== "draft"
+                !bidId ||
+                (
+                    this.currentBid &&
+                    this.currentBid.status !== "draft"
+                )
             ) {
-                return;
+                return Promise.resolve(false);
             }
 
             const discountInput =
-                document.querySelector(
-                    "[data-discount]"
-                );
+                document.querySelector("[data-discount]");
 
             const technicalNotesElement =
-                document.querySelector(
-                    "[data-bid-technical-notes]"
-                );
+                document.querySelector("[data-bid-technical-notes]");
 
             const payload = {
-
                 production_days:
-                    this.getNumberValue(
-                        "[data-production-days]"
-                    ),
+                    this.getNumberValue("[data-production-days]"),
 
                 delivery_days:
-                    this.getNumberValue(
-                        "[data-delivery-days]"
-                    ),
+                    this.getNumberValue("[data-delivery-days]"),
 
                 warranty_months:
-                    this.getNumberValue(
-                        "[data-warranty-months]"
-                    ),
+                    this.getNumberValue("[data-warranty-months]"),
 
                 technical_notes:
                     technicalNotesElement
@@ -1928,93 +1919,118 @@
 
                 discount_percentage:
                     Number(
-                        discountInput &&
-                        discountInput.value
+                        discountInput && discountInput.value
                     ) || 0,
 
-                items:
-                    this.collectBidItems(),
+                items: this.collectBidItems(),
 
                 payment_schedules:
                     this.collectPaymentStages()
-
             };
+
+            const previousSave =
+                this.draftSavePromise || Promise.resolve();
+
+            const savePromise = previousSave
+                .catch(() => false)
+                .then(() =>
+                    this.performDraftSave(
+                        bidId,
+                        loadSequence,
+                        payload,
+                        throwOnError
+                    )
+                );
+
+            this.draftSavePromise = savePromise;
+
+            return savePromise.finally(() => {
+                if (this.draftSavePromise === savePromise) {
+                    this.draftSavePromise = null;
+                }
+            });
+
+        },
+
+
+        performDraftSave: async function (
+            bidId,
+            loadSequence,
+            payload,
+            throwOnError = false
+        ) {
+
+            if (
+                this.currentBidId !== bidId ||
+                this.loadSequence !== loadSequence
+            ) {
+                return false;
+            }
 
             try {
 
                 this.draftSaving = true;
 
-                const response =
-                    await fetch(
-                        `/api/tenders/bids/${bidId}/draft/`,
-                        {
-                            method: "PATCH",
+                const response = await fetch(
+                    `/api/tenders/bids/${bidId}/draft/`,
+                    {
+                        method: "PATCH",
+                        credentials: "same-origin",
 
-                            credentials:
-                                "same-origin",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "X-CSRFToken": this.getCSRFToken()
+                        },
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json",
+                        body: JSON.stringify(payload)
+                    }
+                );
 
-                                "Accept":
-                                    "application/json",
-
-                                "X-CSRFToken":
-                                    this.getCSRFToken()
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    payload
-                                )
-                        }
-                    );
-
-                const data =
-                    await this.readJSON(
-                        response
-                    );
+                const data = await this.readJSON(response);
 
                 if (!response.ok) {
-
                     throw new Error(
                         this.extractError(
                             data,
                             "ذخیره پیش‌نویس انجام نشد."
                         )
                     );
-
                 }
 
                 if (
                     this.currentBidId !== bidId ||
                     this.loadSequence !== loadSequence
                 ) {
-                    return;
+                    return false;
                 }
 
-                this.currentBid =
-                    {
-                        ...this.currentBid,
-                        ...data
-                    };
+                this.currentBid = {
+                    ...this.currentBid,
+                    ...data
+                };
 
                 console.log(
                     "Workshop Tender Draft Saved:",
                     data
                 );
 
-            }
-            catch (error) {
+                return true;
+
+            } catch (error) {
 
                 console.error(
                     "Workshop Tender Draft Save Error:",
                     error
                 );
 
-            }
-            finally {
+                if (throwOnError) {
+                    throw error;
+                }
+
+                return false;
+
+            } finally {
 
                 if (
                     this.currentBidId === bidId &&
@@ -2029,6 +2045,9 @@
 
 
         submitBid: async function () {
+
+            const submitBidId = this.currentBidId;
+            const submitLoadSequence = this.loadSequence;
 
             if (!this.currentBidId) {
 
@@ -2151,42 +2170,6 @@
 
             }
 
-            const discountInput =
-                document.querySelector(
-                    "[data-discount]"
-                );
-
-            const discountPercentage =
-                Number(
-                    discountInput &&
-                    discountInput.value
-                ) || 0;
-
-            const productionDays =
-                this.getNumberValue(
-                    "[data-production-days]"
-                );
-
-            const deliveryDays =
-                this.getNumberValue(
-                    "[data-delivery-days]"
-                );
-
-            const warrantyMonths =
-                this.getNumberValue(
-                    "[data-warranty-months]"
-                );
-
-            const technicalNotesElement =
-                document.querySelector(
-                    "[data-bid-technical-notes]"
-                );
-
-            const technicalNotes =
-                technicalNotesElement
-                    ? technicalNotesElement.value.trim()
-                    : "";
-
             const confirmed =
                 await this.showSubmitConfirmation();
 
@@ -2211,113 +2194,45 @@
 
             try {
 
-                /*
-                 * ------------------------------------------
-                 * STEP 1
-                 * UPDATE BID BASIC INFORMATION
-                 * ------------------------------------------
-                 */
-
-                await this.updateBid({
-
-                    production_days:
-                        productionDays,
-
-                    delivery_days:
-                        deliveryDays,
-
-                    warranty_months:
-                        warrantyMonths,
-
-                    technical_notes:
-                        technicalNotes
-
-                });
-
 
                 /*
-                 * ------------------------------------------
-                 * STEP 2
-                 * UPDATE DISCOUNT
-                 * ------------------------------------------
+                 * SAVE THE LATEST FORM STATE
                  */
 
-                await this.updateDiscount(
-                    discountPercentage
-                );
+                clearTimeout(this.draftSaveTimer);
+                this.draftSaveTimer = null;
 
-
-                /*
-                 * ------------------------------------------
-                 * STEP 3
-                 * CREATE BID ITEMS
-                 * ------------------------------------------
-                 */
-
-                const existingItems =
-                    (
-                        this.currentBid &&
-                        Array.isArray(
-                            this.currentBid.items
-                        )
-                    )
-                    ? this.currentBid.items
-                    : [];
-
-                if (existingItems.length) {
-
-                    throw new Error(
-                        "این پیشنهاد قبلاً دارای ردیف‌های ثبت‌شده است. برای جلوگیری از ثبت تکراری، ارسال متوقف شد."
-                    );
-
-                }
-
-                for (
-                    const item of items
+                if (
+                    this.currentBidId !== submitBidId ||
+                    this.loadSequence !== submitLoadSequence
                 ) {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = "ارسال پیشنهاد";
+                    }
 
-                    await this.createBidItem(
-                        item
-                    );
-
+                    return;
                 }
 
+                const saved = await this.saveDraft(true);
 
-                /*
-                 * ------------------------------------------
-                 * STEP 4
-                 * CREATE PAYMENT SCHEDULES
-                 * ------------------------------------------
-                 */
-
-                const existingSchedules =
-                    (
-                        this.currentBid &&
-                        Array.isArray(
-                            this.currentBid.payment_schedules
-                        )
-                    )
-                    ? this.currentBid.payment_schedules
-                    : [];
-
-                if (existingSchedules.length) {
-
-                    throw new Error(
-                        "این پیشنهاد قبلاً دارای مراحل پرداخت ثبت‌شده است. برای جلوگیری از ثبت تکراری، ارسال متوقف شد."
-                    );
-
-                }
-
-                for (
-                    const stage of paymentStages
+                if (
+                    this.currentBidId !== submitBidId ||
+                    this.loadSequence !== submitLoadSequence
                 ) {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = "ارسال پیشنهاد";
+                    }
 
-                    await this.createPaymentSchedule(
-                        stage
-                    );
-
+                    return;
                 }
 
+                if (!saved) {
+                    throw new Error(
+                        "ذخیره آخرین تغییرات پیشنهاد انجام نشد؛ ارسال متوقف شد."
+                    );
+                }
 
                 /*
                  * ------------------------------------------
@@ -2328,7 +2243,7 @@
 
                 const submitResponse =
                     await fetch(
-                        `/api/tenders/bids/${this.currentBidId}/submit/`,
+                        `/api/tenders/bids/${submitBidId}/submit/`,
                         {
                             method: "POST",
 
@@ -2348,6 +2263,13 @@
                     await this.readJSON(
                         submitResponse
                     );
+
+                if (
+                    this.currentBidId !== submitBidId ||
+                    this.loadSequence !== submitLoadSequence
+                ) {
+                    return;
+                }
 
                 if (!submitResponse.ok) {
 

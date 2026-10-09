@@ -1743,7 +1743,6 @@ class BidDraftSaveView(APIView):
                     bid.payment_schedules.count()
                 ),
             })
-
 class BidSubmitView(APIView):
 
     permission_classes = [
@@ -1752,74 +1751,103 @@ class BidSubmitView(APIView):
 
     def post(self, request, pk):
 
-        bid = get_object_or_404(
-            Bid,
-            id=pk,
-        )
+        with transaction.atomic():
 
-        # workshop ownership check
-
-        membership_exists = (
-            Membership.objects
-            .filter(
-                user=request.user,
-                organization=bid.workshop,
-                status="active",
-            )
-            .exists()
-        )
-
-        if not membership_exists:
-            raise ValidationError(
-                "شما عضو فعال این کارگاه نیستید."
+            bid = get_object_or_404(
+                Bid.objects.select_for_update().select_related(
+                    "tender_round__tender"
+                ),
+                id=pk,
             )
 
-
-        if bid.status != "draft":
-
-            raise ValidationError(
-                "این پیشنهاد قبلاً ارسال شده یا قابل ارسال نیست."
-            )
-        if bid.tender_round.status != "open":
-
-            raise ValidationError(
-                "مهلت ارسال پیشنهاد به پایان رسیده است."
-            )
-
-        if not bid.items.exists():
-
-            raise ValidationError(
-                "حداقل یک آیتم قیمت باید ثبت شود."
+            # Active workshop membership check
+            membership_exists = (
+                Membership.objects
+                .filter(
+                    user=request.user,
+                    organization=bid.workshop,
+                    status="active",
+                )
+                .exists()
             )
 
-        payment_schedules = bid.payment_schedules.all()
+            if not membership_exists:
+                raise ValidationError(
+                    "شما عضو فعال این کارگاه نیستید."
+                )
 
-        if not payment_schedules.exists():
-            raise ValidationError(
-                "برای ارسال پیشنهاد، مراحل پرداخت را تعریف کنید."
+            # Tender participation check
+            participant_exists = (
+                TenderParticipant.objects
+                .filter(
+                    tender=bid.tender_round.tender,
+                    organization=bid.workshop,
+                )
+                .exists()
             )
 
-        total_percentage = sum(
-            (
-                Decimal(str(schedule.percentage))
+            if not participant_exists:
+                raise ValidationError(
+                    "این کارگاه در این مناقصه شرکت داده نشده است."
+                )
+
+            if bid.status != "draft":
+                raise ValidationError(
+                    "این پیشنهاد قبلاً ارسال شده یا قابل ارسال نیست."
+                )
+
+            if bid.tender_round.status != "open":
+                raise ValidationError(
+                    "مهلت ارسال پیشنهاد به پایان رسیده است."
+                )
+
+            items = bid.items.all()
+
+            if not items.exists():
+                raise ValidationError(
+                    "حداقل یک آیتم قیمت باید ثبت شود."
+                )
+
+            if not items.filter(total_price__gt=0).exists():
+                raise ValidationError(
+                    "جمع مبلغ پیشنهاد باید بیشتر از صفر باشد."
+                )
+
+            payment_schedules = bid.payment_schedules.all()
+
+            if not payment_schedules.exists():
+                raise ValidationError(
+                    "برای ارسال پیشنهاد، مراحل پرداخت را تعریف کنید."
+                )
+
+            if any(
+                Decimal(str(schedule.percentage)) <= Decimal("0")
                 for schedule in payment_schedules
-            ),
-            Decimal("0.00"),
-        )
+            ):
+                raise ValidationError(
+                    "درصد هر مرحله پرداخت باید بیشتر از صفر باشد."
+                )
 
-        if total_percentage != Decimal("100.00"):
-            raise ValidationError(
-                "مجموع درصد مراحل پرداخت باید دقیقاً ۱۰۰٪ باشد."
+            total_percentage = sum(
+                (
+                    Decimal(str(schedule.percentage))
+                    for schedule in payment_schedules
+                ),
+                Decimal("0.00"),
             )
 
-        bid.status = "submitted"
+            if total_percentage != Decimal("100.00"):
+                raise ValidationError(
+                    "مجموع درصد مراحل پرداخت باید دقیقاً ۱۰۰٪ باشد."
+                )
 
-        bid.save(
-            update_fields=[
-                "status",
-            ]
-        )
+            bid.status = "submitted"
 
+            bid.save(
+                update_fields=[
+                    "status",
+                ]
+            )
 
         return Response(
             {
@@ -1828,6 +1856,8 @@ class BidSubmitView(APIView):
                 "bid_status": bid.status,
             }
         )
+
+
 class BidDiscountUpdateView(
     generics.GenericAPIView
 ):
