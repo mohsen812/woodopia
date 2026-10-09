@@ -2691,3 +2691,89 @@ class AnonymousTenderBidAPITests(TestCase):
             self.submitted_bid.id,
             bid_ids,
         )
+
+
+class TenderOneOpenPerProjectTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="one_open_tender_test",
+            email="one-open-tender@test.local",
+            password="test-password",
+            is_staff=True,
+        )
+
+        self.customer = Organization.objects.create(
+            name="One Open Tender Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="One Open Tender Project",
+            description="Project for active tender tests.",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.open_tender = Tender.objects.create(
+            project=self.project,
+            title="Existing Open Tender",
+            description="The existing active tender.",
+            status="open",
+        )
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_open_tender_is_rejected_when_project_has_open_tender(self):
+        response = self.client.post(
+            "/api/tenders/",
+            {
+                "project": self.project.pk,
+                "title": "Second Open Tender",
+                "description": "This should be rejected.",
+                "status": "open",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(
+            Tender.objects.filter(
+                project=self.project,
+                status="open",
+            ).count(),
+            1,
+        )
+
+    def test_start_draft_tender_is_rejected_when_project_has_open_tender(self):
+        draft_tender = Tender.objects.create(
+            project=self.project,
+            title="Draft Tender",
+            description="This tender must remain a draft.",
+            status="draft",
+        )
+
+        response = self.client.post(
+            f"/api/tenders/{draft_tender.pk}/start/",
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        draft_tender.refresh_from_db()
+        self.assertEqual(draft_tender.status, "draft")
+
+        self.assertEqual(
+            Tender.objects.filter(
+                project=self.project,
+                status="open",
+            ).count(),
+            1,
+        )

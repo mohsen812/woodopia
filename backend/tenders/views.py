@@ -67,6 +67,7 @@ from .serializers import (
 
 )
 
+
 class TenderListCreateView(
     generics.ListCreateAPIView
 ):
@@ -78,6 +79,34 @@ class TenderListCreateView(
     )
 
     serializer_class = TenderSerializer
+
+    def perform_create(self, serializer):
+
+        project = serializer.validated_data["project"]
+        status = serializer.validated_data.get(
+            "status",
+            "draft",
+        )
+
+        with transaction.atomic():
+
+            # Serialize tender creation for this project.
+            Project.objects.select_for_update().get(
+                pk=project.pk
+            )
+
+            if (
+                status == "open"
+                and Tender.objects.filter(
+                    project_id=project.pk,
+                    status="open",
+                ).exists()
+            ):
+                raise ValidationError(
+                    "برای این پروژه یک مناقصه فعال وجود دارد."
+                )
+
+            serializer.save()
 
 
 class TenderDetailView(
@@ -286,6 +315,34 @@ class TenderStartView(
                 raise ValidationError(
                     "فقط مناقصه در وضعیت پیش‌نویس قابل شروع است."
                 )
+
+
+            # ---------------------------------
+            # PROJECT-LEVEL ACTIVE TENDER CHECK
+            # ---------------------------------
+
+            Project.objects.select_for_update().get(
+                pk=tender.project_id
+            )
+
+            active_tender_exists = (
+                Tender.objects
+                .filter(
+                    project_id=tender.project_id,
+                    status="open",
+                )
+                .exclude(pk=tender.pk)
+                .exists()
+            )
+
+            if active_tender_exists:
+
+                raise ValidationError(
+                    "برای این پروژه یک مناقصه فعال وجود دارد. "
+                    "ابتدا آن را ببندید."
+                )
+
+
 
             # ---------------------------------
             # STANDARDIZATION CHECK
