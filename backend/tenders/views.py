@@ -1735,6 +1735,25 @@ class BidSubmitView(APIView):
                 "حداقل یک آیتم قیمت باید ثبت شود."
             )
 
+        payment_schedules = bid.payment_schedules.all()
+
+        if not payment_schedules.exists():
+            raise ValidationError(
+                "برای ارسال پیشنهاد، مراحل پرداخت را تعریف کنید."
+            )
+
+        total_percentage = sum(
+            (
+                Decimal(str(schedule.percentage))
+                for schedule in payment_schedules
+            ),
+            Decimal("0.00"),
+        )
+
+        if total_percentage != Decimal("100.00"):
+            raise ValidationError(
+                "مجموع درصد مراحل پرداخت باید دقیقاً ۱۰۰٪ باشد."
+            )
 
         bid.status = "submitted"
 

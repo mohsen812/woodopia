@@ -1729,6 +1729,18 @@ class TenderParticipantResponseTests(TestCase):
             unit_price=1000000,
         )
 
+        for stage_order, percentage, title in [
+            (1, Decimal("30.00"), "پیش‌پرداخت"),
+            (2, Decimal("40.00"), "حین تولید"),
+            (3, Decimal("30.00"), "تحویل"),
+        ]:
+            PaymentSchedule.objects.create(
+                bid=bid,
+                stage_order=stage_order,
+                title=title,
+                percentage=percentage,
+            )
+
         response = self.client.post(
             f"/api/tenders/bids/{bid.id}/submit/",
             {},
@@ -1752,6 +1764,44 @@ class TenderParticipantResponseTests(TestCase):
             response.data["bid_status"],
             "submitted",
         )
+    def test_submit_draft_bid_fails_when_payment_total_is_not_100(self):
+
+        bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            status="draft",
+        )
+
+        BidItem.objects.create(
+            bid=bid,
+            project_item=self.project_item,
+            quantity=1,
+            unit_price=1000000,
+        )
+
+        for stage_order, percentage, title in [
+            (1, Decimal("40.00"), "مرحله اول"),
+            (2, Decimal("40.00"), "مرحله دوم"),
+            (3, Decimal("10.00"), "مرحله سوم"),
+        ]:
+            PaymentSchedule.objects.create(
+                bid=bid,
+                stage_order=stage_order,
+                title=title,
+                percentage=percentage,
+            )
+
+        response = self.client.post(
+            f"/api/tenders/bids/{bid.id}/submit/",
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        bid.refresh_from_db()
+        self.assertEqual(bid.status, "draft")
+
     def test_submit_draft_bid_fails_when_round_is_closed(self):
 
         bid = Bid.objects.create(

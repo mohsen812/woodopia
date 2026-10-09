@@ -15,6 +15,8 @@
 
         currentBid: null,
 
+        loadSequence: 0,
+
         specifications: [],
 
 
@@ -261,6 +263,16 @@
 
         loadForProject: async function (project) {
 
+            clearTimeout(this.draftSaveTimer);
+            this.draftSaveTimer = null;
+
+            this.currentTender = null;
+            this.currentBidId = null;
+            this.currentBid = null;
+            this.draftSaving = false;
+            this.specifications = [];
+            this.loadSequence += 1;
+
             const tenderId =
                 project &&
                 (
@@ -278,9 +290,7 @@
             }
 
             this.currentBidId =
-                project.bid_id ||
-                this.currentBidId ||
-                null;
+                project.bid_id || null;
 
             await this.loadTender(
                 tenderId,
@@ -294,6 +304,16 @@
             tenderId,
             bidId
         ) {
+
+            clearTimeout(this.draftSaveTimer);
+            this.draftSaveTimer = null;
+
+            const loadSequence = ++this.loadSequence;
+            this.currentTender = tenderId;
+            this.currentBidId = bidId || null;
+            this.currentBid = null;
+            this.draftSaving = false;
+            this.specifications = [];
 
             const container =
                 document.getElementById(
@@ -332,18 +352,16 @@
                 const data =
                     await response.json();
 
+                if (loadSequence !== this.loadSequence) {
+                    return;
+                }
+
                 this.specifications =
                     Array.isArray(data)
                         ? data
                         : (
                             data.results || []
                         );
-
-                this.currentTender =
-                    tenderId;
-
-                this.currentBidId =
-                    bidId || this.currentBidId;
 
                 console.log(
                     "Workshop Tender Loaded:",
@@ -365,11 +383,16 @@
                 }
 
                 await this.loadBid(
-                    this.currentBidId
+                    this.currentBidId,
+                    loadSequence
                 );
 
             }
             catch (error) {
+
+                if (loadSequence !== this.loadSequence) {
+                    return;
+                }
 
                 console.error(
                     "Tender specification error:",
@@ -385,7 +408,7 @@
         },
 
 
-        loadBid: async function (bidId) {
+        loadBid: async function (bidId, loadSequence) {
 
             try {
 
@@ -406,8 +429,17 @@
                     );
                 }
 
-                this.currentBid =
+                const bidData =
                     await response.json();
+
+                if (
+                    loadSequence !== undefined &&
+                    loadSequence !== this.loadSequence
+                ) {
+                    return;
+                }
+
+                this.currentBid = bidData;
 
                 console.log(
                     "Workshop Bid Loaded:",
@@ -420,6 +452,13 @@
 
             }
             catch (error) {
+
+                if (
+                    loadSequence !== undefined &&
+                    loadSequence !== this.loadSequence
+                ) {
+                    return;
+                }
 
                 console.error(
                     "Bid loading error:",
@@ -1841,7 +1880,10 @@
 
         saveDraft: async function () {
 
-            if (!this.currentBidId) {
+            const bidId = this.currentBidId;
+            const loadSequence = this.loadSequence;
+
+            if (!bidId) {
                 return;
             }
 
@@ -1904,7 +1946,7 @@
 
                 const response =
                     await fetch(
-                        `/api/tenders/bids/${this.currentBidId}/draft/`,
+                        `/api/tenders/bids/${bidId}/draft/`,
                         {
                             method: "PATCH",
 
@@ -1945,6 +1987,13 @@
 
                 }
 
+                if (
+                    this.currentBidId !== bidId ||
+                    this.loadSequence !== loadSequence
+                ) {
+                    return;
+                }
+
                 this.currentBid =
                     {
                         ...this.currentBid,
@@ -1967,7 +2016,12 @@
             }
             finally {
 
-                this.draftSaving = false;
+                if (
+                    this.currentBidId === bidId &&
+                    this.loadSequence === loadSequence
+                ) {
+                    this.draftSaving = false;
+                }
 
             }
 
