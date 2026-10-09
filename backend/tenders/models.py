@@ -456,24 +456,27 @@ class Bid(models.Model):
                 name="unique_workshop_bid_per_round",
             )
         ]
+
     def calculate_final_amount(self):
 
-        percentage = (
-            self.discount_percentage
-            if self.discount_percentage is not None
-            else Decimal("0")
+        total = Decimal(str(self.total_amount or 0))
+
+        percentage = Decimal(
+            str(self.discount_percentage or 0)
         )
 
-        self.discount_amount = (
-            self.total_amount *
-            percentage /
-            Decimal("100")
+        discount = (
+            total * percentage / Decimal("100")
+        )
+
+        self.discount_amount = discount.quantize(
+            Decimal("1")
         )
 
         self.final_amount = (
-            self.total_amount -
-            self.discount_amount
-        )
+            total - self.discount_amount
+        ).quantize(Decimal("1"))
+
     def __str__(self):
         return (
             f"{self.workshop.name} - "

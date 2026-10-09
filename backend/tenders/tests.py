@@ -2777,3 +2777,39 @@ class TenderOneOpenPerProjectTests(TestCase):
             ).count(),
             1,
         )
+
+class BidFinalAmountCalculationTests(TestCase):
+
+    def test_float_discount_percentage_is_converted_to_decimal(self):
+        bid = Bid(
+            total_amount=1000000,
+            discount_percentage=3.5,
+        )
+
+        bid.calculate_final_amount()
+
+        self.assertEqual(
+            bid.discount_amount,
+            Decimal("35000"),
+        )
+        self.assertEqual(
+            bid.final_amount,
+            Decimal("965000"),
+        )
+
+    def test_zero_discount_keeps_total_amount(self):
+        bid = Bid(
+            total_amount=1000000,
+            discount_percentage=0,
+        )
+
+        bid.calculate_final_amount()
+
+        self.assertEqual(
+            bid.discount_amount,
+            Decimal("0"),
+        )
+        self.assertEqual(
+            bid.final_amount,
+            Decimal("1000000"),
+        )
