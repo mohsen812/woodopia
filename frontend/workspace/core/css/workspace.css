@@ -5072,3 +5072,731 @@ body.project-file-center-preview-open {
     background: rgba(239,68,68,.65);
     box-shadow: 0 0 8px rgba(239,68,68,.18);
 }
+
+/* =========================================================
+   FEEMAAS — PROJECT DETAIL UI
+   Final visual layer
+   ========================================================= */
+
+#project-detail-view {
+    direction: rtl;
+}
+
+
+/* ---------------------------------------------------------
+   PAGE HEADING
+--------------------------------------------------------- */
+
+#project-detail-view .page-heading {
+    position: relative;
+    margin-bottom: 18px;
+    padding: 18px 20px 16px;
+    border: 1px solid rgba(255, 255, 255, .065);
+    border-radius: 16px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, .025),
+            rgba(91, 239, 220, .018)
+        );
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, .18),
+        inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+#project-detail-view .page-heading .eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #58e8d4;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    direction: ltr;
+    text-align: left;
+}
+
+#project-detail-view .page-heading h2 {
+    margin: 0;
+    color: #f2f7fb;
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+#project-detail-view .page-heading p {
+    margin: 5px 0 0;
+    color: #8190a3;
+    font-size: 11px;
+}
+
+
+/* ---------------------------------------------------------
+   MAIN CARD
+--------------------------------------------------------- */
+
+#project-detail-view > .project-detail-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+}
+
+
+/* ---------------------------------------------------------
+   PROJECT HEADER
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-header {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROGRESS
+--------------------------------------------------------- */
+
+#project-detail-view .project-progress-section {
+    margin: 0 0 18px;
+    padding: 16px 14px 13px;
+    border: 1px solid rgba(255, 255, 255, .065);
+    border-radius: 13px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, .028),
+            rgba(255, 255, 255, .012)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .02);
+}
+
+#project-detail-view .project-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+#project-detail-view .project-progress-header .eyebrow {
+    margin: 0 0 4px;
+    color: #718198;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.3px;
+}
+
+#project-detail-view .project-progress-header h3 {
+    margin: 0;
+    color: #e8f0f5;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#project-detail-view .project-progress-status {
+    flex: 0 0 auto;
+    padding: 5px 9px;
+    border: 1px solid rgba(91, 239, 220, .16);
+    border-radius: 999px;
+    background: rgba(91, 239, 220, .045);
+    color: #72e8d8;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* nine-stage rail */
+
+#project-detail-view .project-progress-track {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    width: max-content;
+    min-width: 100%;
+    min-height: 69px;
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+#project-detail-view .project-progress-track::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 4%;
+    right: 4%;
+    height: 2px;
+    border-radius: 999px;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(91, 239, 220, .20),
+            rgba(91, 239, 220, .30),
+            rgba(110, 126, 145, .13),
+            rgba(110, 126, 145, .07)
+        );
+}
+
+#project-detail-view .project-progress-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    min-width: 82px;
+}
+
+#project-detail-view .project-progress-node {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 2px solid #455264;
+    border-radius: 50%;
+    background: #0d1722;
+    color: transparent;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, .012);
+}
+
+#project-detail-view .project-progress-node span {
+    font-size: 8px;
+    line-height: 1;
+}
+
+#project-detail-view .project-progress-label {
+    max-width: 92px;
+    color: #68788c;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
+}
+
+#project-detail-view .project-progress-step.completed .project-progress-node {
+    border-color: #58e8d4;
+    background: #58e8d4;
+    color: #061713;
+    box-shadow:
+        0 0 10px rgba(91, 239, 220, .28);
+}
+
+#project-detail-view .project-progress-step.completed .project-progress-label {
+    color: #a6bcb9;
+}
+
+#project-detail-view .project-progress-step.current .project-progress-node {
+    border-color: #58e8d4;
+    background: rgba(91, 239, 220, .08);
+    color: #58e8d4;
+    box-shadow:
+        0 0 0 4px rgba(91, 239, 220, .07),
+        0 0 16px rgba(91, 239, 220, .30);
+    animation: feemaas-detail-progress-pulse 2.2s ease-in-out infinite;
+}
+
+#project-detail-view .project-progress-step.current .project-progress-label {
+    color: #58e8d4;
+    font-weight: 800;
+}
+
+#project-detail-view .project-progress-step.pending .project-progress-node {
+    opacity: .65;
+}
+
+@keyframes feemaas-detail-progress-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 4px rgba(91, 239, 220, .055),
+            0 0 13px rgba(91, 239, 220, .20);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 6px rgba(91, 239, 220, .08),
+            0 0 22px rgba(91, 239, 220, .32);
+    }
+}
+
+
+/* ---------------------------------------------------------
+   NEXT ACTION
+--------------------------------------------------------- */
+
+#project-detail-view .project-progress-next-action {
+    margin-top: 13px;
+    padding: 10px 12px;
+    border: 1px solid rgba(91, 239, 220, .12);
+    border-radius: 9px;
+    background: rgba(91, 239, 220, .025);
+    color: #aebdca;
+}
+
+#project-detail-view .project-progress-next-action strong {
+    color: #dce8ee;
+}
+
+
+/* ---------------------------------------------------------
+   CONSULTANT ACTION
+--------------------------------------------------------- */
+
+#project-detail-view .project-consultant-action {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 18px;
+    padding: 13px 14px;
+    border: 1px solid rgba(91, 239, 220, .16);
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(91, 239, 220, .045),
+            rgba(91, 239, 220, .012)
+        );
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, .14);
+}
+
+#project-detail-view .project-consultant-action-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#project-detail-view .project-consultant-action-content .eyebrow {
+    color: #718198;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+#project-detail-view .project-consultant-action-content strong {
+    color: #e5edf2;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#project-detail-view .project-consultant-action-content > span:last-child {
+    color: #8797a8;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+#project-detail-view .project-consultant-action-button {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 7px 13px;
+    border: 1px solid rgba(91, 239, 220, .28);
+    border-radius: 9px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(91, 239, 220, .09),
+            rgba(91, 239, 220, .025)
+        );
+    color: #bfe9e2;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow:
+        0 0 0 1px rgba(91, 239, 220, .025),
+        0 4px 14px rgba(0, 0, 0, .14);
+    transition:
+        .2s ease;
+}
+
+#project-detail-view .project-consultant-action-button::after {
+    content: "";
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: -5px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(91, 239, 220, .35);
+    filter: blur(7px);
+    opacity: .45;
+}
+
+#project-detail-view .project-consultant-action-button:hover {
+    color: #ffffff;
+    border-color: rgba(91, 239, 220, .48);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(91, 239, 220, .13),
+            rgba(91, 239, 220, .045)
+        );
+    transform: translateY(-1px);
+}
+
+
+/* ---------------------------------------------------------
+   DESCRIPTION
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-description {
+    margin: 0 0 14px;
+    padding: 11px 13px;
+    border: 1px solid rgba(255, 255, 255, .055);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .018);
+}
+
+#project-detail-view .project-detail-description .eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #718198;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+#project-detail-view .project-detail-description p {
+    margin: 0;
+    color: #b5c1cd;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+
+/* ---------------------------------------------------------
+   META
+--------------------------------------------------------- */
+
+#project-detail-view .project-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0 0 15px;
+}
+
+#project-detail-view .project-meta-item {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px 11px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .018) !important;
+    border: 1px solid rgba(255, 255, 255, .065) !important;
+}
+
+#project-detail-view .project-meta-item span {
+    color: #718198 !important;
+    font-size: 9px;
+}
+
+#project-detail-view .project-meta-item strong {
+    color: #dce7ee !important;
+    font-size: 11px;
+}
+
+
+/* ---------------------------------------------------------
+   COLORFUL TABS
+--------------------------------------------------------- */
+
+#project-detail-view .project-detail-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 7px;
+    margin: 0;
+    overflow-x: auto;
+    border: 1px solid rgba(255, 255, 255, .055) !important;
+    border-radius: 12px;
+    background: rgba(5, 11, 20, .78) !important;
+}
+
+#project-detail-view .project-detail-tab {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 7px 12px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #7e8da0 !important;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+#project-detail-view .project-detail-tab:hover {
+    color: #edf6f8 !important;
+    background: rgba(255, 255, 255, .04);
+    transform: translateY(-1px);
+}
+
+#project-detail-view .project-detail-tab.active {
+    color: #72eee0 !important;
+    background: rgba(91, 239, 220, .075) !important;
+    border-color: rgba(91, 239, 220, .18);
+    box-shadow:
+        0 0 16px rgba(91, 239, 220, .07);
+}
+
+
+/* individual tab identities */
+
+#project-detail-view .project-detail-tab[data-project-tab="overview"].active {
+    color: #72eee0 !important;
+    border-color: rgba(91, 239, 220, .24);
+    background: rgba(91, 239, 220, .08) !important;
+}
+
+#project-detail-view .project-detail-tab[data-project-tab="tender"].active {
+    color: #ffd27a !important;
+    border-color: rgba(255, 210, 122, .24);
+    background: rgba(255, 210, 122, .07) !important;
+}
+
+#project-detail-view .project-detail-tab[data-project-tab="messages"].active {
+    color: #b89cff !important;
+    border-color: rgba(184, 156, 255, .24);
+    background: rgba(184, 156, 255, .07) !important;
+}
+
+#project-detail-view .project-detail-tab[data-project-tab="contracts"].active {
+    color: #ffbf69 !important;
+    border-color: rgba(255, 191, 105, .24);
+    background: rgba(255, 191, 105, .07) !important;
+}
+
+#project-detail-view .project-detail-tab[data-project-tab="standardization"].active {
+    color: #76c9ff !important;
+    border-color: rgba(118, 201, 255, .24);
+    background: rgba(118, 201, 255, .07) !important;
+}
+
+#project-detail-view .project-detail-tab[data-project-tab="files"].active {
+    color: #7de7b1 !important;
+    border-color: rgba(125, 231, 177, .24);
+    background: rgba(125, 231, 177, .07) !important;
+}
+
+#project-detail-view .project-detail-tab[data-project-tab="reports"].active {
+    color: #ff8f9f !important;
+    border-color: rgba(255, 143, 159, .24);
+    background: rgba(255, 143, 159, .07) !important;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE
+--------------------------------------------------------- */
+
+@media (max-width: 760px) {
+
+    #project-detail-view .page-heading {
+        padding: 14px 15px;
+    }
+
+    #project-detail-view .page-heading h2 {
+        font-size: 20px;
+    }
+
+    #project-detail-view .project-progress-section {
+        padding: 13px 10px;
+        overflow-x: auto;
+    }
+
+    #project-detail-view .project-progress-track {
+        min-width: 820px;
+    }
+
+    #project-detail-view .project-progress-step {
+        min-width: 82px;
+    }
+
+    #project-detail-view .project-consultant-action {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #project-detail-view .project-consultant-action-button {
+        width: 100%;
+    }
+
+    #project-detail-view .project-meta {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* =========================================================
+   FEEMAAS — PROJECT DETAIL
+   Full viewport workspace
+   ========================================================= */
+
+#project-detail-view {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    min-height: calc(100vh - 24px);
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    box-sizing: border-box;
+}
+
+#project-detail-view > .page-heading,
+#project-detail-view > .project-detail-card {
+    width: 100% !important;
+    max-width: none !important;
+
+    box-sizing: border-box;
+}
+
+#project-detail-view > .project-detail-card {
+    min-height: calc(100vh - 150px);
+}
+
+
+/* اگر والد اصلی View محدودکننده عرض داشته باشد */
+
+.workspace-content:has(#project-detail-view),
+.workspace-main:has(#project-detail-view),
+.workspace-page:has(#project-detail-view) {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+
+/* جلوگیری از محدود شدن خود محتوای پروژه */
+
+#project-detail-view .project-detail-header,
+#project-detail-view .project-detail-tabs,
+#project-detail-view .project-detail-content {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+
+/* Desktop: پروژه واقعاً تمام عرض فضای کاری را بگیرد */
+
+@media (min-width: 761px) {
+
+    #project-detail-view {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    #project-detail-view > .project-detail-card {
+        width: 100% !important;
+    }
+}
+/* =========================================================
+   FEEMAAS — PROJECT DETAIL
+   Remove legacy split layout
+   ========================================================= */
+
+#project-detail-view > .project-detail-card {
+    display: block !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+
+    box-sizing: border-box;
+}
+
+
+/* Full-width project content */
+
+#project-detail-view .project-detail-header {
+    display: block !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE BUTTON
+--------------------------------------------------------- */
+
+#project-detail-view .project-view-close {
+    position: absolute !important;
+
+    top: 18px !important;
+    right: 18px !important;
+    left: auto !important;
+
+    z-index: 50 !important;
+
+    width: 38px !important;
+    height: 38px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 !important;
+}
+
+
+/* ---------------------------------------------------------
+   HEADER
+--------------------------------------------------------- */
+
+#project-detail-view .page-heading {
+    width: 100% !important;
+    max-width: none !important;
+
+    box-sizing: border-box;
+
+    padding-left: 70px !important;
+    padding-right: 70px !important;
+}
+
+
+/* Project number stays visually on the left */
+
+#project-detail-view .page-heading .eyebrow {
+    text-align: left !important;
+}
+
+
+/* Everything below header uses full width */
+
+#project-detail-view .project-progress-section,
+#project-detail-view .project-consultant-action,
+#project-detail-view .project-detail-description,
+#project-detail-view .project-meta,
+#project-detail-view .project-detail-tabs {
+    width: 100% !important;
+    max-width: none !important;
+
+    box-sizing: border-box;
+}

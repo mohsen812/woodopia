@@ -23,6 +23,49 @@ function getProjectProgressStage(progress) {
 }
 
 
+function getProjectCurrentStageLabel(project) {
+
+    const stage =
+        getProjectProgressStage(
+            project.progress
+        );
+
+    return stage?.label || "نامشخص";
+}
+
+
+function getProjectHealthMeta(project) {
+
+    const health =
+        project?.progress?.health || "on_track";
+
+    switch (health) {
+
+        case "delayed":
+            return {
+                key: "delayed",
+                label: "دارای تأخیر",
+                icon: "!",
+            };
+
+        case "blocked":
+            return {
+                key: "blocked",
+                label: "نیازمند پیگیری",
+                icon: "×",
+            };
+
+        case "on_track":
+        default:
+            return {
+                key: "on_track",
+                label: "در وضعیت عادی",
+                icon: "●",
+            };
+    }
+}
+
+
 function getProjectProgressStateClass(state) {
 
     switch (state) {
@@ -274,6 +317,34 @@ function createProjectCard(project) {
             ? currentProgressStage.label
             : "وضعیت نامشخص";
 
+	const projectHealth =
+        getProjectHealthMeta(project);
+
+    const projectProgress =
+        project.progress || null;
+
+    const projectProgressStages =
+        Array.isArray(projectProgress?.stages)
+            ? projectProgress.stages
+            : [];
+
+    const projectProgressCurrentIndex =
+        projectProgressStages.findIndex(
+            stage =>
+                stage.key ===
+                projectProgress?.current_stage
+        );
+
+    const projectProgressPercent =
+        projectProgressCurrentIndex >= 0 &&
+        projectProgressStages.length > 1
+            ? Math.round(
+                (
+                    projectProgressCurrentIndex /
+                    (projectProgressStages.length - 1)
+                ) * 100
+            )
+            : 0;
     const budget = Number(project.estimated_budget || 0);
 
     const formattedBudget = budget > 0
@@ -303,15 +374,24 @@ function createProjectCard(project) {
 
         <div class="project-card-top">
 
-            <div class="project-card-identity">
+        <div
+             class="project-card-identity project-signal project-signal-${projectHealth.key}"
+        >
 
-                <span class="project-status-light"></span>
+            <span
+                class="project-status-light"
+                aria-hidden="true"
+            ></span>
 
-                <span class="project-status-label">
-                    ${escapeHtml(statusLabel)}
-                </span>
+            <span class="project-status-label">
+                ${escapeHtml(statusLabel)}
+            </span>
 
-            </div>
+            <span class="project-health-label">
+                ${escapeHtml(projectHealth.label)}
+            </span>
+
+        </div>
 
             <span class="project-number">
                 #${project.id}
@@ -329,17 +409,55 @@ function createProjectCard(project) {
                 )}
             </h3>
 
-            <p class="project-description">
-                ${escapeHtml(
-                    project.description ||
-                    "برای این پروژه توضیحی ثبت نشده است."
-                )}
-            </p>
-
         </div>
 
 
         <div class="project-card-divider"></div>
+
+
+		<div class="project-card-progress">
+
+            <div class="project-card-progress-head">
+
+                <span class="project-card-progress-label">
+                    مسیر پروژه
+                </span>
+
+                <strong class="project-card-progress-percent">
+                    ${projectProgressPercent}%
+                </strong>
+
+            </div>
+
+            <div
+                class="project-card-progress-track"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="${projectProgressPercent}"
+            >
+
+                <span
+                    class="project-card-progress-fill"
+                    style="width: ${projectProgressPercent}%"
+                ></span>
+
+            </div>
+
+            <div class="project-card-progress-stage">
+
+                <span>
+                    مرحله فعلی
+                </span>
+
+                <strong>
+                    ${escapeHtml(statusLabel)}
+                </strong>
+
+            </div>
+
+        </div>
+
 
 
         <div class="project-card-info-grid">
@@ -449,12 +567,10 @@ function showProject(project) {
             "project-modal"
         );
 
-
     const detail =
         document.getElementById(
             "project-detail"
         );
-
 
     if (!modal || !detail) {
 
@@ -463,54 +579,324 @@ function showProject(project) {
         );
 
         return;
-
     }
 
-    const summaryProgressStage =
+
+    /*
+    ========================================================
+     SUMMARY DATA
+    ========================================================
+    */
+
+    const progress =
+        project?.progress || {};
+
+    const stages =
+        Array.isArray(progress.stages)
+            ? progress.stages
+            : [];
+
+    const currentStage =
         getProjectProgressStage(
-            project.progress
+            progress
         );
 
-    const summaryStatusLabel =
-        summaryProgressStage
-            ? summaryProgressStage.label
-            : "وضعیت نامشخص";
+    const statusLabel =
+        currentStage?.label ||
+        "وضعیت نامشخص";
+
+    const health =
+        getProjectHealthMeta(
+            project
+        );
+
+    const nextAction =
+        progress.next_action || null;
+
+    const nextActionRequired =
+        nextAction?.required === true;
+
+    const nextActionTitle =
+        nextAction?.title ||
+        "";
+
+    const nextActionValue =
+        nextAction?.action ||
+        "";
+
+    const timing =
+        progress.timing || {};
+
+    const hasTiming =
+        timing?.type === "deadline" &&
+        Boolean(timing?.value);
+
+
+    const itemCount =
+        Array.isArray(project?.items)
+            ? project.items.length
+            : 0;
+
+
+    const budget =
+        project?.estimated_budget ??
+        project?.budget ??
+        "—";
+
+
+    /*
+    ========================================================
+     JOURNEY
+    ========================================================
+    */
+
+    const journeyHtml =
+        stages.length
+            ? `
+                <div class="project-summary-journey">
+
+                    <div class="project-summary-journey-track">
+
+                        ${stages.map(
+                            function(stage, index) {
+
+                                const state =
+                                    getProjectProgressStateClass(
+                                        stage.state
+                                    );
+
+                                const icon =
+                                    getProjectProgressStateIcon(
+                                        stage.state
+                                    );
+
+                                const isCurrent =
+                                    stage.key ===
+                                    progress.current_stage;
+
+                                return `
+                                    <div
+                                        class="
+                                            project-summary-stage
+                                            project-summary-stage-${state}
+                                            ${isCurrent ? "is-current" : ""}
+                                        "
+                                        title="${escapeHtml(
+                                            stage.label || ""
+                                        )}"
+                                    >
+
+                                        <span
+                                            class="project-summary-stage-dot"
+                                            aria-hidden="true"
+                                        >
+                                            ${icon}
+                                        </span>
+
+                                        <span
+                                            class="project-summary-stage-label"
+                                        >
+                                            ${escapeHtml(
+                                                stage.label || ""
+                                            )}
+                                        </span>
+
+                                    </div>
+
+                                    ${
+                                        index <
+                                        stages.length - 1
+                                            ? `
+                                                <span
+                                                    class="
+                                                        project-summary-stage-connector
+                                                        ${state === "completed"
+                                                            ? "is-completed"
+                                                            : ""}
+                                                    "
+                                                    aria-hidden="true"
+                                                ></span>
+                                            `
+                                            : ""
+                                    }
+                                `;
+                            }
+                        ).join("")}
+
+                    </div>
+
+                </div>
+            `
+            : "";
+
+
+    /*
+    ========================================================
+     TIMING
+    ========================================================
+    */
+
+    const timingHtml =
+        hasTiming
+            ? `
+                <div
+                    class="project-summary-timing"
+                    data-deadline="${escapeHtml(
+                        timing.value
+                    )}"
+                >
+
+                    <span
+                        class="project-summary-timing-icon"
+                        aria-hidden="true"
+                    >
+                        ◷
+                    </span>
+
+                    <span
+                        class="project-summary-timing-value"
+                        data-timer-value
+                    >
+                        —
+                    </span>
+
+                    <span
+                        class="project-summary-timing-label"
+                    >
+                        ${escapeHtml(
+                            timing.label ||
+                            "زمان باقی‌مانده"
+                        )}
+                    </span>
+
+                </div>
+            `
+            : "";
+
+
+    /*
+    ========================================================
+     ACTION BEACON
+    ========================================================
+    */
+
+    const actionHtml =
+        nextActionRequired &&
+        nextActionValue
+            ? `
+                <button
+                    type="button"
+                    class="
+                        project-summary-action-beacon
+                        is-required
+                    "
+                    data-action="${escapeHtml(
+                        nextActionValue
+                    )}"
+                >
+
+                    <span
+                        class="project-summary-action-light"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span
+                        class="project-summary-action-title"
+                    >
+                        ${escapeHtml(
+                            nextActionTitle
+                        )}
+                    </span>
+
+                    <span
+                        class="project-summary-action-arrow"
+                        aria-hidden="true"
+                    >
+                        →
+                    </span>
+
+                </button>
+            `
+            : "";
+
+
+    /*
+    ========================================================
+     SUMMARY
+    ========================================================
+    */
+
     detail.innerHTML = `
 
         <div class="project-summary">
 
-            <div class="eyebrow">
-                PROJECT #${project.id}
+            <!-- HEADER -->
+
+            <div class="project-summary-header">
+
+                <div class="project-summary-project-id">
+
+                    <span
+                        class="project-summary-live-dot"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span>
+                        PROJECT #${project.id}
+                    </span>
+
+                </div>
+
             </div>
 
 
-            <h2>
-                ${escapeHtml(
-                    project.title ||
-                    "بدون عنوان"
-                )}
-            </h2>
+            <!-- TITLE -->
 
+            <div class="project-summary-title-area">
 
-            <div class="project-summary-status">
-
-                <span>
-                    وضعیت پروژه
-                </span>
-
-                <strong>
+                <h2>
                     ${escapeHtml(
-                       summaryStatusLabel
+                        project.title ||
+                        "بدون عنوان"
                     )}
-                </strong>
+                </h2>
+
+                <div
+                    class="
+                        project-summary-status
+                        project-summary-signal
+                        project-signal-${health.key}
+                    "
+                >
+
+                    <span
+                        class="project-status-light"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span>
+                        ${escapeHtml(
+                            statusLabel
+                        )}
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            health.label
+                        )}
+                    </strong>
+
+                </div>
 
             </div>
 
+
+            <!-- DESCRIPTION -->
 
             <div class="project-summary-description">
 
                 <span class="eyebrow">
-                    DESCRIPTION
+                    توضیحات
                 </span>
 
                 <p>
@@ -523,93 +909,128 @@ function showProject(project) {
             </div>
 
 
-            <div class="project-meta">
+            <!-- JOURNEY -->
 
-                <div class="project-meta-item">
+            ${journeyHtml}
 
-                    <span>
-                        شناسه پروژه
+
+            <!-- META -->
+
+            <div class="project-summary-meta">
+
+                <div class="project-summary-meta-card project-summary-meta-items">
+
+                    <span class="project-summary-meta-label">
+                        اقلام
                     </span>
 
                     <strong>
-                        #${project.id}
+                        ${itemCount}
                     </strong>
 
                 </div>
 
 
-                <div class="project-meta-item">
+                <div class="project-summary-meta-card project-summary-meta-budget">
 
-                    <span>
-                        تعداد
-                    </span>
-
-                    <strong>
-                        ${project.quantity ?? "—"}
-                    </strong>
-
-                </div>
-
-
-                <div class="project-meta-item">
-
-                    <span>
+                    <span class="project-summary-meta-label">
                         بودجه
                     </span>
 
                     <strong>
-                        ${project.budget ?? "—"}
+                        ${escapeHtml(
+                            String(budget)
+                        )}
                     </strong>
 
                 </div>
 
             </div>
+            <!-- LIVE ACTION AREA -->
 
+            <div class="project-summary-live-area">
 
-            <div class="project-actions">
+                ${timingHtml}
 
-                <button
-                    type="button"
-                    class="project-action primary"
-                    data-action="open-project"
-                >
-                    مشاهده پروژه
-                </button>
-
-
-                <button
-                    type="button"
-                    class="project-action"
-                    data-action="messages"
-                >
-                    پیام‌ها
-                </button>
-
-
-                <button
-                    type="button"
-                    class="project-action"
-                    data-action="contracts"
-                >
-                    قراردادها
-                </button>
-
-
-                ${
-                    project.status === "draft"
-                    ? `
-                        <button
-                            type="button"
-                            class="project-action"
-                            data-action="consultant"
-                        >
-                            ارسال برای مشاور
-                        </button>
-                    `
-                    : ""
-                }
+                ${actionHtml}
 
             </div>
+
+
+            <!-- TABS -->
+
+            <nav
+                class="project-summary-tabs"
+                aria-label="Project navigation"
+            >
+
+                <button
+                    type="button"
+                    class="
+                        project-summary-tab
+                        project-summary-tab-project
+                        is-active
+                    "
+                    data-action="open-project"
+                >
+                    <span
+                        class="project-summary-tab-icon"
+                        aria-hidden="true"
+                    >
+                        ◈
+                    </span>
+
+                    <span>
+                        مشاهده پروژه
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="
+                        project-summary-tab
+                        project-summary-tab-messages
+                    "
+                    data-action="messages"
+                >
+                    <span
+                        class="project-summary-tab-icon"
+                        aria-hidden="true"
+                    >
+                        ◌
+                    </span>
+
+                    <span>
+                        پیام‌ها
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="
+                        project-summary-tab
+                        project-summary-tab-contracts
+                    "
+                    data-action="contracts"
+                >
+                    <span
+                        class="project-summary-tab-icon"
+                        aria-hidden="true"
+                    >
+                        ◇
+                    </span>
+
+                    <span>
+                        قراردادها
+                    </span>
+
+                </button>
+
+            </nav>
 
         </div>
 
@@ -617,9 +1038,9 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    OPEN MODAL
-    --------------------------------------------------------
+    ========================================================
+     OPEN MODAL
+    ========================================================
     */
 
     modal.classList.remove(
@@ -632,9 +1053,115 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    OPEN PROJECT
-    --------------------------------------------------------
+    ========================================================
+     TIMER
+    ========================================================
+    */
+
+    let summaryTimerInterval = null;
+
+
+    function updateSummaryTimer() {
+
+        const timer =
+            detail.querySelector(
+                "[data-timer-value]"
+            );
+
+        const timingElement =
+            detail.querySelector(
+                "[data-deadline]"
+            );
+
+        if (!timer || !timingElement) {
+            return;
+        }
+
+        const deadline =
+            new Date(
+                timingElement.dataset.deadline
+            ).getTime();
+
+        if (!Number.isFinite(deadline)) {
+
+            timer.textContent =
+                "—";
+
+            return;
+        }
+
+        const remaining =
+            deadline - Date.now();
+
+
+        if (remaining <= 0) {
+
+            timer.textContent =
+                "پایان مهلت";
+
+            if (summaryTimerInterval) {
+
+                clearInterval(
+                    summaryTimerInterval
+                );
+
+                summaryTimerInterval = null;
+
+            }
+
+            return;
+        }
+
+
+        const totalSeconds =
+            Math.floor(
+                remaining / 1000
+            );
+
+        const days =
+            Math.floor(
+                totalSeconds / 86400
+            );
+
+        const hours =
+            Math.floor(
+                (totalSeconds % 86400) / 3600
+            );
+
+        const minutes =
+            Math.floor(
+                (totalSeconds % 3600) / 60
+            );
+
+        const seconds =
+            totalSeconds % 60;
+
+
+        timer.textContent =
+            days > 0
+                ? `${days} روز  ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
+                : `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+
+    updateSummaryTimer();
+
+
+    if (hasTiming) {
+
+        summaryTimerInterval =
+            window.setInterval(
+                updateSummaryTimer,
+                1000
+            );
+
+    }
+
+
+    /*
+    ========================================================
+     OPEN PROJECT
+    ========================================================
     */
 
     const openButton =
@@ -651,9 +1178,7 @@ function showProject(project) {
 
                 event.preventDefault();
 
-
                 closeProjectModal();
-
 
                 openProjectDetail(
                     project
@@ -666,9 +1191,9 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    MESSAGES
-    --------------------------------------------------------
+    ========================================================
+     MESSAGES
+    ========================================================
     */
 
     const messagesButton =
@@ -685,15 +1210,7 @@ function showProject(project) {
 
                 event.preventDefault();
 
-
-                /*
-                فعلاً فقط View اصلی پیام‌ها.
-                بعداً آن را به Project Detail Tab
-                تبدیل می‌کنیم.
-                */
-
                 closeProjectModal();
-
 
                 if (
                     typeof showView ===
@@ -713,9 +1230,9 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    CONTRACTS
-    --------------------------------------------------------
+    ========================================================
+     CONTRACTS
+    ========================================================
     */
 
     const contractsButton =
@@ -732,9 +1249,7 @@ function showProject(project) {
 
                 event.preventDefault();
 
-
                 closeProjectModal();
-
 
                 if (
                     typeof showView ===
@@ -754,14 +1269,14 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    CONSULTANT
-    --------------------------------------------------------
+    ========================================================
+     CONSULTANT ACTION
+    ========================================================
     */
 
     const consultantButton =
         detail.querySelector(
-            '[data-action="consultant"]'
+            '[data-action="send_to_consultant"]'
         );
 
 
@@ -780,22 +1295,35 @@ function showProject(project) {
                     return;
                 }
 
+
                 const confirmed =
                     window.confirm(
                         "آیا می‌خواهید این پروژه برای مشاور ارسال شود؟"
                     );
 
+
                 if (!confirmed) {
                     return;
                 }
 
-                consultantButton.disabled = true;
 
-                const originalText =
-                    consultantButton.textContent;
+                consultantButton.disabled =
+                    true;
 
-                consultantButton.textContent =
-                    "در حال ارسال...";
+
+                const originalTitle =
+                    consultantButton.querySelector(
+                        ".project-summary-action-title"
+                    );
+
+
+                if (originalTitle) {
+
+                    originalTitle.textContent =
+                        "در حال ارسال...";
+
+                }
+
 
                 try {
 
@@ -804,12 +1332,15 @@ function showProject(project) {
                             ? getCookie("csrftoken")
                             : null;
 
+
                     const response =
                         await fetch(
                             `/api/projects/${project.id}/send-to-consultant/`,
                             {
                                 method: "POST",
-                                credentials: "same-origin",
+
+                                credentials:
+                                    "same-origin",
 
                                 headers: {
                                     "Content-Type":
@@ -828,48 +1359,67 @@ function showProject(project) {
                             }
                         );
 
+
                     const data =
                         await response.json();
 
+
                     if (!response.ok) {
+
                         throw new Error(
                             data.error ||
                             data.detail ||
                             "ارسال پروژه برای مشاور انجام نشد."
                         );
+
                     }
+
 
                     project.status =
                         data.status ||
                         "consulting";
 
 
-                    const statusElement =
-                        detail.querySelector(
-                            ".project-summary-status strong"
-                        );
-
-
-                    if(statusElement){
-
-                        statusElement.textContent =
-                            "consulting";
-
-                    }
-
-
-                    consultantButton.remove();
-
                     if (
                         typeof loadCustomerProjects ===
                         "function"
                     ) {
+
                         await loadCustomerProjects();
+
                     }
+
+
+                    /*
+                    ------------------------------------------------
+                     Refresh summary from the updated project state.
+                    ------------------------------------------------
+                    */
+
+                    const refreshedProject =
+                        {
+                            ...project,
+                            status:
+                                project.status
+                        };
+
+
+                    closeProjectModal();
+
 
                     alert(
                         "پروژه با موفقیت برای مشاور ارسال شد."
                     );
+
+
+                    /*
+                    بعداً می‌توانیم اینجا پروژه را
+                    از لیست تازه بارگذاری‌شده پیدا کنیم.
+                    فعلاً Summary بسته می‌شود تا
+                    state قدیمی دوباره نمایش داده نشود.
+                    */
+
+                    void refreshedProject;
 
                 } catch(error) {
 
@@ -878,25 +1428,32 @@ function showProject(project) {
                         error
                     );
 
-                    consultantButton.disabled = false;
 
-                    consultantButton.textContent =
-                        originalText;
+                    consultantButton.disabled =
+                        false;
+
+
+                    if (originalTitle) {
+
+                        originalTitle.textContent =
+                            nextActionTitle;
+
+                    }
+
 
                     alert(
-                         error.message ||
-                         "خطا در ارسال پروژه برای مشاور."
+                        error.message ||
+                        "خطا در ارسال پروژه برای مشاور."
                     );
 
                 }
 
             }
-       );
+        );
 
     }
 
 }
-
 
 /*
 ============================================================
@@ -1033,7 +1590,7 @@ const projectProgressHtml =
         <div class="project-detail-description">
 
                 <span class="eyebrow">
-                    DESCRIPTION
+                    توضیحات
                 </span>
 
                 <p>
@@ -2304,7 +2861,7 @@ function renderTenderBid(
                                 class="tender-award-button"
                                 data-bid-id="${bid.bid_id}"
                             >
-                               انتخاب این کارگاه 
+                               انتخاب این کارگاه
                             </button>
                         `
                         : ""
@@ -4794,7 +5351,7 @@ catch(error){
     );
 
 }
-                        
+
                         }
 
 
