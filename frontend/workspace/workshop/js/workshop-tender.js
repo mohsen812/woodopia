@@ -2007,7 +2007,8 @@
 
                 this.currentBid = {
                     ...this.currentBid,
-                    ...data
+                    ...data,
+                    status: data.bid_status || this.currentBid.status
                 };
 
                 console.log(

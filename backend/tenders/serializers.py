@@ -360,38 +360,20 @@ class WorkshopTenderInvitationSerializer(
             "bid_id",
         ]
 
-    def get_bid_id(
-        self,
-        obj
-    ):
 
-        active_round = (
-            obj.tender.rounds
-            .filter(
-                status="open"
-            )
-            .order_by(
-                "round_number"
-            )
-            .first()
-        )
-
-        if not active_round:
-            return None
-
+    def get_bid_id(self, obj):
         bid = (
-            active_round.bids
+            Bid.objects
             .filter(
+                tender_round__tender=obj.tender,
                 workshop=obj.organization,
-                status="draft",
+                status__in=["draft", "submitted"],
             )
+            .order_by("-tender_round__round_number")
             .first()
         )
 
-        if not bid:
-            return None
-
-        return bid.id
+        return bid.id if bid else None
 class TenderSerializer(serializers.ModelSerializer):
 
     rounds = TenderRoundSerializer(
