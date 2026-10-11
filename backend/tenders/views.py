@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from decimal import Decimal, InvalidOperation
 
+from .alias_generator import assign_bid_alias
 
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -1712,14 +1713,14 @@ class BidDraftSaveView(APIView):
                     "delivery_days",
                     "warranty_months",
                     "technical_notes",
-                        "discount_percentage",
-                        "discount_percentage",
-                        "discount_amount",
+                    "discount_percentage",
+                    "discount_amount",
                     "final_amount",
                     "total_amount",
                     "updated_at",
                 ]
             )
+
 
             # بعد از محاسبه نهایی، amount پرداخت‌ها را sync می‌کنیم.
             for schedule in bid.payment_schedules.all():
@@ -1841,11 +1842,16 @@ class BidSubmitView(APIView):
                     "مجموع درصد مراحل پرداخت باید دقیقاً ۱۰۰٪ باشد."
                 )
 
+            # Allocate a stable alias before submission.
+            # The alias and submitted status share the outer transaction.
+            assign_bid_alias(bid)
+
             bid.status = "submitted"
 
             bid.save(
                 update_fields=[
                     "status",
+                    "updated_at",
                 ]
             )
 
@@ -1854,6 +1860,7 @@ class BidSubmitView(APIView):
                 "status": "ok",
                 "bid_id": bid.id,
                 "bid_status": bid.status,
+                "public_alias": bid.public_alias,
             }
         )
 
@@ -1957,7 +1964,6 @@ class BidDiscountUpdateView(
 
 
         bid.calculate_final_amount()
-
 
         bid.save(
             update_fields=[

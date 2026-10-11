@@ -3,6 +3,14 @@ from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
+from django.utils import timezone
+
+from tenders.models import (
+    Tender,
+    TenderRound,
+    Bid,
+)
+
 from organizations.models import (
     Membership,
     Organization,
@@ -1360,3 +1368,293 @@ class ProjectActivityAPITests(TestCase):
             len(response.data),
             0,
         )
+
+class ProjectTenderVisibilityTests(TestCase):
+
+    def setUp(self):
+        from django.utils import timezone
+        from organizations.models import (
+            Membership,
+            Organization,
+            OrganizationRole,
+        )
+        from projects.models import ProjectAssignment
+        from tenders.models import Tender, TenderRound, Bid
+
+        self.customer_user = User.objects.create_user(
+            username="tender_visibility_customer",
+            email="tender_visibility_customer@example.com",
+            password="test-password",
+        )
+
+        self.consultant_user = User.objects.create_user(
+            username="tender_visibility_consultant",
+            email="tender_visibility_consultant@example.com",
+            password="test-password",
+        )
+
+        customer_role, _ = OrganizationRole.objects.get_or_create(
+            name="owner",
+            organization_type="customer",
+        )
+
+        consultant_role, _ = OrganizationRole.objects.get_or_create(
+            name="consultant",
+            organization_type="company",
+        )
+
+        self.customer_org = Organization.objects.create(
+            name="Tender Visibility Customer",
+            organization_type="customer",
+            status="active",
+            owner=self.customer_user,
+        )
+
+        self.consultant_org = Organization.objects.create(
+            name="Tender Visibility Consultant",
+            organization_type="company",
+            status="active",
+            owner=self.consultant_user,
+        )
+
+        Membership.objects.create(
+            user=self.customer_user,
+            organization=self.customer_org,
+            role_fk=customer_role,
+            status="active",
+        )
+
+        consultant_membership = Membership.objects.create(
+            user=self.consultant_user,
+            organization=self.consultant_org,
+            role_fk=consultant_role,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Tender Visibility Test Project",
+            description="Project for tender visibility tests",
+            customer=self.customer_org,
+            created_by=self.customer_user,
+            status="tender",
+        )
+
+        ProjectItem.objects.create(
+            project=self.project,
+            name="Tender Visibility Test Item",
+            description="Item for tender visibility tests",
+            quantity=1,
+        )
+
+        ProjectAssignment.objects.create(
+            project=self.project,
+            membership=consultant_membership,
+            assigned_by=self.customer_user,
+            status="active",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Tender Visibility Test",
+            status="closed",
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="evaluated",
+            closed_at=timezone.now(),
+        )
+
+        from tenders.alias_generator import assign_bid_alias
+
+        self.bids = []
+
+        for index, amount in enumerate(
+            [1000, 2000, 3000, 4000],
+            start=1,
+        ):
+            workshop_owner = User.objects.create_user(
+                username=f"visibility_workshop_owner_{index}",
+                email=f"visibility_workshop_owner_{index}@example.com",
+                password="test-password",
+            )
+            workshop = Organization.objects.create(
+                name=f"Visibility Workshop {index}",
+                organization_type="workshop",
+                status="active",
+                owner=workshop_owner,
+            )
+
+            bid = Bid.objects.create(
+                tender_round=self.round,
+                workshop=workshop,
+                total_amount=amount,
+                final_amount=amount,
+                discount_percentage=0,
+                discount_amount=0,
+                production_days=index * 5,
+                delivery_days=index * 2,
+                warranty_months=12 + index,
+                technical_notes="test bid",
+                status="submitted",
+            )
+
+            assign_bid_alias(bid)
+            self.bids.append(bid)
+
+        self.url = f"/api/projects/{self.project.id}/tender/"
+
+        self.customer_client = APIClient()
+        self.customer_client.force_authenticate(
+            user=self.customer_user,
+        )
+
+        self.consultant_client = APIClient()
+        self.consultant_client.force_authenticate(
+            user=self.consultant_user,
+        )
+
+    def assert_no_price_fields(self, value):
+        sensitive_fields = {
+            "total_amount",
+            "discount_percentage",
+            "discount_amount",
+            "final_amount",
+            "unit_price",
+            "total_price",
+        }
+
+        if isinstance(value, dict):
+            self.assertTrue(
+                sensitive_fields.isdisjoint(value.keys()),
+                msg=(
+                    "Sensitive price fields found in response: "
+                    f"{sensitive_fields.intersection(value.keys())}"
+                ),
+            )
+
+            for nested_value in value.values():
+                self.assert_no_price_fields(nested_value)
+
+        elif isinstance(value, list):
+            for nested_value in value:
+                self.assert_no_price_fields(nested_value)
+
+    def test_customer_cannot_see_bids_or_prices_before_reveal(self):
+        self.tender.revealed_at = None
+        self.tender.reveal_at = None
+        self.tender.save(
+            update_fields=["revealed_at", "reveal_at"],
+        )
+
+        response = self.customer_client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        self.assertIsNone(data["evaluation"])
+
+        tender_data = data["tender"]
+        self.assertIsNotNone(tender_data)
+
+        nested_bids = [
+            bid
+            for round_data in tender_data["rounds"]
+            for bid in round_data["bids"]
+        ]
+
+        self.assertEqual(len(nested_bids), len(self.bids))
+
+        for bid in nested_bids:
+            self.assertTrue(bid["public_alias"])
+            self.assertNotIn("id", bid)
+            self.assertNotIn("workshop", bid)
+            self.assertNotIn("workshop_name", bid)
+
+        self.assert_no_price_fields(data)
+        self.assert_no_price_fields(data)
+
+    def test_customer_sees_at_most_three_bids_after_reveal(self):
+        from django.utils import timezone
+
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["revealed_at"])
+
+        response = self.customer_client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertIsNotNone(data["evaluation"])
+
+        results = data["evaluation"]["results"]
+        self.assertLessEqual(len(results), 3)
+
+        visible_bid_ids = {
+            result["bid_id"]
+            for result in results
+            if result.get("bid_id") is not None
+        }
+
+        nested_bids = [
+            bid
+            for round_data in data["tender"]["rounds"]
+            for bid in round_data["bids"]
+        ]
+
+        self.assertLessEqual(len(nested_bids), 3)
+
+        expected_aliases = set(
+            Bid.objects.filter(
+                id__in=visible_bid_ids,
+            ).values_list("public_alias", flat=True)
+        )
+
+        nested_aliases = {
+            bid["public_alias"]
+            for bid in nested_bids
+        }
+
+        self.assertEqual(nested_aliases, expected_aliases)
+
+        for bid in nested_bids:
+            self.assertNotIn("id", bid)
+            self.assertNotIn("workshop", bid)
+            self.assertNotIn("workshop_name", bid)
+
+        self.assert_no_price_fields(data)
+    def test_authorized_consultant_can_see_all_bids_after_reveal(self):
+        from django.utils import timezone
+
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["revealed_at"])
+
+        response = self.consultant_client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        self.assertIsNotNone(data["evaluation"])
+
+        nested_bids = [
+            bid
+            for round_data in data["tender"]["rounds"]
+            for bid in round_data["bids"]
+        ]
+
+        self.assertEqual(len(nested_bids), len(self.bids))
+
+        returned_bid_ids = {
+            bid["id"]
+            for bid in nested_bids
+        }
+
+        expected_bid_ids = {
+            bid.id
+            for bid in self.bids
+        }
+
+        self.assertEqual(returned_bid_ids, expected_bid_ids)

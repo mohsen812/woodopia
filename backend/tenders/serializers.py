@@ -182,6 +182,7 @@ class BidSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "tender_round",
+			"public_alias",
             "workshop",
             "workshop_name",
             "total_amount",
@@ -209,46 +210,18 @@ class BidSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-
 class AnonymousBidSerializer(serializers.ModelSerializer):
 
-    items = BidItemSerializer(
-        many=True,
-        read_only=True,
-    )
-
-    payment_schedules = PaymentScheduleSerializer(
-        many=True,
-        read_only=True,
-    )
-
     class Meta:
-
         model = Bid
-
         fields = [
-            "id",
-            "tender_round",
-
+            "public_alias",
             "production_days",
             "delivery_days",
             "warranty_months",
-            "technical_notes",
-            "items",
-            "payment_schedules",
             "status",
-            "created_at",
-            "updated_at",
         ]
-
-        read_only_fields = [
-            "id",
-            "tender_round",
-            "status",
-            "created_at",
-            "updated_at",
-        ]
-
+        read_only_fields = fields
 class TenderRoundSerializer(serializers.ModelSerializer):
 
     bids = BidSerializer(
@@ -275,7 +248,27 @@ class TenderRoundSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
+class CustomerTenderRoundSerializer(serializers.ModelSerializer):
 
+    bids = AnonymousBidSerializer(
+        many=True,
+        read_only=True,
+    )
+
+
+    class Meta:
+
+        model = TenderRound
+
+        fields = [
+            "id",
+            "round_number",
+            "status",
+            "started_at",
+            "closed_at",
+            "created_at",
+            "bids",
+        ]
 class TenderRoundCreateSerializer(
     serializers.ModelSerializer
 ):
@@ -416,7 +409,31 @@ class TenderSerializer(serializers.ModelSerializer):
             "participants",
         ]
 
+class CustomerTenderSerializer(serializers.ModelSerializer):
 
+    rounds = CustomerTenderRoundSerializer(
+        many=True,
+        read_only=True,
+    )
+
+
+    class Meta:
+
+        model = Tender
+
+        fields = [
+            "id",
+            "project",
+            "title",
+            "description",
+            "status",
+            "standardization_status",
+
+            "created_at",
+            "updated_at",
+
+            "rounds",
+        ]
 class TenderAwardCreateSerializer(
     serializers.Serializer
 ):

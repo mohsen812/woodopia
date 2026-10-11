@@ -373,6 +373,13 @@ class Bid(models.Model):
         on_delete=models.CASCADE,
         related_name="tender_bids",
     )
+    public_alias = models.CharField(
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+    )
 
     total_amount = models.DecimalField(
         max_digits=15,

@@ -13,9 +13,12 @@ from rest_framework.exceptions import NotFound
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from tenders.models import Tender
+from tenders.models import Tender, Bid
 
-from tenders.serializers import TenderSerializer
+from tenders.serializers import (
+    TenderSerializer,
+    CustomerTenderSerializer,
+)
 from tenders.services import select_tender_bid
 
 from evaluation.services import evaluate_tender
@@ -1383,6 +1386,13 @@ class ProjectTenderView(
 
     def get(self, request, pk):
 
+        from tenders.authorization import (
+            is_manager,
+            has_customer_tender_access,
+            has_consultant_tender_access,
+        )
+        from tenders.visibility import tender_is_revealed
+
         project = self.get_project()
 
         project_item = (
@@ -1398,15 +1408,12 @@ class ProjectTenderView(
 
         tender = (
             Tender.objects
-            .filter(
-                project=project
-            )
+            .filter(project=project)
             .order_by("-created_at")
             .first()
         )
 
         if not tender:
-
             return Response({
                 "project_id": project.id,
                 "project_title": project.title,
@@ -1418,13 +1425,71 @@ class ProjectTenderView(
                 ),
             })
 
-        tender_data = TenderSerializer(
-            tender
-        ).data
+        manager_view = is_manager(request.user)
 
-        evaluation_data = evaluate_tender(
-            tender.id
+        consultant_view = (
+            has_consultant_tender_access(
+                request.user,
+                tender,
+            )
         )
+
+        customer_view = (
+            not manager_view
+            and not consultant_view
+            and has_customer_tender_access(
+                request.user,
+                tender,
+            )
+        )
+
+        revealed = tender_is_revealed(tender)
+
+        if customer_view:
+            tender_data = CustomerTenderSerializer(tender).data
+        else:
+            tender_data = TenderSerializer(tender).data
+
+        if customer_view and not revealed:
+
+            evaluation_data = None
+        else:
+
+            evaluation_data = evaluate_tender(tender.id)
+
+            if customer_view and isinstance(evaluation_data, dict):
+
+                results = evaluation_data.get("results", [])
+
+                # مشتری پس از افشا فقط سه پیشنهاد برتر را می‌بیند.
+                visible_results = results[:3]
+
+                visible_bid_ids = {
+                    item["bid_id"]
+                    for item in visible_results
+                    if item.get("bid_id") is not None
+                }
+
+                evaluation_data["results"] = visible_results
+
+                # شناسه‌های داخلی فقط برای پیدا کردن aliasها
+                # در سمت سرور استفاده می‌شوند.
+                visible_bid_aliases = set(
+                    Bid.objects.filter(
+                        id__in=visible_bid_ids,
+                    )
+                    .exclude(public_alias__isnull=True)
+                    .exclude(public_alias="")
+                    .values_list("public_alias", flat=True)
+                )
+
+                # در پاسخ مشتری، فیلتر فقط بر اساس alias عمومی است.
+                for round_data in tender_data.get("rounds", []):
+                    round_data["bids"] = [
+                        bid
+                        for bid in round_data.get("bids", [])
+                        if bid.get("public_alias") in visible_bid_aliases
+                    ]
 
         return Response({
             "project_id": project.id,
