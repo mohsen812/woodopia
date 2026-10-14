@@ -76,12 +76,19 @@ class TenderReportAPITests(TestCase):
             created_by=self.user,
             status="tender",
         )
+        now = timezone.now()
+
         self.tender = Tender.objects.create(
             project=self.project,
             title="Tender Report Test Tender",
             description="Test tender report.",
-            status="open",
-            reveal_at=timezone.now() - timedelta(minutes=1),
+            status="revealed",
+            reveal_at=now - timedelta(minutes=1),
+            revealed_at=now,
+            preliminary_approved_at=now,
+            commission_check_1=True,
+            commission_check_2=True,
+            rankings_published_at=now,
         )
 
         self.round = TenderRound.objects.create(
@@ -91,6 +98,10 @@ class TenderReportAPITests(TestCase):
         )
 
         self.client = APIClient()
+
+        self.client.force_authenticate(
+		    user=self.user
+        )
 
     def create_bid(
         self,
@@ -970,21 +981,18 @@ class TenderVisibilityTests(TestCase):
         )
 
 
-    def test_tender_revealed_after_reveal_time(self):
-
-        self.tender.reveal_at = (
-            timezone.now()
-            -
-            timedelta(hours=1)
-        )
-
+    def test_tender_not_revealed_just_because_reveal_time_passed(self):
+        self.tender.reveal_at = timezone.now() - timedelta(hours=1)
         self.tender.save()
 
-        self.assertTrue(
-            tender_is_revealed(
-                self.tender
-            )
-        )
+        self.assertFalse(tender_is_revealed(self.tender))
+
+    def test_tender_revealed_after_official_reveal_is_recorded(self):
+        self.tender.reveal_at = timezone.now() - timedelta(hours=1)
+        self.tender.revealed_at = timezone.now()
+        self.tender.save()
+
+        self.assertTrue(tender_is_revealed(self.tender))
 
 class TenderRevealLockAPITests(TestCase):
 
@@ -1020,6 +1028,7 @@ class TenderRevealLockAPITests(TestCase):
         )
 
         self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
 
     def test_report_is_locked_before_reveal(self):
@@ -1081,9 +1090,9 @@ class TenderBidVisibilityTests(TestCase):
 
         self.tender = Tender.objects.create(
             project=self.project,
-            title="Visibility Tender",
+            title="Visible Bid Tender",
             status="open",
-            reveal_at=timezone.now() + timedelta(hours=1),
+            reveal_at=timezone.now() - timedelta(hours=1),
         )
 
         self.round = TenderRound.objects.create(
@@ -1117,8 +1126,8 @@ class TenderBidVisibilityTests(TestCase):
 
     def test_workshop_can_only_see_own_bid_after_reveal(self):
 
-        self.tender.reveal_at = timezone.now()
-        self.tender.save()
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["revealed_at"])
 
         bids = get_visible_bids(
             self.tender,
@@ -1190,24 +1199,23 @@ class TenderVisibleBidsTests(TestCase):
 
 
         self.bids = []
-
         for index, workshop in enumerate(self.workshops):
-
             self.bids.append(
                 Bid.objects.create(
                     tender_round=self.round,
                     workshop=workshop,
-                    total_amount=1000000 - (index * 10000),
+                    total_amount=1000000 - index * 10000,
+                    final_amount=1000000 - index * 10000,
                     production_days=10,
                     delivery_days=5,
                     warranty_months=12,
-					status="submitted",
+                    status="submitted",
                 )
             )
 
-
     def test_customer_only_sees_top_three_bids(self):
-
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["revealed_at"])
         bids = get_visible_bids(
             self.tender,
             "customer",
@@ -1220,7 +1228,8 @@ class TenderVisibleBidsTests(TestCase):
 
 
     def test_consultant_sees_all_bids(self):
-
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["revealed_at"])
         bids = get_visible_bids(
             self.tender,
             "consultant",
@@ -1233,7 +1242,8 @@ class TenderVisibleBidsTests(TestCase):
 
 
     def test_workshop_only_sees_own_bid(self):
-
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["revealed_at"])
         bids = get_visible_bids(
             self.tender,
             "workshop",
@@ -1252,12 +1262,11 @@ class TenderVisibleBidsTests(TestCase):
 class TenderVisibleBidsAPITests(TestCase):
 
     def setUp(self):
-
         User = get_user_model()
 
         self.user = User.objects.create_user(
-            username="visible_api_user",
-            email="visible-api@test.local",
+            username="visible_api_customer",
+            email="visible-api-customer@test.local",
             password="test-password",
         )
 
@@ -1267,17 +1276,39 @@ class TenderVisibleBidsAPITests(TestCase):
             owner=self.user,
         )
 
+        self.consultant_user = User.objects.create_user(
+            username="visible_api_consultant",
+            email="visible-api-consultant@test.local",
+            password="test-password",
+        )
+
+        self.company = Organization.objects.create(
+            name="API Consultant Company",
+            organization_type="company",
+            owner=self.consultant_user,
+        )
+
+        consultant_role = OrganizationRole.objects.create(
+            name="consultant",
+            organization_type="company",
+        )
+
+        consultant_membership = Membership.objects.create(
+            user=self.consultant_user,
+            organization=self.company,
+            role_fk=consultant_role,
+            status="active",
+        )
+
         self.workshops = []
 
         for index in range(7):
-            self.workshops.append(
-                Organization.objects.create(
-                    name=f"API Workshop {index}",
-                    organization_type="workshop",
-                    owner=self.user,
-                )
+            workshop = Organization.objects.create(
+                name=f"API Workshop {index}",
+                organization_type="workshop",
+                owner=self.user,
             )
-
+            self.workshops.append(workshop)
 
         self.project = Project.objects.create(
             title="Visible API Project",
@@ -1286,42 +1317,62 @@ class TenderVisibleBidsAPITests(TestCase):
             status="tender",
         )
 
+        ProjectAssignment.objects.create(
+            project=self.project,
+            membership=consultant_membership,
+            assigned_by=self.consultant_user,
+            status="active",
+        )
 
         self.tender = Tender.objects.create(
             project=self.project,
             title="Visible API Tender",
-            status="open",
+            status="revealed",
             reveal_at=timezone.now() - timedelta(hours=1),
+            revealed_at=timezone.now(),
+            preliminary_approved_at=timezone.now(),
+            commission_check_1=True,
+            commission_check_2=True,
+            rankings_published_at=timezone.now(),
         )
-
 
         self.round = TenderRound.objects.create(
             tender=self.tender,
             round_number=1,
-            status="closed",
+            status="evaluated",
         )
 
+        from tenders.alias_generator import assign_bid_alias
 
         for index, workshop in enumerate(self.workshops):
+            TenderParticipant.objects.create(
+                tender=self.tender,
+                organization=workshop,
+                response_status="accepted",
+            )
 
-            Bid.objects.create(
+            bid = Bid.objects.create(
                 tender_round=self.round,
                 workshop=workshop,
                 total_amount=1000000 - index * 10000,
-				final_amount=1000000 - index * 10000,
+                final_amount=1000000 - index * 10000,
                 production_days=10,
                 delivery_days=5,
                 warranty_months=12,
-				status="submitted",
+                status="submitted",
             )
+            assign_bid_alias(bid)
 
+        self.customer_client = APIClient()
+        self.customer_client.force_authenticate(user=self.user)
 
-        self.client = APIClient()
+        self.consultant_client = APIClient()
+        self.consultant_client.force_authenticate(
+            user=self.consultant_user
+        )
+    def test_customer_visible_bids_api_reveals_identity_only_for_top_three(self):
 
-
-    def test_customer_visible_bids_api_returns_three(self):
-
-        response = self.client.get(
+        response = self.customer_client.get(
             "/api/tenders/{}/visible-bids/?viewer_type=customer".format(
                 self.tender.id
             )
@@ -1332,15 +1383,92 @@ class TenderVisibleBidsAPITests(TestCase):
             200,
         )
 
+        data = response.json()
+
         self.assertEqual(
-            len(response.json()),
+            len(data),
+            7,
+        )
+
+        for bid in data:
+            self.assertIsNotNone(
+                bid.get("public_alias")
+            )
+
+            self.assertIsNotNone(
+                bid.get("total_score")
+            )
+
+        ranked_bids = [
+            bid
+            for bid in data
+            if bid.get("rank") in (1, 2, 3)
+        ]
+
+        self.assertEqual(
+            len(ranked_bids),
             3,
         )
+
+        for bid in ranked_bids:
+            self.assertIsNotNone(
+                bid.get("workshop_name")
+            )
+
+        for bid in data:
+            if bid.get("rank") not in (1, 2, 3):
+                self.assertIsNone(
+                    bid.get("workshop_name")
+                )
+
+    def test_customer_visible_bids_api_shows_payment_stage_count_only(self):
+        from tenders.models import PaymentSchedule
+
+        bid = Bid.objects.filter(
+            tender_round=self.round
+        ).first()
+
+        PaymentSchedule.objects.create(
+            bid=bid,
+            stage_order=1,
+            title="Advance",
+            percentage=30,
+            amount=300000,
+            description="Private payment detail",
+        )
+        PaymentSchedule.objects.create(
+            bid=bid,
+            stage_order=2,
+            title="Completion",
+            percentage=70,
+            amount=700000,
+            description="Private completion detail",
+        )
+
+        response = self.customer_client.get(
+            "/api/tenders/{}/visible-bids/?viewer_type=customer".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        bid_data = next(
+            item for item in data
+            if item["public_alias"] == bid.public_alias
+        )
+
+        self.assertEqual(bid_data["payment_stage_count"], 2)
+        self.assertNotIn("payment_schedules", bid_data)
+        self.assertNotIn("percentage", bid_data)
+        self.assertNotIn("amount", bid_data)
+        self.assertNotIn("description", bid_data)
 
 
     def test_consultant_visible_bids_api_returns_all(self):
 
-        response = self.client.get(
+        response = self.consultant_client.get(
             "/api/tenders/{}/visible-bids/?viewer_type=consultant".format(
                 self.tender.id
             )
@@ -1355,6 +1483,148 @@ class TenderVisibleBidsAPITests(TestCase):
             len(response.json()),
             7,
         )
+
+    def _prepare_for_consultant_review(self):
+        self.tender.status = "closed"
+        self.tender.revealed_at = None
+        self.tender.save(update_fields=["status", "revealed_at"])
+
+        self.round.status = "closed"
+        self.round.save(update_fields=["status"])
+
+        return Bid.objects.filter(
+            tender_round=self.round,
+            status="submitted",
+        ).first()
+
+    def test_consultant_review_list_hides_workshop_identity(self):
+        bid = self._prepare_for_consultant_review()
+
+        response = self.consultant_client.get(
+            "/api/tenders/{}/visible-bids/?viewer_type=consultant".format(
+                self.tender.id
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 7)
+
+        bid_data = next(item for item in data if item["id"] == bid.id)
+
+        self.assertEqual(bid_data["public_alias"], bid.public_alias)
+        self.assertIn("total_amount", bid_data)
+        self.assertIn("final_amount", bid_data)
+        self.assertEqual(bid_data["review_status"], "pending")
+        self.assertNotIn("workshop", bid_data)
+        self.assertNotIn("workshop_name", bid_data)
+
+    def test_consultant_cannot_reject_bid_without_reason(self):
+        bid = self._prepare_for_consultant_review()
+
+        response = self.consultant_client.patch(
+            "/api/tenders/bids/{}/review/".format(bid.id),
+            {"decision": "rejected"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        bid.refresh_from_db()
+        self.assertEqual(bid.review_status, "pending")
+        self.assertIsNone(bid.reviewed_at)
+        self.assertIsNone(bid.reviewed_by)
+
+    def test_consultant_can_approve_submitted_bid(self):
+        bid = self._prepare_for_consultant_review()
+
+        response = self.consultant_client.patch(
+            "/api/tenders/bids/{}/review/".format(bid.id),
+            {"decision": "approved"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        bid.refresh_from_db()
+        self.assertEqual(bid.review_status, "approved")
+        self.assertIsNotNone(bid.reviewed_at)
+        self.assertEqual(bid.reviewed_by, self.consultant_user)
+        self.assertEqual(bid.rejection_reason, "")
+        self.assertEqual(bid.status, "submitted")
+
+    def test_consultant_can_change_review_decision(self):
+        bid = self._prepare_for_consultant_review()
+        reason = "مشخصات فنی با الزامات پروژه مطابقت ندارد."
+
+        approve_response = self.consultant_client.patch(
+            "/api/tenders/bids/{}/review/".format(bid.id),
+            {"decision": "approved"},
+            format="json",
+        )
+        self.assertEqual(approve_response.status_code, 200)
+
+        bid.refresh_from_db()
+        first_reviewed_at = bid.reviewed_at
+
+        reject_response = self.consultant_client.patch(
+            "/api/tenders/bids/{}/review/".format(bid.id),
+            {
+                "decision": "rejected",
+                "rejection_reason": reason,
+            },
+            format="json",
+        )
+        self.assertEqual(reject_response.status_code, 200)
+
+        bid.refresh_from_db()
+        self.assertEqual(bid.review_status, "rejected")
+        self.assertEqual(bid.rejection_reason, reason)
+        self.assertEqual(bid.reviewed_by, self.consultant_user)
+        self.assertGreaterEqual(bid.reviewed_at, first_reviewed_at)
+
+        approve_again_response = self.consultant_client.patch(
+            "/api/tenders/bids/{}/review/".format(bid.id),
+            {"decision": "approved"},
+            format="json",
+        )
+        self.assertEqual(approve_again_response.status_code, 200)
+
+        bid.refresh_from_db()
+        self.assertEqual(bid.review_status, "approved")
+        self.assertEqual(bid.rejection_reason, "")
+        self.assertEqual(bid.reviewed_by, self.consultant_user)
+        self.assertEqual(bid.status, "submitted")
+
+    def test_consultant_cannot_change_decision_after_official_reveal(self):
+        bid = self._prepare_for_consultant_review()
+
+        bid.review_status = "approved"
+        bid.reviewed_at = timezone.now()
+        bid.reviewed_by = self.consultant_user
+        bid.save(update_fields=[
+            "review_status", "reviewed_at", "reviewed_by"
+        ])
+
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["status", "revealed_at"])
+
+        response = self.consultant_client.patch(
+            "/api/tenders/bids/{}/review/".format(bid.id),
+            {
+                "decision": "rejected",
+                "rejection_reason": "تغییر پس از افشای رسمی",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        bid.refresh_from_db()
+        self.assertEqual(bid.review_status, "approved")
+        self.assertEqual(bid.rejection_reason, "")
+
 class TenderRevealWorkflowTests(TestCase):
 
     def setUp(self):
@@ -1396,6 +1666,31 @@ class TenderRevealWorkflowTests(TestCase):
                 self.tender.id
             )
 
+
+    def test_cannot_reveal_while_submitted_bid_is_pending(self):
+        workshop = Organization.objects.create(
+            name="Pending Review Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+        Bid.objects.create(
+            tender_round=self.round,
+            workshop=workshop,
+            status="submitted",
+        )
+
+        self.tender.reveal_at = timezone.now() - timedelta(minutes=1)
+        self.tender.save(update_fields=["reveal_at"])
+
+        with self.assertRaisesMessage(
+            ValueError,
+            "All submitted bids must be reviewed before reveal.",
+        ):
+            reveal_tender(self.tender.id)
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "closed")
+        self.assertIsNone(self.tender.revealed_at)
 
     def test_reveal_after_time(self):
 
@@ -2559,8 +2854,13 @@ class AnonymousTenderBidAPITests(TestCase):
         )
 
         self.assertEqual(
-            data[0]["id"],
-            self.submitted_bid.id,
+            data[0]["status"],
+            "submitted",
+        )
+
+        self.assertNotIn(
+            "id",
+            data[0],
         )
 
 
@@ -2623,20 +2923,16 @@ class AnonymousTenderBidAPITests(TestCase):
 
         data = response.json()
 
-        bid_ids = [
-            item["id"]
+        bid_statuses = [
+            item["status"]
             for item in data
         ]
 
-        self.assertIn(
-            self.submitted_bid.id,
-            bid_ids,
-        )
+        self.assertIn("submitted", bid_statuses)
+        self.assertNotIn("draft", bid_statuses)
 
-        self.assertNotIn(
-            self.draft_bid.id,
-            bid_ids,
-        )
+        for item in data:
+            self.assertNotIn("id", item)
 
     def test_anonymous_bids_use_latest_revealed_round_only(self):
         older_round = TenderRound.objects.create(
@@ -2677,20 +2973,16 @@ class AnonymousTenderBidAPITests(TestCase):
 
         data = response.json()
 
-        bid_ids = [
-            item["id"]
+        production_days = [
+            item["production_days"]
             for item in data
         ]
 
-        self.assertIn(
-            older_bid.id,
-            bid_ids,
-        )
+        self.assertIn(older_bid.production_days, production_days)
+        self.assertNotIn(self.submitted_bid.production_days, production_days)
 
-        self.assertNotIn(
-            self.submitted_bid.id,
-            bid_ids,
-        )
+        for item in data:
+            self.assertNotIn("id", item)
 
 
 class TenderOneOpenPerProjectTests(TestCase):
@@ -2813,3 +3105,117 @@ class BidFinalAmountCalculationTests(TestCase):
             bid.final_amount,
             Decimal("1000000"),
         )
+
+
+class TenderCommissionAndRankingPublicationAPITests(TestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="commission_ranking_test_user",
+            password="test-password",
+        )
+        self.user.is_staff = True
+        self.user.is_superuser = True
+        self.user.save(update_fields=["is_staff", "is_superuser"])
+
+        self.customer = Organization.objects.create(
+            name="Commission Ranking Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.project = Project.objects.create(
+            title="Commission Ranking Project",
+            customer=self.customer,
+            created_by=self.user,
+        )
+
+        now = timezone.now()
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Commission Ranking Tender",
+            status="revealed",
+            reveal_at=now,
+            revealed_at=now,
+            preliminary_approved_at=now,
+            commission_check_1=False,
+            commission_check_2=False,
+        )
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_rankings_cannot_be_published_before_both_checks(self):
+        response = self.client.post(
+            "/api/tenders/{}/publish-rankings/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.tender.refresh_from_db()
+        self.assertIsNone(self.tender.rankings_published_at)
+
+    def test_each_commission_check_is_independent(self):
+        response = self.client.post(
+            "/api/tenders/{}/commission-check-1/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.tender.refresh_from_db()
+        self.assertTrue(self.tender.commission_check_1)
+        self.assertFalse(self.tender.commission_check_2)
+
+        response = self.client.post(
+            "/api/tenders/{}/publish-rankings/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.tender.refresh_from_db()
+        self.assertIsNone(self.tender.rankings_published_at)
+
+    def test_rankings_can_be_published_after_both_checks(self):
+        for endpoint in ("commission-check-1", "commission-check-2"):
+            response = self.client.post(
+                "/api/tenders/{}/{}/".format(self.tender.id, endpoint),
+                {},
+                format="json",
+            )
+            self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            "/api/tenders/{}/publish-rankings/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.tender.refresh_from_db()
+        self.assertTrue(self.tender.commission_check_1)
+        self.assertTrue(self.tender.commission_check_2)
+        self.assertIsNotNone(self.tender.rankings_published_at)
+
+    def test_commission_checks_cannot_be_changed_after_publication(self):
+        now = timezone.now()
+        self.tender.commission_check_1 = True
+        self.tender.commission_check_2 = True
+        self.tender.rankings_published_at = now
+        self.tender.save(update_fields=[
+            "commission_check_1",
+            "commission_check_2",
+            "rankings_published_at",
+        ])
+
+        response = self.client.post(
+            "/api/tenders/{}/commission-check-1/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)

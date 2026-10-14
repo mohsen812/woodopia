@@ -401,6 +401,7 @@ class ProjectCreateTests(TestCase):
             "/api/projects/"
         )
 
+
         self.assertEqual(
             response.status_code,
             200,
@@ -1576,11 +1577,60 @@ class ProjectTenderVisibilityTests(TestCase):
         self.assert_no_price_fields(data)
         self.assert_no_price_fields(data)
 
-    def test_customer_sees_at_most_three_bids_after_reveal(self):
+    def test_customer_only_sees_top_three_workshop_identities_after_rankings_published(self):
         from django.utils import timezone
 
-        self.tender.revealed_at = timezone.now()
-        self.tender.save(update_fields=["revealed_at"])
+        now = timezone.now()
+        self.tender.revealed_at = now
+        self.tender.commission_check_1 = True
+        self.tender.commission_check_2 = True
+        self.tender.rankings_published_at = now
+        self.tender.save(update_fields=[
+            "revealed_at",
+            "commission_check_1",
+            "commission_check_2",
+            "rankings_published_at",
+        ])
+
+        response = self.customer_client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.data["evaluation"])
+
+        results = response.data["evaluation"]["results"]
+        self.assertEqual(len(results), len(self.bids))
+
+        for result in results:
+            if result["rank"] <= 3:
+                self.assertIsNotNone(result["workshop_name"])
+                self.assertIsNotNone(result["workshop_id"])
+            else:
+                self.assertIsNone(result["workshop_name"])
+                self.assertIsNone(result["workshop_id"])
+
+        self.assertEqual(
+            response.data["evaluation"]["summary"]["winner"],
+            next(
+                result["workshop_name"]
+                for result in results
+                if result["rank"] == 1
+            ),
+        )
+
+    def test_customer_sees_all_bids_after_reveal(self):
+        from django.utils import timezone
+
+        now = timezone.now()
+        self.tender.revealed_at = now
+        self.tender.commission_check_1 = True
+        self.tender.commission_check_2 = True
+        self.tender.rankings_published_at = now
+        self.tender.save(update_fields=[
+            "revealed_at",
+            "commission_check_1",
+            "commission_check_2",
+            "rankings_published_at",
+        ])
 
         response = self.customer_client.get(self.url)
 
@@ -1590,7 +1640,7 @@ class ProjectTenderVisibilityTests(TestCase):
         self.assertIsNotNone(data["evaluation"])
 
         results = data["evaluation"]["results"]
-        self.assertLessEqual(len(results), 3)
+        self.assertEqual(len(results), len(self.bids))
 
         visible_bid_ids = {
             result["bid_id"]
@@ -1604,7 +1654,7 @@ class ProjectTenderVisibilityTests(TestCase):
             for bid in round_data["bids"]
         ]
 
-        self.assertLessEqual(len(nested_bids), 3)
+        self.assertEqual(len(nested_bids), len(self.bids))
 
         expected_aliases = set(
             Bid.objects.filter(
@@ -1658,3 +1708,197 @@ class ProjectTenderVisibilityTests(TestCase):
         }
 
         self.assertEqual(returned_bid_ids, expected_bid_ids)
+
+
+    def test_authorized_consultant_sees_anonymous_bids_before_reveal(self):
+
+        self.tender.revealed_at = None
+        self.tender.reveal_at = None
+
+        self.tender.save(
+            update_fields=[
+                "revealed_at",
+                "reveal_at",
+            ],
+        )
+
+        response = self.consultant_client.get(
+            self.url
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertIsNone(
+            data["evaluation"]
+        )
+
+        nested_bids = [
+            bid
+            for round_data in data["tender"]["rounds"]
+            for bid in round_data["bids"]
+        ]
+
+        self.assertEqual(
+            len(nested_bids),
+            len(self.bids),
+        )
+
+        for bid in nested_bids:
+
+            self.assertTrue(
+                bid["public_alias"]
+            )
+
+            self.assertNotIn(
+                "workshop",
+                bid,
+            )
+
+            self.assertNotIn(
+                "workshop_name",
+                bid,
+            )
+
+        self.assert_no_price_fields(data)
+class ProjectTenderVisibilityAPITests(TestCase):
+
+    def setUp(self):
+
+        self.client = APIClient()
+
+        self.user = User.objects.create_user(
+            username="tender_visibility_api_user",
+            password="testpass123",
+        )
+
+        self.customer = Organization.objects.create(
+            name="API Customer",
+            organization_type="customer",
+            status="active",
+            owner=self.user,
+        )
+
+        role = OrganizationRole.objects.create(
+            name="owner",
+            organization_type="customer",
+        )
+
+        Membership.objects.create(
+            user=self.user,
+            organization=self.customer,
+            role_fk=role,
+            status="active",
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        self.project = Project.objects.create(
+            title="Visibility API Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        ProjectItem.objects.create(
+            project=self.project,
+            name="Visibility Test Item",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Visibility API Tender",
+            status="open",
+            reveal_at=timezone.now() + timezone.timedelta(hours=2),
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Hidden Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        self.bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            total_amount=5000000,
+            status="submitted",
+            public_alias="ALPHA-4A12",
+        )
+
+
+    def test_pre_reveal_tender_does_not_expose_price_in_api(self):
+
+        response = self.client.get(
+            "/api/projects/{}/tender/".format(
+                self.project.id
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        bids = (
+            data["tender"]["rounds"][0]["bids"]
+        )
+
+        self.assertEqual(
+            len(bids),
+            1,
+        )
+
+        bid = bids[0]
+
+        self.assertIn(
+            "public_alias",
+            bid,
+        )
+
+        self.assertNotIn(
+            "total_amount",
+            bid,
+        )
+
+        self.assertNotIn(
+            "final_amount",
+            bid,
+        )
+
+        self.assertEqual(
+            bid["public_alias"],
+            "ALPHA-4A12",
+        )
+
+        self.assertNotIn(
+            "workshop",
+            bid,
+        )
+
+        self.assertNotIn(
+            "workshop_name",
+            bid,
+        )
+
+        self.assertFalse(
+            data["visibility"]["show_workshop_identity"]
+        )
+
+        self.assertFalse(
+            data["visibility"]["show_price"]
+        )

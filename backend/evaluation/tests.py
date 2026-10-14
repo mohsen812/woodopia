@@ -397,6 +397,47 @@ class EvaluationServiceTests(TestCase):
             status="submitted",
         )
 
+    def test_rejected_bid_is_excluded_from_evaluation(self):
+        eligible_workshop = self.create_workshop(
+            "Eligible Workshop"
+        )
+        rejected_workshop = self.create_workshop(
+            "Rejected Workshop"
+        )
+
+        eligible_bid = self.create_bid(
+            workshop=eligible_workshop,
+            total_amount=150000000,
+            production_days=20,
+            delivery_days=10,
+            warranty_months=24,
+        )
+        rejected_bid = self.create_bid(
+            workshop=rejected_workshop,
+            total_amount=100000000,
+            production_days=10,
+            delivery_days=5,
+            warranty_months=36,
+        )
+
+        rejected_bid.review_status = "rejected"
+        rejected_bid.rejection_reason = "Failed technical review."
+        rejected_bid.save(
+            update_fields=["review_status", "rejection_reason"]
+        )
+
+        result = evaluate_tender(self.tender.id)
+
+        self.assertEqual(result["summary"]["total_bids"], 1)
+        self.assertEqual(
+            [item["bid_id"] for item in result["results"]],
+            [eligible_bid.id],
+        )
+        self.assertNotIn(
+            rejected_bid.id,
+            [item["bid_id"] for item in result["results"]],
+        )
+
     def test_tender_without_bids_returns_no_bids(self):
         result = evaluate_tender(
             self.tender.id

@@ -311,7 +311,10 @@ def get_project_progress(project, user=None):
             .first()
         )
 
-        if tender is not None:
+        if (
+            tender is not None
+            and tender.standardization_status != "draft"
+        ):
             stages[1]["state"] = "completed"
             stages[2]["state"] = "current"
             current_stage = "standardization"
@@ -493,13 +496,13 @@ def get_project_progress(project, user=None):
     # Health
     # ---------------------------------
 
+
     health = "on_track"
 
     if any(stage["state"] == "blocked" for stage in stages):
         health = "blocked"
     elif any(stage["state"] == "attention" for stage in stages):
         health = "delayed"
-
     return {
         "current_stage": current_stage,
         "stages": stages,

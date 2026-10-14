@@ -4,11 +4,9 @@ from django.utils import timezone
 from evaluation.services import evaluate_round
 
 from .models import (
-
+    Bid,
     Tender,
-
     TenderRoundEvaluation,
-
 )
 
 
@@ -49,6 +47,17 @@ def reveal_tender(tender_id):
             "No closed round available for evaluation."
         )
 
+    pending_bids_exist = Bid.objects.filter(
+        tender_round=active_round,
+        status="submitted",
+        review_status="pending",
+    ).exists()
+
+    if pending_bids_exist:
+        raise ValueError(
+            "All submitted bids must be reviewed before reveal."
+        )
+
     evaluation = evaluate_round(
         active_round.id
     )
@@ -64,8 +73,6 @@ def reveal_tender(tender_id):
         winner_bid = None
 
         if winner_bid_id:
-            from .models import Bid
-
             winner_bid = Bid.objects.get(
                 id=winner_bid_id
             )
@@ -88,14 +95,17 @@ def reveal_tender(tender_id):
             ]
         )
 
-        tender.status = "revealed"
+        now = timezone.now()
 
-        tender.revealed_at = timezone.now()
+        tender.status = "revealed"
+        tender.revealed_at = now
+        tender.preliminary_approved_at = now
 
         tender.save(
             update_fields=[
                 "status",
                 "revealed_at",
+                "preliminary_approved_at",
             ]
         )
 

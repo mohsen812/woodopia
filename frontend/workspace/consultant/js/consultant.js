@@ -621,7 +621,7 @@ async function openConsultantProjectModal(
 ================================================== */
 
 function renderProjectJourney(
-    status
+    progress
 ) {
 
     const stages = [
@@ -655,10 +655,10 @@ function renderProjectJourney(
 
 
     const currentIndex =
-        stages.findIndex(
-            stage =>
-                stage.key === status
-        );
+    stages.findIndex(
+        stage =>
+            stage.key === progress?.current_stage
+    );
 
 
     const activeIndex =
@@ -813,7 +813,7 @@ function renderConsultantProject(
 
         journey.innerHTML =
             renderProjectJourney(
-                project.status
+                project.progress
             );
 
     }

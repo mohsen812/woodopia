@@ -17,6 +17,10 @@ from .views import (
     TenderEvaluationView,
     TenderReportView,
     TenderBidListView,
+    ConsultantBidReviewView,
+    TenderRevealView,
+    TenderCommissionCheckView,
+    TenderPublishRankingsView,
     AnonymousTenderBidListView,
     TenderSelectBidView,
     TenderAwardView,
@@ -105,6 +109,26 @@ urlpatterns = [
     ),
 
     path(
+        "<int:pk>/reveal/",
+        TenderRevealView.as_view(),
+        name="tender-reveal",
+    ),
+    path(
+        "<int:pk>/commission-check-1/",
+        TenderCommissionCheckView.as_view(check_number=1),
+        name="tender-commission-check-1",
+    ),
+    path(
+        "<int:pk>/commission-check-2/",
+        TenderCommissionCheckView.as_view(check_number=2),
+        name="tender-commission-check-2",
+    ),
+    path(
+        "<int:pk>/publish-rankings/",
+        TenderPublishRankingsView.as_view(),
+        name="tender-publish-rankings",
+    ),
+    path(
         "<int:pk>/evaluation/",
         TenderEvaluationView.as_view(),
         name="tender-evaluation"
@@ -138,6 +162,11 @@ urlpatterns = [
         "<int:tender_id>/bids/",
         BidCreateView.as_view(),
         name="bid-create"
+    ),
+    path(
+        "bids/<int:pk>/review/",
+        ConsultantBidReviewView.as_view(),
+        name="consultant-bid-review",
     ),
     path(
         "bids/<int:pk>/",

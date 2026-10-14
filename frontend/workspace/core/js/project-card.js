@@ -133,19 +133,27 @@ function renderProjectProgress(progress) {
             ? currentStage.label
             : "وضعیت نامشخص";
 
-
     const stagesHtml =
         progress.stages.map(stage => {
 
+            const isCurrentStage =
+                stage.key === progress.current_stage;
+
+
             const stateClass =
-                getProjectProgressStateClass(
-                    stage.state
-                );
+                [
+                    getProjectProgressStateClass(
+                        stage.state
+                    ),
+                    ...(isCurrentStage ? ["current"] : [])
+                ].join(" ");
+
 
             const stateIcon =
                 getProjectProgressStateIcon(
                     stage.state
                 );
+
 
             return `
                 <div
@@ -173,7 +181,6 @@ function renderProjectProgress(progress) {
             `;
 
         }).join("");
-
 
     const nextAction =
         progress.next_action &&
@@ -1463,6 +1470,11 @@ function showProject(project) {
 
 function openProjectDetail(project) {
 
+    console.log(
+        "DETAIL PROJECT PROGRESS:",
+        project.progress
+    );
+
     let projectView =
         document.getElementById(
             "project-detail-view"
@@ -2371,6 +2383,10 @@ function renderTenderDashboard(
         data.evaluation;
 
 
+    const visibility =
+        data.visibility || {};
+
+
     if (!tender) {
 
         container.innerHTML = `
@@ -2408,6 +2424,9 @@ function renderTenderDashboard(
 
     const results =
         evaluation?.results || [];
+
+    console.log("FEEMAAS EVALUATION:", evaluation);
+    console.log("FEEMAAS RESULTS:", results);
 
 
     container.innerHTML = `
@@ -2581,22 +2600,47 @@ function renderTenderDashboard(
                 </div>
 
 
-                ${
-                    results.length
-                        ? results.map(
-                            bid => renderTenderBid(
-                                bid,
-                                tender
-                            )
-                        ).join("")
-                        : `
-                            <div class="tender-empty">
+                <div class="tender-bids-slider">
 
-                                هنوز پیشنهادی ثبت نشده است.
 
-                            </div>
-                        `
-                }
+                    <button
+                        class="tender-slider-arrow tender-slider-prev"
+                        type="button"
+                    >
+                        ‹
+                    </button>
+
+
+                    <div class="tender-bids-track">
+
+                        ${
+                            results.length
+                                ? results.map(
+                                    bid => renderTenderBid(
+                                        bid,
+                                        tender,
+                                        visibility
+                                    )
+                                ).join("")
+                                : `
+                                    <div class="tender-empty">
+                                        هنوز پیشنهادی ثبت نشده است.
+                                    </div>
+                                `
+                        }
+
+                    </div>
+
+
+    <button
+        class="tender-slider-arrow tender-slider-next"
+        type="button"
+    >
+        ›
+    </button>
+
+
+</div>
 
             </div>
 
@@ -2604,6 +2648,57 @@ function renderTenderDashboard(
         </div>
 
     `;
+	    const bidsTrack =
+        container.querySelector(
+            ".tender-bids-track"
+        );
+
+    const nextButton =
+        container.querySelector(
+            ".tender-slider-next"
+        );
+
+    const prevButton =
+        container.querySelector(
+            ".tender-slider-prev"
+        );
+
+
+    if (
+        bidsTrack &&
+        nextButton &&
+        prevButton
+    ) {
+
+        const scrollAmount = 360;
+
+
+        nextButton.addEventListener(
+            "click",
+            () => {
+
+                bidsTrack.scrollBy({
+                    left: scrollAmount,
+                    behavior: "smooth",
+                });
+
+            }
+        );
+
+
+        prevButton.addEventListener(
+            "click",
+            () => {
+
+                bidsTrack.scrollBy({
+                    left: -scrollAmount,
+                    behavior: "smooth",
+                });
+
+            }
+        );
+
+    }
     container
         .querySelectorAll(
             ".tender-award-button"
@@ -2700,7 +2795,8 @@ await apiPost(
 
 function renderTenderBid(
     bid,
-    tender
+    tender,
+    visibility
 ) {
 
     console.log(
@@ -2708,16 +2804,29 @@ function renderTenderBid(
         bid
     );
 
+	const rankClass =
+        bid.rank === 1
+            ? "rank-gold"
+            : bid.rank === 2
+                ? "rank-blue"
+                : bid.rank === 3
+                    ? "rank-green"
+                    : "";
+
     return `
 <div
-            class="tender-bid
-                ${
-                    bid.rank === 1
-                        ? "tender-bid-winner"
-                        : ""
-                }"
-        >
+    class="
+        tender-bid
+        ${rankClass}
+        ${
+            bid.rank === 1
+                ? "tender-bid-winner"
+                : ""
+        }
+    "
+>
 
+    <div class="bid-led"></div>
 
             <div class="tender-bid-rank">
 
@@ -2726,7 +2835,11 @@ function renderTenderBid(
                 </span>
 
                 <strong>
-                    #${bid.rank}
+                    ${
+                        visibility.show_rank
+                            ? `#${bid.rank ?? "—"}`
+                            : "—"
+                    }
                 </strong>
 
             </div>
@@ -2739,10 +2852,17 @@ function renderTenderBid(
                 </span>
 
                 <h4>
-                    ${escapeHtml(
-                        bid.workshop_name ||
-                        "کارگاه نامشخص"
-                    )}
+                    ${
+                        visibility.show_workshop_identity
+                            ? escapeHtml(
+                                bid.workshop_name ||
+                                "کارگاه نامشخص"
+                            )
+                            : (
+                                bid.public_alias ||
+                                "پیشنهاد ناشناس"
+                            )
+                    }
                 </h4>
 
 
@@ -2755,9 +2875,13 @@ function renderTenderBid(
                         </span>
 
                         <strong>
-                            ${formatTenderAmount(
-                                bid.amount
-                            )}
+                            ${
+                                visibility.show_price
+                                    ? formatTenderAmount(
+                                        bid.amount
+                                    )
+                                    : "مخفی"
+                            }
                         </strong>
 
                         <small>
@@ -2825,12 +2949,18 @@ function renderTenderBid(
                         </span>
 
                         <strong>
-                            ${bid.total_score ?? "—"}
+                            ${
+                                visibility.show_score
+                                    ? (bid.total_score ?? "—")
+                                    : "—"
+                            }
                         </strong>
 
-                        <small>
-                            / 100
-                        </small>
+                        ${
+                            visibility.show_score
+                                ? `<small>/ 100</small>`
+                                : ""
+                        }
 
                     </div>
 

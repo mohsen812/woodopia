@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
 from organizations.models import (
@@ -38,6 +39,7 @@ from .services import (
     award_tender,
     select_tender_bid,
 )
+from .workflows import reveal_tender
 
 from .models import (
     Tender,
@@ -54,7 +56,8 @@ from .serializers import (
     TenderSerializer,
     TenderParticipantSerializer,
     BidSerializer,
-	AnonymousBidSerializer,
+    AnonymousBidSerializer,
+    ConsultantBidReviewSerializer,
     TenderRoundCreateSerializer,
     BidItemSerializer,
     PaymentScheduleSerializer,
@@ -64,8 +67,8 @@ from .serializers import (
     ConsultantSpecificationSerializer,
     SpecificationAttachmentSerializer,
     WorkshopTenderInvitationSerializer,
-
-
+    CustomerPriceBidSerializer,
+    CustomerRankedBidSerializer,
 )
 
 
@@ -2030,41 +2033,64 @@ class BidItemCreateView(
         serializer.save(
             bid=bid
         )
-class TenderEvaluationView(
-    generics.GenericAPIView
-):
+class TenderEvaluationView(generics.GenericAPIView):
 
-    queryset = Tender.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
 
-        result = evaluate_tender(pk)
+        tender = get_object_or_404(Tender, pk=pk)
 
-        return Response(result)
-class TenderReportView(
-    generics.GenericAPIView
-):
-
-    queryset = Tender.objects.all()
-
-    def get(self, request, pk):
-
-        tender = self.get_object()
+        if not has_consultant_tender_access(request.user, tender):
+            return Response(
+                {"status": "forbidden", "message": "دسترسی ارزیابی فقط برای مشاور مجاز است."},
+                status=403,
+            )
 
         if not tender_is_revealed(tender):
             return Response(
-                {
-                    "status": "locked",
-                    "message": "Tender results are not revealed yet."
-                },
-                status=403
+                {"status": "locked", "message": "ابتدا باید بازگشایی پیشنهادها ثبت شود."},
+                status=403,
             )
 
-        report = build_tender_report(
-            pk
+        return Response(evaluate_tender(tender.id))
+
+
+class TenderReportView(generics.GenericAPIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+
+        tender = get_object_or_404(Tender, pk=pk)
+
+        allowed = (
+            has_consultant_tender_access(request.user, tender)
+            or has_customer_tender_access(request.user, tender)
         )
 
-        return Response(report)
+        if not allowed:
+            return Response(
+                {"status": "forbidden", "message": "شما مجاز به مشاهده این گزارش نیستید."},
+                status=403,
+            )
+
+        if not (
+            tender.commission_check_1
+            and tender.commission_check_2
+            and tender.rankings_published_at
+        ):
+            return Response(
+                {
+                    "status": "locked",
+                    "message": "گزارش پس از تأیید هر دو کارمزد و انتشار رتبه‌بندی در دسترس قرار می‌گیرد.",
+                },
+                status=403,
+            )
+
+        return Response(build_tender_report(tender.id))
+
+
 class PaymentScheduleListCreateView(generics.ListCreateAPIView):
 
     serializer_class = PaymentScheduleSerializer
@@ -2133,73 +2159,287 @@ class PaymentScheduleListCreateView(generics.ListCreateAPIView):
             stage_order=next_stage,
             amount=amount,
         )
-class TenderBidListView(
-    generics.ListAPIView
-):
+class ConsultantBidReviewView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    serializer_class = BidSerializer
+    def patch(self, request, pk):
+        with transaction.atomic():
+            bid = get_object_or_404(
+                Bid.objects.select_for_update().select_related(
+                    "tender_round__tender"
+                ),
+                pk=pk,
+            )
+            tender = bid.tender_round.tender
+
+            if not has_consultant_tender_access(request.user, tender):
+                raise PermissionDenied("Consultant access required.")
+
+            if tender.status != "closed" or tender.revealed_at is not None:
+                raise ValidationError(
+                    "Review is available only after closure and before reveal."
+                )
+
+            if bid.status != "submitted":
+                raise ValidationError(
+                    "Only submitted bids can be reviewed."
+                )
+
+            decision = request.data.get("decision")
+            if decision not in ("approved", "rejected"):
+                raise ValidationError({
+                    "decision": "Use 'approved' or 'rejected'."
+                })
+
+            reason = str(
+                request.data.get("rejection_reason", "")
+            ).strip()
+
+            if decision == "rejected" and not reason:
+                raise ValidationError({
+                    "rejection_reason": "A rejection reason is required."
+                })
+
+            bid.review_status = decision
+            bid.reviewed_at = timezone.now()
+            bid.reviewed_by = request.user
+            bid.rejection_reason = reason if decision == "rejected" else ""
+            bid.save(update_fields=[
+                "review_status",
+                "reviewed_at",
+                "reviewed_by",
+                "rejection_reason",
+            ])
+
+        return Response({
+            "id": bid.id,
+            "public_alias": bid.public_alias,
+            "review_status": bid.review_status,
+            "reviewed_at": bid.reviewed_at,
+            "rejection_reason": bid.rejection_reason,
+        })
 
 
-    def get_queryset(self):
+class TenderRevealView(APIView):
+    permission_classes = [IsAuthenticated]
 
-        from .visibility import get_visible_bids
+    def post(self, request, pk):
+        tender = get_object_or_404(Tender, pk=pk)
 
-        tender_id = self.kwargs.get(
-            "tender_id"
-        )
+        if not has_consultant_tender_access(request.user, tender):
+            raise PermissionDenied("Consultant access required.")
 
-        tender = get_object_or_404(
-            Tender,
-            id=tender_id,
-        )
+        try:
+            tender = reveal_tender(tender.id)
+        except ValueError as exc:
+            raise ValidationError({"error": str(exc)})
 
-        viewer_type = self.request.query_params.get(
-            "viewer_type"
-        )
+        return Response({
+            "tender_id": tender.id,
+            "status": tender.status,
+            "revealed_at": tender.revealed_at,
+            "preliminary_approved_at": tender.preliminary_approved_at,
+        })
 
-        if not self.request.user.is_authenticated:
-            return get_visible_bids(
-                tender,
-                viewer_type,
+
+class TenderCommissionCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+    check_number = None
+
+    def post(self, request, pk):
+        check_number = self.check_number
+
+        if check_number not in (1, 2):
+            raise ValidationError({"check_number": "Invalid commission check."})
+
+        with transaction.atomic():
+            tender = get_object_or_404(
+                Tender.objects.select_for_update(),
+                pk=pk,
             )
 
+            if not has_consultant_tender_access(request.user, tender):
+                raise PermissionDenied("Consultant access required.")
+
+            if tender.status != "revealed" or not tender.preliminary_approved_at:
+                raise ValidationError(
+                    "Tender must be revealed before commission checks."
+                )
+
+            if tender.rankings_published_at is not None:
+                raise ValidationError(
+                    "Commission checks cannot be changed after rankings are published."
+                )
+
+            field_name = f"commission_check_{check_number}"
+
+            if not getattr(tender, field_name):
+                setattr(tender, field_name, True)
+                tender.save(update_fields=[field_name])
+
+        return Response({
+            "tender_id": tender.id,
+            "commission_check_1": tender.commission_check_1,
+            "commission_check_2": tender.commission_check_2,
+            "rankings_published_at": tender.rankings_published_at,
+        })
+
+
+class TenderPublishRankingsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        with transaction.atomic():
+            tender = get_object_or_404(
+                Tender.objects.select_for_update(),
+                pk=pk,
+            )
+
+            if not has_consultant_tender_access(request.user, tender):
+                raise PermissionDenied("Consultant access required.")
+
+            if tender.status != "revealed" or not tender.preliminary_approved_at:
+                raise ValidationError(
+                    "Tender must be revealed before publishing rankings."
+                )
+
+            if not (
+                tender.commission_check_1
+                and tender.commission_check_2
+            ):
+                raise ValidationError(
+                    "Both commission checks must be completed before publishing rankings."
+                )
+
+            if tender.rankings_published_at is None:
+                tender.rankings_published_at = timezone.now()
+                tender.save(update_fields=["rankings_published_at"])
+
+        return Response({
+            "tender_id": tender.id,
+            "commission_check_1": tender.commission_check_1,
+            "commission_check_2": tender.commission_check_2,
+            "rankings_published_at": tender.rankings_published_at,
+        })
+
+
+class TenderBidListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BidSerializer
+
+    def _get_tender(self):
+        if not hasattr(self, "_visible_tender"):
+            self._visible_tender = get_object_or_404(
+                Tender,
+                id=self.kwargs.get("tender_id"),
+            )
+        return self._visible_tender
+
+    def _get_viewer_type(self):
+        viewer_type = self.request.query_params.get("viewer_type")
+        if viewer_type not in ("consultant", "customer", "workshop"):
+            raise PermissionDenied("Invalid tender viewer role.")
+        return viewer_type
+
+    def _get_evaluation_by_bid_id(self, tender):
+        if not hasattr(self, "_evaluation_by_bid_id"):
+            evaluation = evaluate_tender(tender.id)
+            self._evaluation_by_bid_id = {
+                item["bid_id"]: item
+                for item in evaluation.get("results", [])
+                if item.get("bid_id") is not None
+            }
+        return self._evaluation_by_bid_id
+
+    def get_queryset(self):
+        from .visibility import (
+            get_visible_bids,
+            tender_is_revealed,
+            tender_rankings_are_published,
+        )
+
+        tender = self._get_tender()
+        viewer_type = self._get_viewer_type()
+        user = self.request.user
 
         if viewer_type == "consultant":
+            if not has_consultant_tender_access(user, tender):
+                raise PermissionDenied("Consultant access required.")
+            return get_visible_bids(tender, "consultant")
 
-            if not has_consultant_tender_access(
-                self.request.user,
-                tender,
-            ):
-                return Bid.objects.none()
+        if viewer_type == "customer":
+            if not has_customer_tender_access(user, tender):
+                raise PermissionDenied("Customer access required.")
 
+            bids = get_visible_bids(tender, "customer")
 
-        elif viewer_type == "customer":
-
-            if not has_customer_tender_access(
-                self.request.user,
-                tender,
-            ):
-                return Bid.objects.none()
+            if tender_rankings_are_published(tender):
+                return bids
 
 
-        elif viewer_type == "workshop":
+            return bids
 
-            if not has_workshop_tender_access(
-                self.request.user,
-                tender,
-            ):
-                return Bid.objects.none()
+        if viewer_type == "workshop":
+            if not has_workshop_tender_access(user, tender):
+                raise PermissionDenied("Workshop access required.")
 
+            participant_organization_ids = TenderParticipant.objects.filter(
+                tender=tender,
+            ).values_list("organization_id", flat=True)
 
-        else:
+            active_organization_ids = Membership.objects.filter(
+                user=user,
+                status="active",
+                organization_id__in=participant_organization_ids,
+            ).values_list("organization_id", flat=True)
 
-            return Bid.objects.none()
+            return Bid.objects.filter(
+                tender_round__tender=tender,
+                workshop_id__in=active_organization_ids,
+            ).distinct()
 
+        raise PermissionDenied("Access denied.")
 
-        return get_visible_bids(
-            tender,
-            viewer_type,
+    def get_serializer_class(self):
+        from .visibility import (
+            tender_is_revealed,
+            tender_rankings_are_published,
         )
+
+        viewer_type = self._get_viewer_type()
+        tender = self._get_tender()
+
+        if viewer_type == "customer":
+            if tender_rankings_are_published(tender):
+                return CustomerRankedBidSerializer
+
+            if tender.preliminary_approved_at:
+                return CustomerPriceBidSerializer
+
+            return AnonymousBidSerializer
+
+        if viewer_type == "consultant" and not tender_is_revealed(tender):
+            return ConsultantBidReviewSerializer
+
+        return BidSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        tender = self._get_tender()
+
+        from .visibility import tender_rankings_are_published
+
+        if (
+            self._get_viewer_type() == "customer"
+            and tender_rankings_are_published(tender)
+        ):
+            context["evaluation_by_bid_id"] = (
+                self._get_evaluation_by_bid_id(tender)
+            )
+
+        return context
+
+
 class AnonymousTenderBidListView(
     generics.ListAPIView
 ):

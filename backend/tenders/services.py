@@ -206,49 +206,31 @@ from .permissions import get_bid_visibility_role
 from .visibility import tender_is_revealed
 
 
-def get_visible_bids(
-    tender,
-    role,
-    workshop=None,
-):
 
+def get_visible_bids(tender, role, workshop=None):
     if not tender_is_revealed(tender):
-        raise ValueError(
-            "Tender results are not revealed yet."
-        )
+        raise ValueError("Tender results are not revealed yet.")
 
     visibility = get_bid_visibility_role(role)
-
-    bids = Bid.objects.filter(
-        tender_round__tender=tender
-    )
-
-    if visibility == "top_3":
-
-        evaluation = evaluate_tender(
-            tender.id
-        )
-
-        top_ids = [
-            item["bid_id"]
-            for item in evaluation["results"][:3]
-        ]
-
-        return bids.filter(
-            id__in=top_ids
-        )
+    bids = Bid.objects.filter(tender_round__tender=tender)
 
     if visibility == "own":
-
         if not workshop:
             return bids.none()
+        return bids.filter(workshop=workshop)
 
-        return bids.filter(
-            workshop=workshop
-        )
+    if visibility == "top_3":
+        from evaluation.services import evaluate_tender
+
+        result = evaluate_tender(tender.id)
+        ranked_bid_ids = [
+            item["bid_id"]
+            for item in result.get("results", [])[:3]
+            if item.get("bid_id") is not None
+        ]
+        return bids.filter(id__in=ranked_bid_ids)
 
     if visibility == "all":
-
         return bids
 
     return bids.none()

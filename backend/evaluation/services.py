@@ -109,7 +109,9 @@ def evaluate_round(round_id):
 
     bids = Bid.objects.filter(
         tender_round=round_obj,
-		status="submitted",
+        status="submitted",
+    ).exclude(
+        review_status="rejected",
     )
 
 

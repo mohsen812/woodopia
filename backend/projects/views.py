@@ -18,6 +18,7 @@ from tenders.models import Tender, Bid
 from tenders.serializers import (
     TenderSerializer,
     CustomerTenderSerializer,
+    PreRevealTenderRoundSerializer,
 )
 from tenders.services import select_tender_bid
 
@@ -1390,8 +1391,12 @@ class ProjectTenderView(
             is_manager,
             has_customer_tender_access,
             has_consultant_tender_access,
+            has_workshop_tender_access,
         )
-        from tenders.visibility import tender_is_revealed
+        from tenders.visibility import (
+            tender_is_revealed,
+            get_tender_visibility,
+        )
 
         project = self.get_project()
 
@@ -1434,9 +1439,16 @@ class ProjectTenderView(
             )
         )
 
+        workshop_view = (
+            has_workshop_tender_access(
+                request.user,
+                tender,
+            )
+        )
         customer_view = (
             not manager_view
             and not consultant_view
+            and not workshop_view
             and has_customer_tender_access(
                 request.user,
                 tender,
@@ -1446,50 +1458,98 @@ class ProjectTenderView(
         revealed = tender_is_revealed(tender)
 
         if customer_view:
+            viewer_type = "customer"
+
+        elif consultant_view:
+            viewer_type = "consultant"
+
+        elif workshop_view:
+            viewer_type = "workshop"
+
+        else:
+            return Response(
+                {"detail": "You do not have access to this tender."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+
+        visibility = get_tender_visibility(
+            tender,
+            viewer_type,
+        )
+
+
+        if customer_view:
             tender_data = CustomerTenderSerializer(tender).data
+
+        elif (
+            (consultant_view or workshop_view)
+            and not revealed
+        ):
+
+            tender_data = TenderSerializer(
+                tender
+            ).data
+
+            for round_obj in tender_data.get("rounds", []):
+
+                round_obj["bids"] = PreRevealTenderRoundSerializer(
+                    tender.rounds.get(
+                        id=round_obj["id"]
+                    )
+                ).data["bids"]
+
         else:
             tender_data = TenderSerializer(tender).data
-
-        if customer_view and not revealed:
+        if not revealed:
 
             evaluation_data = None
-        else:
 
-            evaluation_data = evaluate_tender(tender.id)
+        elif consultant_view:
 
-            if customer_view and isinstance(evaluation_data, dict):
+            evaluation_data = evaluate_tender(
+                tender.id
+            )
 
-                results = evaluation_data.get("results", [])
+        elif customer_view:
 
-                # مشتری پس از افشا فقط سه پیشنهاد برتر را می‌بیند.
-                visible_results = results[:3]
+            if visibility.get("show_rank"):
 
-                visible_bid_ids = {
-                    item["bid_id"]
-                    for item in visible_results
-                    if item.get("bid_id") is not None
-                }
-
-                evaluation_data["results"] = visible_results
-
-                # شناسه‌های داخلی فقط برای پیدا کردن aliasها
-                # در سمت سرور استفاده می‌شوند.
-                visible_bid_aliases = set(
-                    Bid.objects.filter(
-                        id__in=visible_bid_ids,
-                    )
-                    .exclude(public_alias__isnull=True)
-                    .exclude(public_alias="")
-                    .values_list("public_alias", flat=True)
+                evaluation_data = evaluate_tender(
+                    tender.id
                 )
 
-                # در پاسخ مشتری، فیلتر فقط بر اساس alias عمومی است.
-                for round_data in tender_data.get("rounds", []):
-                    round_data["bids"] = [
-                        bid
-                        for bid in round_data.get("bids", [])
-                        if bid.get("public_alias") in visible_bid_aliases
-                    ]
+                if evaluation_data:
+                    for result in evaluation_data.get("results", []):
+                        if result.get("rank", 0) > 3:
+                            result["workshop_name"] = None
+                            result["workshop_id"] = None
+
+                    results = evaluation_data.get("results", [])
+                    winner = next(
+                        (
+                            result
+                            for result in results
+                            if result.get("rank") == 1
+                        ),
+                        None,
+                    )
+
+                    if "summary" in evaluation_data:
+                        evaluation_data["summary"]["winner"] = (
+                            winner.get("workshop_name")
+                            if winner
+                            else None
+                        )
+
+            else:
+
+                evaluation_data = None
+
+        else:
+
+            evaluation_data = None
+
 
         return Response({
             "project_id": project.id,
@@ -1498,6 +1558,7 @@ class ProjectTenderView(
             "project_item_name": project_item.name,
             "tender": tender_data,
             "evaluation": evaluation_data,
+            "visibility": visibility,
             "ready": True,
         })
 # =====================================

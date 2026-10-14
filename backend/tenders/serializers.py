@@ -158,6 +158,34 @@ class PaymentScheduleSerializer(serializers.ModelSerializer):
 
         return attrs
 
+class ConsultantBidReviewSerializer(serializers.ModelSerializer):
+    items = BidItemSerializer(many=True, read_only=True)
+    payment_schedules = PaymentScheduleSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Bid
+        fields = [
+            "id",
+            "public_alias",
+            "created_at",
+            "total_amount",
+            "discount_percentage",
+            "discount_amount",
+            "final_amount",
+            "production_days",
+            "delivery_days",
+            "warranty_months",
+            "technical_notes",
+            "items",
+            "payment_schedules",
+            "status",
+            "review_status",
+            "reviewed_at",
+            "rejection_reason",
+        ]
+        read_only_fields = fields
+
+
 class BidSerializer(serializers.ModelSerializer):
 
     workshop_name = serializers.CharField(
@@ -212,6 +240,11 @@ class BidSerializer(serializers.ModelSerializer):
 
 class AnonymousBidSerializer(serializers.ModelSerializer):
 
+    payment_stage_count = serializers.SerializerMethodField()
+
+    def get_payment_stage_count(self, obj):
+        return obj.payment_schedules.count()
+
     class Meta:
         model = Bid
         fields = [
@@ -220,8 +253,108 @@ class AnonymousBidSerializer(serializers.ModelSerializer):
             "delivery_days",
             "warranty_months",
             "status",
+            "payment_stage_count",
         ]
         read_only_fields = fields
+
+class PreRevealBidSerializer(serializers.ModelSerializer):
+
+    payment_stage_count = serializers.SerializerMethodField()
+
+    def get_payment_stage_count(self, obj):
+        return obj.payment_schedules.count()
+
+    class Meta:
+
+        model = Bid
+
+        fields = [
+            "public_alias",
+            "production_days",
+            "delivery_days",
+            "warranty_months",
+            "technical_notes",
+            "status",
+            "payment_stage_count",
+        ]
+
+        read_only_fields = fields
+
+
+class CustomerPriceBidSerializer(serializers.ModelSerializer):
+    """
+    Customer-visible bid fields after preliminary approval.
+    Never expose the real workshop identity in this stage.
+    """
+
+    payment_stage_count = serializers.SerializerMethodField()
+
+    def get_payment_stage_count(self, obj):
+        return obj.payment_schedules.count()
+
+    class Meta:
+        model = Bid
+        fields = [
+            "public_alias",
+            "total_amount",
+            "discount_amount",
+            "final_amount",
+            "production_days",
+            "delivery_days",
+            "warranty_months",
+            "status",
+            "payment_stage_count",
+        ]
+        read_only_fields = fields
+
+
+class CustomerRankedBidSerializer(serializers.ModelSerializer):
+    """
+    Ranked customer view. Real workshop identity is exposed
+    only for the top three evaluated bids.
+    """
+
+    payment_stage_count = serializers.SerializerMethodField()
+    workshop_name = serializers.SerializerMethodField()
+    rank = serializers.SerializerMethodField()
+    total_score = serializers.SerializerMethodField()
+    def get_payment_stage_count(self, obj):
+        return obj.payment_schedules.count()
+    class Meta:
+        model = Bid
+        fields = [
+            "public_alias",
+            "total_amount",
+            "discount_amount",
+            "final_amount",
+            "production_days",
+            "delivery_days",
+            "warranty_months",
+            "rank",
+            "total_score",
+            "workshop_name",
+            "status",
+            "payment_stage_count",
+        ]
+        read_only_fields = fields
+
+    def _evaluation_result(self, obj):
+        results = self.context.get("evaluation_by_bid_id", {})
+        return results.get(obj.id, {})
+
+    def get_rank(self, obj):
+        return self._evaluation_result(obj).get("rank")
+
+    def get_total_score(self, obj):
+        return self._evaluation_result(obj).get("total_score")
+
+    def get_workshop_name(self, obj):
+        result = self._evaluation_result(obj)
+
+        if result.get("rank") in (1, 2, 3):
+            return result.get("workshop_name")
+
+        return None
 class TenderRoundSerializer(serializers.ModelSerializer):
 
     bids = BidSerializer(
@@ -269,6 +402,31 @@ class CustomerTenderRoundSerializer(serializers.ModelSerializer):
             "created_at",
             "bids",
         ]
+
+class PreRevealTenderRoundSerializer(serializers.ModelSerializer):
+
+    bids = PreRevealBidSerializer(
+        many=True,
+        read_only=True,
+    )
+
+
+    class Meta:
+
+        model = TenderRound
+
+        fields = [
+            "id",
+            "round_number",
+            "status",
+            "started_at",
+            "closed_at",
+            "created_at",
+            "bids",
+        ]
+
+
+
 class TenderRoundCreateSerializer(
     serializers.ModelSerializer
 ):

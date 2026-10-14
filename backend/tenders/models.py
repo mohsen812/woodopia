@@ -81,6 +81,24 @@ class Tender(models.Model):
         null=True,
         blank=True,
     )
+
+    preliminary_approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    commission_check_1 = models.BooleanField(
+        default=False,
+    )
+
+    commission_check_2 = models.BooleanField(
+        default=False,
+    )
+
+    rankings_published_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
     winner_bid = models.ForeignKey(
         "Bid",
         null=True,
@@ -439,7 +457,36 @@ class Bid(models.Model):
         choices=STATUS_CHOICES,
         default="draft",
     )
+    REVIEW_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
 
+    review_status = models.CharField(
+        max_length=20,
+        choices=REVIEW_STATUS_CHOICES,
+        default="pending",
+        db_index=True,
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_tender_bids",
+    )
+
+    rejection_reason = models.TextField(
+        blank=True,
+        default="",
+    )
     created_at = models.DateTimeField(
         auto_now_add=True
     )
