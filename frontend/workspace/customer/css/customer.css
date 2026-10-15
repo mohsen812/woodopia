@@ -3892,3 +3892,176 @@ button {
     }
 
 }
+/* FIX: actual customer project modal */
+#project-modal #project-detail .project-detail-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    padding: 10px;
+    margin: 18px 0;
+    border: 1px solid rgba(114, 238, 224, .22);
+    border-radius: 17px;
+    background: linear-gradient(135deg, #0b1b2a, #10172b);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .25);
+}
+
+#project-modal #project-detail .project-detail-tab {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 10px 17px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .035);
+    color: #b7c6d5;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+#project-modal #project-detail .project-detail-tab:hover {
+    color: #72eee0;
+    border-color: rgba(114, 238, 224, .5);
+    background: rgba(114, 238, 224, .09);
+    transform: translateY(-2px);
+}
+
+#project-modal #project-detail .project-detail-tab.active {
+    color: #07151c;
+    border-color: transparent;
+    background: linear-gradient(135deg, #72eee0, #8acbff);
+    box-shadow: 0 5px 18px rgba(114, 238, 224, .2);
+}
+
+@media (max-width: 760px) {
+    #project-modal #project-detail .project-detail-tabs {
+        gap: 7px;
+        padding: 8px;
+    }
+
+    #project-modal #project-detail .project-detail-tab {
+        min-height: 42px;
+        padding: 9px 12px;
+    }
+}
+
+/* FEEMAAS — Customer tender dashboard: actual DOM selectors */
+#project-modal #project-detail #tender-dashboard .tender-dashboard {
+    display: grid;
+    gap: 20px;
+    color: #e8f2ff;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-dashboard-header,
+#project-modal #project-detail #tender-dashboard .tender-recommendation,
+#project-modal #project-detail #tender-dashboard .tender-ranking {
+    padding: 22px;
+    border: 1px solid rgba(114, 238, 224, .2);
+    border-radius: 20px;
+    background: linear-gradient(135deg, #101d30, #111629);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .2);
+}
+
+#project-modal #project-detail #tender-dashboard .tender-dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-dashboard-header h3 {
+    margin: 10px 0;
+    color: #72eee0;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-stat {
+    padding: 18px;
+    border: 1px solid rgba(138, 203, 255, .2);
+    border-radius: 16px;
+    background: rgba(17, 28, 47, .9);
+}
+
+#project-modal #project-detail #tender-dashboard .tender-stat span,
+#project-modal #project-detail #tender-dashboard .tender-stat strong {
+    display: block;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-stat span {
+    color: #a8b9ce;
+    font-size: 12px;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-stat strong {
+    margin-top: 10px;
+    color: #72eee0;
+    font-size: 24px;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-bids-slider {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-bids-track {
+    display: flex;
+    flex: 1;
+    gap: 16px;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 12px 4px 18px;
+    scroll-behavior: smooth;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-bid {
+    position: relative;
+    flex: 0 0 290px;
+    min-height: 220px;
+    padding: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(114, 238, 224, .3);
+    border-radius: 18px;
+    background: linear-gradient(155deg, #172941, #101626);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .24);
+    transition: transform .2s ease, border-color .2s ease;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-bid:hover {
+    transform: translateY(-4px);
+    border-color: #72eee0;
+}
+
+#project-modal #project-detail #tender-dashboard .tender-empty {
+    display: grid;
+    place-items: center;
+    flex: 1 0 100%;
+    min-height: 130px;
+    padding: 24px;
+    border: 1px dashed rgba(114, 238, 224, .35);
+    border-radius: 16px;
+    color: #b9c9dc;
+    background: rgba(114, 238, 224, .035);
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    #project-modal #project-detail #tender-dashboard .tender-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #project-modal #project-detail #tender-dashboard .tender-dashboard-header {
+        flex-direction: column;
+    }
+
+    #project-modal #project-detail #tender-dashboard .tender-bid {
+        flex-basis: 250px;
+    }
+}

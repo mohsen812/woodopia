@@ -99,13 +99,11 @@ def reveal_tender(tender_id):
 
         tender.status = "revealed"
         tender.revealed_at = now
-        tender.preliminary_approved_at = now
 
         tender.save(
             update_fields=[
                 "status",
                 "revealed_at",
-                "preliminary_approved_at",
             ]
         )
 

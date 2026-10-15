@@ -9,6 +9,7 @@ from tenders.models import (
     Tender,
     TenderRound,
     Bid,
+    TenderParticipant,
 )
 
 from organizations.models import (
@@ -1577,6 +1578,44 @@ class ProjectTenderVisibilityTests(TestCase):
         self.assert_no_price_fields(data)
         self.assert_no_price_fields(data)
 
+    def test_customer_sees_prices_after_preliminary_approval_without_workshop_identity(self):
+        from django.utils import timezone
+
+        self.tender.preliminary_approved_at = timezone.now()
+        self.tender.revealed_at = None
+        self.tender.commission_check_1 = False
+        self.tender.commission_check_2 = False
+        self.tender.rankings_published_at = None
+        self.tender.save(update_fields=[
+            "preliminary_approved_at",
+            "revealed_at",
+            "commission_check_1",
+            "commission_check_2",
+            "rankings_published_at",
+        ])
+
+        response = self.customer_client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNone(data["evaluation"])
+
+        nested_bids = [
+            bid
+            for round_data in data["tender"]["rounds"]
+            for bid in round_data["bids"]
+        ]
+        self.assertEqual(len(nested_bids), len(self.bids))
+
+        for bid in nested_bids:
+            self.assertIn("total_amount", bid)
+            self.assertIn("final_amount", bid)
+            self.assertIn("discount_amount", bid)
+            self.assertTrue(bid["public_alias"])
+            self.assertNotIn("workshop", bid)
+            self.assertNotIn("workshop_name", bid)
+            self.assertNotIn("workshop_id", bid)
+
     def test_customer_only_sees_top_three_workshop_identities_after_rankings_published(self):
         from django.utils import timezone
 
@@ -1672,9 +1711,16 @@ class ProjectTenderVisibilityTests(TestCase):
         for bid in nested_bids:
             self.assertNotIn("id", bid)
             self.assertNotIn("workshop", bid)
-            self.assertNotIn("workshop_name", bid)
 
-        self.assert_no_price_fields(data)
+            self.assertIn("total_amount", bid)
+            self.assertIn("final_amount", bid)
+            self.assertIn("discount_amount", bid)
+
+            if bid["rank"] in (1, 2, 3):
+                self.assertTrue(bid["workshop_name"])
+            else:
+                self.assertIsNone(bid["workshop_name"])
+
     def test_authorized_consultant_can_see_all_bids_after_reveal(self):
         from django.utils import timezone
 
@@ -1902,3 +1948,63 @@ class ProjectTenderVisibilityAPITests(TestCase):
         self.assertFalse(
             data["visibility"]["show_price"]
         )
+
+    def test_workshop_sees_only_its_own_bid_before_and_after_reveal(self):
+        workshop_user = User.objects.create_user(
+            username="visibility_workshop_user",
+            email="visibility_workshop_user@example.com",
+            password="testpass123",
+        )
+
+        workshop_role = OrganizationRole.objects.create(
+            name="workshop_member_visibility_test",
+            organization_type="workshop",
+        )
+
+        Membership.objects.create(
+            user=workshop_user,
+            organization=self.workshop,
+            role_fk=workshop_role,
+            status="active",
+        )
+
+        rival_workshop = Organization.objects.create(
+            name="Rival Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        TenderParticipant.objects.create(
+            tender=self.tender,
+            organization=self.workshop,
+        )
+        TenderParticipant.objects.create(
+            tender=self.tender,
+            organization=rival_workshop,
+        )
+
+        Bid.objects.create(
+            tender_round=self.round,
+            workshop=rival_workshop,
+            total_amount=9000000,
+            status="submitted",
+            public_alias="BRAVO-9B21",
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=workshop_user)
+        url = "/api/projects/{}/tender/".format(self.project.id)
+
+        for reveal in (False, True):
+            if reveal:
+                self.tender.revealed_at = timezone.now()
+                self.tender.save(update_fields=["revealed_at"])
+
+            response = client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+            data = response.json()
+            bids = data["tender"]["rounds"][0]["bids"]
+
+            self.assertEqual(len(bids), 1)
+            self.assertEqual(bids[0]["workshop"], self.workshop.id)

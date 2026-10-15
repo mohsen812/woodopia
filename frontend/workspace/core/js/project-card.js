@@ -2422,13 +2422,21 @@ function renderTenderDashboard(
         evaluation?.recommendation || {};
 
 
+    const roundBids = (tender.rounds || []).reduce(
+        (allBids, round) => {
+            return allBids.concat(round.bids || []);
+        },
+        []
+    );
+
     const results =
-        evaluation?.results || [];
+        evaluation?.results?.length
+            ? evaluation.results
+            : roundBids;
 
     console.log("FEEMAAS EVALUATION:", evaluation);
+    console.log("FEEMAAS ROUND BIDS:", roundBids);
     console.log("FEEMAAS RESULTS:", results);
-
-
     container.innerHTML = `
 
         <div class="tender-dashboard">
@@ -2871,23 +2879,26 @@ function renderTenderBid(
                     <div>
 
                         <span>
-                            قیمت
+                            مبلغ پیشنهادی
                         </span>
 
                         <strong>
                             ${
                                 visibility.show_price
                                     ? formatTenderAmount(
+                                        bid.final_amount ??
+                                        bid.total_amount ??
                                         bid.amount
                                     )
-                                    : "مخفی"
+                                    : "پس از اعلام نتایج"
                             }
                         </strong>
 
-                        <small>
-                            تومان
-                        </small>
-
+                        ${
+                            visibility.show_price
+                                ? `<small>تومان</small>`
+                                : ""
+                        }
                     </div>
 
 
@@ -2981,11 +2992,9 @@ function renderTenderBid(
                         : ""
                 }
                 ${
-                              bid.rank <= 3 &&
-                              (
-                              tender.status === "revealed" ||
-                              tender.status === "awarded"
-                              )
+                              visibility.show_rank &&
+                              bid.rank >= 1 &&
+                              bid.rank <= 3
                         ? `
                             <button
                                 class="tender-award-button"

@@ -1,5 +1,10 @@
 ﻿from django.db.models import Q
 
+from workspace.services import (
+    get_active_membership,
+    get_workspace_for_membership,
+)
+
 from .services import (
     get_consultant_projects,
     claim_project,
@@ -376,6 +381,12 @@ class ConsultantStandardizationView(
                 Q(
                     customer__members__user=user,
                     customer__members__status="active",
+                )
+				                |
+                Q(
+                    tenders__participants__organization__members__user=user,
+                    tenders__participants__organization__members__status="active",
+                    tenders__participants__organization__organization_type="workshop",
                 )
             ).distinct(),
             id=project_id,
@@ -1381,6 +1392,12 @@ class ProjectTenderView(
                     customer__organization_type="customer",
                     customer__status="active",
                 )
+                |
+                Q(
+                    tenders__participants__organization__members__user=user,
+                    tenders__participants__organization__members__status="active",
+                    tenders__participants__organization__organization_type="workshop",
+                )
             ).distinct(),
             id=project_id,
         )
@@ -1432,75 +1449,237 @@ class ProjectTenderView(
 
         manager_view = is_manager(request.user)
 
-        consultant_view = (
-            has_consultant_tender_access(
-                request.user,
-                tender,
-            )
+        active_membership = get_active_membership(request)
+        active_workspace = None
+
+        if active_membership:
+            active_workspace = get_workspace_for_membership(
+                active_membership
+            )["workspace"]
+
+        customer_access = has_customer_tender_access(
+            request.user,
+            tender,
+        )
+        consultant_access = has_consultant_tender_access(
+            request.user,
+            tender,
+        )
+        workshop_access = has_workshop_tender_access(
+            request.user,
+            tender,
         )
 
-        workshop_view = (
-            has_workshop_tender_access(
+        customer_view = False
+        consultant_view = False
+        workshop_view = False
+
+        if manager_view:
+            customer_view = has_customer_tender_access(
                 request.user,
                 tender,
             )
-        )
-        customer_view = (
-            not manager_view
-            and not consultant_view
-            and not workshop_view
-            and has_customer_tender_access(
+            consultant_view = has_consultant_tender_access(
                 request.user,
                 tender,
             )
-        )
+            workshop_view = has_workshop_tender_access(
+                request.user,
+                tender,
+            )
+        elif active_membership:
+            if active_workspace == "customer":
+                customer_view = (
+                    customer_access
+                    and active_membership.organization_id
+                    == tender.project.customer_id
+                )
+
+            elif active_workspace == "consultant":
+                consultant_view = (
+                    consultant_access
+                    and ProjectAssignment.objects.filter(
+                        project=project,
+                        membership=active_membership,
+                        status="active",
+                    ).exists()
+                )
+
+            elif active_workspace == "workshop":
+                workshop_view = (
+                    workshop_access
+                    and tender.participants.filter(
+                        organization=active_membership.organization,
+                    ).exists()
+                )
+
+            if not (
+                customer_view
+                or consultant_view
+                or workshop_view
+            ):
+                return Response(
+                    {
+                        "detail": (
+                            "فضای کاری فعال به این مناقصه "
+                            "دسترسی ندارد."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        else:
+            available_views = []
+
+            if customer_access:
+                available_views.append("customer")
+
+            if consultant_access:
+                available_views.append("consultant")
+
+            if workshop_access:
+                available_views.append("workshop")
+
+            if len(available_views) > 1:
+                return Response(
+                    {
+                        "detail": (
+                            "ابتدا فضای کاری فعال خود را انتخاب کنید."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            if not available_views:
+                return Response(
+                    {"detail": "دسترسی به این مناقصه مجاز نیست."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            customer_view = available_views[0] == "customer"
+            consultant_view = available_views[0] == "consultant"
+            workshop_view = available_views[0] == "workshop"
 
         revealed = tender_is_revealed(tender)
 
-        if customer_view:
-            viewer_type = "customer"
-
-        elif consultant_view:
+        if consultant_view:
             viewer_type = "consultant"
-
         elif workshop_view:
             viewer_type = "workshop"
-
         else:
-            return Response(
-                {"detail": "You do not have access to this tender."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            viewer_type = "customer"
 
         visibility = get_tender_visibility(
             tender,
             viewer_type,
         )
-
-
+        if workshop_view:
+            visibility["show_price"] = True
         if customer_view:
+            from tenders.serializers import (
+                AnonymousBidSerializer,
+                CustomerPriceBidSerializer,
+                CustomerRankedBidSerializer,
+            )
+
             tender_data = CustomerTenderSerializer(tender).data
+            customer_evaluation = (
+                evaluate_tender(tender.id)
+                if visibility.get("show_rank")
+                else None
+            )
+            evaluation_by_bid_id = {
+                result["bid_id"]: result
+                for result in (customer_evaluation or {}).get("results", [])
+                if result.get("bid_id") is not None
+            }
 
-        elif (
-            (consultant_view or workshop_view)
-            and not revealed
-        ):
+            for round_data in tender_data.get("rounds", []):
+                round_obj = tender.rounds.get(id=round_data["id"])
+                visible_bids = round_obj.bids.filter(
+                    status="submitted",
+                ).exclude(
+                    review_status="rejected",
+                ).order_by("id")
 
-            tender_data = TenderSerializer(
-                tender
-            ).data
+                if (
+                    visibility.get("show_rank")
+                    and customer_evaluation
+                    and customer_evaluation.get("round_id") == round_obj.id
+                ):
+                    bid_serializer = CustomerRankedBidSerializer(
+                        visible_bids,
+                        many=True,
+                        context={
+                            "evaluation_by_bid_id": evaluation_by_bid_id,
+                        },
+                    )
+                elif visibility.get("show_price"):
+                    bid_serializer = CustomerPriceBidSerializer(
+                        visible_bids,
+                        many=True,
+                    )
+                else:
+                    bid_serializer = AnonymousBidSerializer(
+                        visible_bids,
+                        many=True,
+                    )
+
+                round_data["bids"] = bid_serializer.data
+
+        elif workshop_view:
+            # A workshop must never receive competitors' bids.
+            tender_data = TenderSerializer(tender).data
+
+            if (
+                active_membership
+                and active_workspace == "workshop"
+            ):
+                workshop_ids = {
+                    active_membership.organization_id
+                }
+            else:
+                workshop_ids = set(
+                    Membership.objects.filter(
+                        user=request.user,
+                        status="active",
+                        organization__organization_type="workshop",
+                        organization__tender_participations__tender=tender,
+                    ).values_list(
+                        "organization_id",
+                        flat=True,
+                    ).distinct()
+                )
+
+                if len(workshop_ids) != 1:
+                    return Response(
+                        {
+                            "detail": (
+                                "برای مشاهده پیشنهاد، "
+                                "یک فضای کاری کارگاه مشخص انتخاب کنید."
+                            )
+                        },
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
 
             for round_obj in tender_data.get("rounds", []):
+                round_obj["bids"] = [
+                    bid
+                    for bid in round_obj.get("bids", [])
+                    if bid.get("workshop") in workshop_ids
+                ]
 
+        elif consultant_view and not revealed:
+            tender_data = TenderSerializer(tender).data
+
+            for round_obj in tender_data.get("rounds", []):
                 round_obj["bids"] = PreRevealTenderRoundSerializer(
-                    tender.rounds.get(
-                        id=round_obj["id"]
-                    )
+                    tender.rounds.get(id=round_obj["id"])
                 ).data["bids"]
 
         else:
             tender_data = TenderSerializer(tender).data
+
         if not revealed:
 
             evaluation_data = None

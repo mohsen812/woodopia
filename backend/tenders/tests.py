@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 
@@ -1713,6 +1713,10 @@ class TenderRevealWorkflowTests(TestCase):
 
         self.assertIsNotNone(
             tender.revealed_at
+        )
+
+        self.assertIsNone(
+            tender.preliminary_approved_at
         )
 
 

@@ -3326,3 +3326,49 @@ body {
 
     color: rgba(255, 255, 255, 0.62);
 }
+/* FEEMAAS — Consultant project tabs: visible redesign */
+.consultant-project-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 24px 0 20px;
+    padding: 10px;
+    border: 1px solid rgba(0, 217, 255, .15);
+    border-radius: 17px;
+    background: linear-gradient(135deg, rgba(8, 24, 38, .98), rgba(13, 25, 43, .96));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+
+.consultant-project-tab {
+    min-height: 43px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .035);
+    color: #a9bdcc;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .22s ease;
+}
+
+.consultant-project-tab.active,
+.consultant-project-tab:hover {
+    color: #031720;
+    background: linear-gradient(135deg, #00d9ff, #70f0d0);
+    border-color: transparent;
+    box-shadow: 0 6px 20px rgba(0, 217, 255, .16);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 760px) {
+    .consultant-project-tabs {
+        gap: 7px;
+        padding: 8px;
+    }
+
+    .consultant-project-tab {
+        padding: 9px 12px;
+    }
+}

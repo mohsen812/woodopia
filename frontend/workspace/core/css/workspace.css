@@ -6233,3 +6233,272 @@ body.project-file-center-preview-open {
     cursor:pointer;
 
 }
+
+/* TENDER BID CARD POLISH — 2026-10 */
+
+#project-detail-view .tender-bids-track {
+    align-items: stretch;
+    padding: 12px 4px 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 255, 200, .45) transparent;
+}
+
+#project-detail-view .tender-bid {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 280px;
+    max-width: 340px;
+    flex: 0 0 310px;
+    padding: 24px 20px 20px;
+    overflow: hidden;
+    scroll-snap-align: start;
+    background:
+        radial-gradient(ellipse at top right, rgba(0, 255, 210, .09), transparent 55%),
+        linear-gradient(145deg, rgba(26, 31, 43, .98), rgba(13, 17, 28, .97));
+    border: 1px solid rgba(148, 163, 184, .24);
+    border-radius: 18px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .22);
+    transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+
+#project-detail-view .tender-bid:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 255, 210, .48);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, .3), 0 0 18px rgba(0, 255, 210, .08);
+}
+
+#project-detail-view .tender-bid-main {
+    min-width: 0;
+    width: 100%;
+}
+
+#project-detail-view .tender-bid-main .eyebrow {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #72e8d0;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+}
+
+#project-detail-view .tender-bid-main h4 {
+    margin: 0 0 18px;
+    padding-inline-end: 28px;
+    color: #f3f6fb;
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+#project-detail-view .tender-bid-rank {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    border: 1px solid rgba(148, 163, 184, .17);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .035);
+}
+
+#project-detail-view .tender-bid-rank span {
+    color: #aab5c5;
+    font-size: 12px;
+}
+
+#project-detail-view .tender-bid-rank strong {
+    color: #e8f7f4;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+}
+
+#project-detail-view .tender-bid-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+#project-detail-view .tender-bid-values > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 72px;
+    padding: 11px 12px;
+    border: 1px solid rgba(148, 163, 184, .15);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .035);
+}
+
+#project-detail-view .tender-bid-values > div:first-child {
+    grid-column: 1 / -1;
+    border-color: rgba(0, 255, 200, .24);
+    background: linear-gradient(120deg, rgba(0, 255, 200, .09), rgba(255, 255, 255, .025));
+}
+
+#project-detail-view .tender-bid-values span {
+    color: #aeb9c9;
+    font-size: 12px;
+}
+
+#project-detail-view .tender-bid-values strong {
+    max-width: 100%;
+    color: #f4f7fb;
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+#project-detail-view .tender-bid-values > div:first-child strong {
+    color: #75f2d7;
+    font-size: 19px;
+}
+
+#project-detail-view .tender-bid-values small {
+    color: #8f9bad;
+    font-size: 11px;
+}
+
+#project-detail-view .tender-bid-notes {
+    margin: 14px 0 0;
+    padding: 12px;
+    color: #c4cedb;
+    font-size: 12px;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+    border-right: 2px solid rgba(0, 255, 200, .55);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, .035);
+}
+
+#project-detail-view .tender-bid .tender-award-button {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 255, 190, .55);
+    border-radius: 11px;
+    background: linear-gradient(120deg, rgba(0, 210, 160, .2), rgba(0, 150, 255, .13));
+    color: #cafff1;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+#project-detail-view .tender-bid .tender-award-button:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(120deg, rgba(0, 210, 160, .32), rgba(0, 150, 255, .22));
+    box-shadow: 0 0 18px rgba(0, 255, 190, .12);
+}
+
+#project-detail-view .tender-bid.rank-gold {
+    border-color: rgba(255, 215, 0, .7);
+    box-shadow: inset 0 2px 0 rgba(255, 215, 0, .55), 0 10px 28px rgba(0, 0, 0, .22);
+}
+
+#project-detail-view .tender-bid.rank-blue {
+    border-color: rgba(0, 191, 255, .65);
+    box-shadow: inset 0 2px 0 rgba(0, 191, 255, .5), 0 10px 28px rgba(0, 0, 0, .22);
+}
+
+#project-detail-view .tender-bid.rank-green {
+    border-color: rgba(0, 255, 136, .6);
+    box-shadow: inset 0 2px 0 rgba(0, 255, 136, .45), 0 10px 28px rgba(0, 0, 0, .22);
+}
+
+#project-detail-view .tender-slider-arrow {
+    flex: 0 0 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 255, 210, .25);
+    background: rgba(0, 255, 210, .08);
+    transition: background .2s ease, border-color .2s ease;
+}
+
+#project-detail-view .tender-slider-arrow:hover {
+    background: rgba(0, 255, 210, .17);
+    border-color: rgba(0, 255, 210, .55);
+}
+
+@media (max-width: 640px) {
+    #project-detail-view .tender-bids-slider {
+        gap: 8px;
+    }
+
+    #project-detail-view .tender-bids-track {
+        gap: 12px;
+    }
+
+    #project-detail-view .tender-bid {
+        min-width: 0;
+        max-width: none;
+        flex: 0 0 min(86%, 310px);
+        padding: 20px 15px 16px;
+    }
+
+    #project-detail-view .tender-slider-arrow {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        font-size: 22px;
+    }
+}
+
+/* FEEMAAS — Customer project tabs: visible redesign */
+#project-detail-view .project-detail-tabs {
+    gap: 9px;
+    padding: 10px;
+    border: 1px solid rgba(114, 238, 224, .15) !important;
+    border-radius: 17px;
+    background: linear-gradient(135deg, rgba(10, 24, 38, .98), rgba(12, 19, 35, .96)) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+}
+
+#project-detail-view .project-detail-tab {
+    min-height: 44px;
+    padding: 10px 17px;
+    border: 1px solid rgba(255, 255, 255, .07);
+    border-radius: 12px;
+    color: #aab9c9 !important;
+    font-size: 12px;
+    font-weight: 800;
+    transition: all .22s ease;
+}
+
+#project-detail-view .project-detail-tab:hover {
+    border-color: rgba(114, 238, 224, .24);
+    background: rgba(114, 238, 224, .07) !important;
+    transform: translateY(-2px);
+}
+
+#project-detail-view .project-detail-tab.active {
+    color: #06151b !important;
+    background: linear-gradient(135deg, #72eee0, #8acbff) !important;
+    border-color: transparent !important;
+    box-shadow: 0 6px 20px rgba(114, 238, 224, .18);
+}
+
+@media (max-width: 760px) {
+    #project-detail-view .project-detail-tabs {
+        gap: 7px;
+        padding: 8px;
+    }
+
+    #project-detail-view .project-detail-tab {
+        min-height: 42px;
+        padding: 9px 13px;
+    }
+}
