@@ -269,6 +269,7 @@ class PreRevealBidSerializer(serializers.ModelSerializer):
         model = Bid
 
         fields = [
+            "id",
             "public_alias",
             "production_days",
             "delivery_days",
@@ -276,6 +277,9 @@ class PreRevealBidSerializer(serializers.ModelSerializer):
             "technical_notes",
             "status",
             "payment_stage_count",
+            "review_status",
+            "reviewed_at",
+            "rejection_reason",
         ]
 
         read_only_fields = fields
@@ -553,6 +557,10 @@ class TenderSerializer(serializers.ModelSerializer):
             "scheduled_end_at",
             "round_count",
             "deadline",
+            "reveal_at",
+            "revealed_at",
+            "pre_reveal_approved_at",
+            "cancellation_reason",
 
             "created_at",
             "updated_at",

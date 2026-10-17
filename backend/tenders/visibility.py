@@ -50,7 +50,7 @@ def get_tender_visibility(tender, viewer_type):
         visibility = {
             **policy,
             "show_alias": True,
-            "show_price": bool(tender.preliminary_approved_at),
+            "show_price": tender_is_revealed(tender),
         }
 
         if tender_rankings_are_published(tender):

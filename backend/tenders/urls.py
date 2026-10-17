@@ -19,6 +19,9 @@ from .views import (
     TenderBidListView,
     ConsultantBidReviewView,
     TenderRevealView,
+    TenderRejectView,
+	TenderPreRevealApprovalView,
+    TenderPreliminaryApprovalView,
     TenderCommissionCheckView,
     TenderPublishRankingsView,
     AnonymousTenderBidListView,
@@ -112,6 +115,21 @@ urlpatterns = [
         "<int:pk>/reveal/",
         TenderRevealView.as_view(),
         name="tender-reveal",
+    ),
+    path(
+        "<int:pk>/reject/",
+        TenderRejectView.as_view(),
+        name="tender-reject",
+    ),
+    path(
+        "<int:pk>/pre-reveal-approve/",
+        TenderPreRevealApprovalView.as_view(),
+        name="tender-pre-reveal-approve",
+    ),
+    path(
+        "<int:pk>/preliminary-approve/",
+        TenderPreliminaryApprovalView.as_view(),
+        name="tender-preliminary-approve",
     ),
     path(
         "<int:pk>/commission-check-1/",

@@ -566,7 +566,7 @@ async function openConsultantProjectModal(
 
         const project =
             await response.json();
-        
+
         console.log(
             "FEEMAAS PROJECT DATA:",
             project
@@ -1075,6 +1075,16 @@ function renderConsultantProjectTab(
 
             break;
 
+
+
+
+        case "proposals":
+
+            loadConsultantProposals(
+                project.id
+            );
+
+            break;
 
         case "report":
 
@@ -2604,6 +2614,603 @@ function openTenderSettingsPanel(
 
 }
 
+
+
+
+async function loadConsultantProposals(projectId) {
+
+    const content = document.getElementById(
+        "consultant-project-content"
+    );
+
+    if (!content) {
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="project-section proposals-section">
+            <p class="proposals-message">
+                در حال دریافت پیشنهادها...
+            </p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(
+            `/api/projects/${projectId}/tender/`,
+            {
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Proposals loading failed");
+        }
+
+        const data = await response.json();
+
+        // Avoid showing a response for a project that is no longer active.
+        if (
+            typeof project !== "undefined" &&
+            project &&
+            String(project.id) !== String(projectId)
+        ) {
+            return;
+        }
+
+        renderConsultantProposals(data);
+    } catch (error) {
+        console.error("Proposals error:", error);
+
+        const currentContent = document.getElementById(
+            "consultant-project-content"
+        );
+
+        if (currentContent) {
+            currentContent.innerHTML = `
+                <div class="project-section proposals-section">
+                    <p class="proposals-message">
+                        دریافت پیشنهادها انجام نشد. دوباره تلاش کن.
+                    </p>
+                    <button
+                        type="button"
+                        class="proposals-retry"
+                        onclick="loadConsultantProposals(${Number(projectId) || 0})">
+                        تلاش دوباره
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+
+function renderConsultantProposals(data) {
+
+    const content = document.getElementById(
+        "consultant-project-content"
+    );
+
+    if (!content) {
+        return;
+    }
+
+    const escapeText = value => String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const tender = data && data.tender
+        ? data.tender
+        : null;
+
+    const visibility = data && data.visibility
+        ? data.visibility
+        : {};
+
+    if (!tender) {
+        content.innerHTML = `
+            <section class="project-section proposals-section">
+                <h3>پیشنهادهای مناقصه</h3>
+                <p class="proposals-message">
+                    هنوز مناقصه‌ای برای این پروژه ایجاد نشده است.
+                </p>
+            </section>
+        `;
+        return;
+    }
+
+    const rounds = Array.isArray(tender.rounds)
+        ? tender.rounds
+        : [];
+
+
+    const bids = [];
+
+    rounds.forEach(round => {
+        const roundBids = Array.isArray(round.bids)
+            ? round.bids
+            : [];
+
+        roundBids
+            .filter(bid => bid.status === "submitted")
+            .forEach(bid => {
+                bids.push({
+                    ...bid,
+                    _roundName: round.round_number
+                        ? `دور ${round.round_number}`
+                        : "",
+                    _roundStatus: round.status || ""
+                });
+            });
+    });
+
+    const showAlias = visibility.show_alias === true;
+    const showPrice = visibility.show_price === true;
+    const showIdentity =
+        visibility.show_workshop_identity === true;
+    const showRank = visibility.show_rank === true;
+
+    // Technical review is allowed only after closure
+    // and before the tender is revealed.
+    const reviewEnabled =
+        tender.status === "closed" &&
+        !tender.revealed_at &&
+        !showPrice;
+
+    // Ranking must come from explicit API fields, never card order.
+    const evaluation = data.evaluation;
+    const rankingRows = [];
+
+    const collectRankingRows = value => {
+        if (Array.isArray(value)) {
+            value.forEach(collectRankingRows);
+            return;
+        }
+
+        if (!value || typeof value !== "object") {
+            return;
+        }
+
+        if (
+            value.bid_id != null ||
+            value.bid != null ||
+            value.public_alias != null
+        ) {
+            rankingRows.push(value);
+        }
+
+        Object.entries(value).forEach(([key, child]) => {
+            if (
+                ["rankings", "results", "ranked_bids", "bids"]
+                    .includes(key) &&
+                Array.isArray(child)
+            ) {
+                child.forEach(collectRankingRows);
+            }
+        });
+    };
+
+    if (showRank && evaluation) {
+        collectRankingRows(evaluation);
+    }
+
+    const findRanking = bid => {
+        const row = rankingRows.find(item => {
+            const itemBidId =
+                item.bid_id ??
+                (item.bid && typeof item.bid === "object"
+                    ? item.bid.id
+                    : item.bid);
+
+            if (
+                itemBidId != null &&
+                bid.id != null &&
+                String(itemBidId) === String(bid.id)
+            ) {
+                return true;
+            }
+
+            return Boolean(
+                item.public_alias &&
+                bid.public_alias &&
+                item.public_alias === bid.public_alias
+            );
+        });
+
+        if (!row) {
+            return null;
+        }
+
+        const rawRank =
+            row.rank ??
+            row.rank_position ??
+            row.position;
+
+        const rank = Number(rawRank);
+
+        return Number.isInteger(rank) && rank > 0
+            ? rank
+            : null;
+    };
+
+    const rankClass = rank => {
+        if (rank === 1) return "proposal-rank-gold";
+        if (rank === 2) return "proposal-rank-green";
+        if (rank === 3) return "proposal-rank-blue";
+        return "";
+    };
+
+    const money = value => {
+        if (value == null || value === "") {
+            return "—";
+        }
+
+        const numeric = Number(value);
+
+        return Number.isFinite(numeric)
+            ? numeric.toLocaleString("fa-IR")
+            : escapeText(value);
+    };
+
+    const renderBid = bid => {
+        const rank = showRank ? findRanking(bid) : null;
+        const alias = showAlias && bid.public_alias
+            ? escapeText(bid.public_alias)
+            : "";
+
+        const workshopName = showIdentity
+            ? (
+                bid.workshop_name ||
+                bid.workshop_display_name ||
+                ""
+            )
+            : "";
+
+        const finalAmount =
+            bid.final_amount ??
+            bid.total_amount ??
+            null;
+
+        const fields = [];
+
+        if (bid.production_days != null) {
+            fields.push(
+                `<span>زمان تولید: ${escapeText(bid.production_days)} روز</span>`
+            );
+        }
+
+        if (bid.delivery_days != null) {
+            fields.push(
+                `<span>زمان تحویل: ${escapeText(bid.delivery_days)} روز</span>`
+            );
+        }
+
+        if (bid.warranty_months != null) {
+            fields.push(
+                `<span>ضمانت: ${escapeText(bid.warranty_months)} ماه</span>`
+            );
+        }
+
+        if (
+            Array.isArray(bid.items) &&
+            bid.items.length
+        ) {
+            fields.push(
+                `<span>اقلام پیشنهاد: ${money(bid.items.length)}</span>`
+            );
+        }
+
+        const priceMarkup = showPrice
+            ? `
+                <div class="proposal-price">
+                    <span>مبلغ نهایی</span>
+                    <strong>${money(finalAmount)}</strong>
+                    ${
+                        bid.discount_percentage != null
+                            ? `<span>تخفیف: ${escapeText(bid.discount_percentage)}٪</span>`
+                            : ""
+                    }
+                </div>
+            `
+            : "";
+
+        const rankMarkup = rank
+            ? `
+                <span class="proposal-rank ${rankClass(rank)}">
+                    رتبه ${money(rank)}
+                </span>
+            `
+            : "";
+
+        const identityMarkup = showIdentity && workshopName
+            ? `
+                <div class="proposal-workshop">
+                    کارگاه: ${escapeText(workshopName)}
+                </div>
+            `
+            : "";
+
+        const aliasMarkup = alias
+            ? `<div class="proposal-alias">شناسه پیشنهاد: ${alias}</div>`
+            : "";
+
+        const technicalMarkup = bid.technical_notes
+            ? `
+                <p class="proposal-notes">
+                    ${escapeText(bid.technical_notes)}
+                </p>
+            `
+            : "";
+
+        const reviewStatus = [
+            "approved",
+            "rejected",
+            "pending"
+        ].includes(bid.review_status)
+            ? bid.review_status
+            : "pending";
+
+        const reviewStatusLabels = {
+            pending: "در انتظار بررسی فنی",
+            approved: "تأیید فنی شده",
+            rejected: "رد شده در بررسی فنی"
+        };
+
+        const reviewStatusMarkup = `
+            <div class="proposal-review-status proposal-review-status-${reviewStatus}">
+                <span class="proposal-review-status-label">
+                    وضعیت بررسی فنی
+                </span>
+                <strong>
+                    ${reviewStatusLabels[reviewStatus]}
+                </strong>
+                ${
+                    reviewStatus === "rejected" && bid.rejection_reason
+                        ? `<p class="proposal-rejection-reason">دلیل رد: ${escapeText(bid.rejection_reason)}</p>`
+                        : ""
+                }
+            </div>
+        `;
+
+        const reviewActionsMarkup = !reviewEnabled
+            ? ""
+            : reviewStatus !== "pending"
+                ? `
+                    <div
+                        class="proposal-review-actions proposal-review-actions-locked"
+                        title="${reviewStatus === "approved" ? "تأیید فنی ثبت شده" : "رد فنی ثبت شده"}"
+                        aria-label="${reviewStatus === "approved" ? "تأیید فنی ثبت شده" : "رد فنی ثبت شده"}"
+                    >
+                        <span
+                            class="proposal-review-locked-icon ${reviewStatus === "approved" ? "approved" : "rejected"}"
+                            aria-hidden="true"
+                        >${reviewStatus === "approved" ? "✓" : "✕"}</span>
+                    </div>
+                  `
+                : `
+                    <div class="proposal-review-actions">
+                        <button
+                            type="button"
+                            class="proposal-review-button proposal-review-approve"
+                            data-bid-review="${escapeText(bid.id)}"
+                            data-review-decision="approved"
+                        >تأیید فنی</button>
+                        <button
+                            type="button"
+                            class="proposal-review-button proposal-review-reject"
+                            data-bid-review="${escapeText(bid.id)}"
+                            data-review-decision="rejected"
+                        >رد پیشنهاد</button>
+                    </div>
+                  `;
+
+        return `
+            <article
+                class="proposal-card ${rank ? rankClass(rank) : ""}"
+                data-proposal-bid-id="${escapeText(bid.id ?? "")}"
+            >
+
+                <div class="proposal-card-heading">
+                <h4>
+                    پیشنهاد
+                    ${bid._roundName
+                        ? `— ${escapeText(bid._roundName)}`
+                        : ""}
+                </h4>
+                ${rankMarkup}
+            </div>
+                ${aliasMarkup}
+                ${identityMarkup}
+                <div class="proposal-facts">
+                    ${fields.join("")}
+                </div>
+                ${technicalMarkup}
+                ${reviewStatusMarkup}
+                ${reviewActionsMarkup}
+                ${priceMarkup}
+            </article>
+        `;
+    };
+
+    const bidsMarkup = bids.length
+        ? bids.map(renderBid).join("")
+        : `
+            <div class="proposals-empty">
+                <p>در حال حاضر پیشنهادی برای نمایش در دسترس نیست.</p>
+            </div>
+        `;
+
+    const stageMessage = !showPrice
+        ? "قیمت‌ها هنوز برای این مرحله قابل نمایش نیستند."
+        : (
+            !showIdentity
+                ? "قیمت‌ها قابل مشاهده‌اند؛ هویت کارگاه‌ها تا انتشار رسمی رتبه‌بندی پنهان می‌ماند."
+                : "هویت کارگاه‌ها و اطلاعات مجاز پیشنهادها قابل مشاهده است."
+        );
+
+    content.innerHTML = `
+        <section class="project-section proposals-section">
+            <div class="proposals-header">
+                <div>
+                    <div class="proposals-kicker">BID REVIEW</div>
+                    <h3>پیشنهادهای مناقصه</h3>
+                    <p>${escapeText(stageMessage)}</p>
+                </div>
+                <span class="proposals-count">
+                    ${money(bids.length)} پیشنهاد
+                </span>
+            </div>
+
+            <div class="proposals-carousel">
+                <div class="proposals-carousel-controls" aria-label="پیمایش پیشنهادها">
+                    <button type="button" class="proposals-scroll-btn proposals-scroll-left"
+                            aria-label="مشاهده پیشنهادهای بعدی به سمت چپ" title="پیشنهادهای سمت چپ">‹</button>
+                    <button type="button" class="proposals-scroll-btn proposals-scroll-right"
+                            aria-label="بازگشت به پیشنهادهای سمت راست" title="پیشنهادهای سمت راست">›</button>
+                </div>
+                <div class="proposals-grid">
+                ${bidsMarkup}
+            </div>
+            </div>
+        </section>
+    `;
+
+    // Connect technical approval/rejection to the existing API.
+    content.querySelectorAll("[data-bid-review]").forEach(button => {
+        button.addEventListener("click", async () => {
+            const bidId = button.dataset.bidReview;
+            const decision = button.dataset.reviewDecision;
+
+            if (!bidId || !["approved", "rejected"].includes(decision)) {
+                return;
+            }
+
+            let rejectionReason = "";
+
+            if (decision === "rejected") {
+                const answer = window.prompt(
+                    "دلیل رد فنی پیشنهاد را وارد کنید:"
+                );
+
+                if (answer === null) {
+                    return;
+                }
+
+                rejectionReason = answer.trim();
+
+                if (!rejectionReason) {
+                    window.alert("برای رد پیشنهاد، وارد کردن دلیل الزامی است.");
+                    return;
+                }
+            }
+
+            const card = button.closest(".proposal-card");
+            const actionButtons = card
+                ? card.querySelectorAll("[data-bid-review]")
+                : [button];
+
+            actionButtons.forEach(item => {
+                item.disabled = true;
+            });
+
+            try {
+                const response = await fetch(
+                    `/api/tenders/bids/${encodeURIComponent(bidId)}/review/`,
+                    {
+                        method: "PATCH",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            decision,
+                            rejection_reason: rejectionReason
+                        })
+                    }
+                );
+
+                let result = {};
+                try {
+                    result = await response.json();
+                } catch (_) {
+                    result = {};
+                }
+
+                if (!response.ok) {
+                    const message =
+                        result.detail ||
+                        result.rejection_reason ||
+                        result.decision ||
+                        "ثبت بررسی فنی انجام نشد.";
+
+                    throw new Error(
+                        typeof message === "string"
+                            ? message
+                            : JSON.stringify(message)
+                    );
+                }
+
+                await loadConsultantProposals(
+                    Number(data.project_id)
+                );
+            } catch (error) {
+                console.error("Bid technical review failed:", error);
+                window.alert(
+                    error.message ||
+                    "خطا در ثبت بررسی فنی. دوباره تلاش کنید."
+                );
+
+                actionButtons.forEach(item => {
+                    item.disabled = false;
+                });
+            }
+        });
+    });
+
+    const proposalsCarousel = content.querySelector(".proposals-carousel");
+    const proposalsGrid = content.querySelector(".proposals-grid");
+    const scrollLeftButton = content.querySelector(".proposals-scroll-left");
+    const scrollRightButton = content.querySelector(".proposals-scroll-right");
+
+    if (proposalsCarousel && proposalsGrid && scrollLeftButton && scrollRightButton) {
+        const updateProposalScrollControls = () => {
+            const hasOverflow =
+                proposalsGrid.scrollWidth > proposalsGrid.clientWidth + 2;
+
+            proposalsCarousel.classList.toggle("has-overflow", hasOverflow);
+            scrollLeftButton.disabled = !hasOverflow;
+            scrollRightButton.disabled = !hasOverflow;
+        };
+
+        const scrollProposalCards = direction => {
+            const firstCard = proposalsGrid.querySelector(".proposal-card");
+            const gap = parseFloat(getComputedStyle(proposalsGrid).columnGap) || 14;
+            const distance = firstCard ? firstCard.getBoundingClientRect().width + gap : 280;
+
+            proposalsGrid.scrollBy({
+                left: direction * distance,
+                behavior: "smooth"
+            });
+        };
+
+        scrollLeftButton.addEventListener("click", () => scrollProposalCards(-1));
+        scrollRightButton.addEventListener("click", () => scrollProposalCards(1));
+
+        updateProposalScrollControls();
+        window.requestAnimationFrame(updateProposalScrollControls);
+        window.addEventListener("resize", updateProposalScrollControls, { passive: true });
+    }
+}
+
+
 /* ==================================================
    TENDER RENDER
 ================================================== */
@@ -2809,7 +3416,7 @@ function renderConsultantTender(
 
     const participantCount =
         participants.length;
-    
+
         /*
     --------------------------------------------------
     TENDER CONTROL
@@ -2853,7 +3460,7 @@ function renderConsultantTender(
     const timelineEnd =
         tenderStatus === "draft"
             ? scheduledEndAt
-            : closedAt;  
+            : closedAt;
 
     const canStartTender =
         tenderStatus === "draft" &&
@@ -2865,6 +3472,11 @@ function renderConsultantTender(
     const canCloseTender =
         tenderStatus === "open";
 
+
+    const revealTimeReached =
+        Boolean(tender.reveal_at) &&
+        Number.isFinite(new Date(tender.reveal_at).getTime()) &&
+        new Date(tender.reveal_at).getTime() <= Date.now();
 
     let tenderActionHtml = "";
 
@@ -2950,6 +3562,43 @@ function renderConsultantTender(
     }
 
 
+    else if (tenderStatus === "closed") {
+
+        if (!tender.pre_reveal_approved_at) {
+            tenderActionHtml = `
+                <div class="tender-action-panel">
+                    <div class="tender-action-info">
+                        <span class="tender-action-kicker">TENDER ACTION</span>
+                        <strong>تأیید نهایی پیش از افشا</strong>
+                        <small>پس از تکمیل بررسی فنی، تأیید نهایی را ثبت کنید.</small>
+                    </div>
+                    <button
+                        type="button"
+                        id="pre-reveal-approve-button"
+                        class="tender-action-button start"
+                    >✓ تأیید نهایی</button>
+                </div>
+            `;
+        } else {
+            tenderActionHtml = `
+                <div class="tender-action-panel">
+                    <div class="tender-action-info">
+                        <span class="tender-action-kicker">TENDER ACTION</span>
+                        <strong>آماده بازگشایی پیشنهادها</strong>
+                        <small>برای ادامه، پیشنهادها را بازگشایی کنید.</small>
+                    </div>
+                    <button
+                        type="button"
+                        id="reveal-tender-button"
+                        class="tender-action-button start"
+                    >↗ بازگشایی پیشنهادها</button>
+                </div>
+            `;
+        }
+
+    }
+
+
     /*
     --------------------------------------------------
     CONTROL ACTION HANDLERS
@@ -2974,6 +3623,12 @@ function renderConsultantTender(
         document.getElementById(
             "tender-settings-button"
         );
+
+    const preRevealApproveButton =
+        document.getElementById("pre-reveal-approve-button");
+
+    const revealTenderButton =
+        document.getElementById("reveal-tender-button");
 
 
     /*
@@ -3019,6 +3674,95 @@ function renderConsultantTender(
             }
         );
 
+    }
+
+
+    /*
+    ----------------------------------------------
+    FINAL APPROVAL BEFORE REVEAL
+    ----------------------------------------------
+    */
+
+    if (preRevealApproveButton) {
+        preRevealApproveButton.addEventListener("click", async () => {
+            if (!confirm("تأیید نهایی پیش از افشا ثبت شود؟")) return;
+
+            preRevealApproveButton.disabled = true;
+
+            try {
+                const response = await fetch(
+                    `/api/tenders/${encodeURIComponent(tender.id)}/pre-reveal-approve/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: JSON.stringify({})
+                    }
+                );
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || result.detail ||
+                        (typeof result === "string" ? result : "ثبت تأیید نهایی ناموفق بود.")
+                    );
+                }
+
+                alert("تأیید نهایی پیش از افشا ثبت شد.");
+                await loadConsultantTender(Number(data.project_id));
+            } catch (error) {
+                alert(error.message || "ثبت تأیید نهایی ناموفق بود.");
+                preRevealApproveButton.disabled = false;
+            }
+        });
+    }
+
+    /*
+    ----------------------------------------------
+    REVEAL TENDER
+    ----------------------------------------------
+    */
+
+    if (revealTenderButton) {
+        revealTenderButton.addEventListener("click", async () => {
+            if (!confirm("پیشنهادها بازگشایی شوند؟")) return;
+
+            revealTenderButton.disabled = true;
+
+            try {
+                const response = await fetch(
+                    `/api/tenders/${encodeURIComponent(tender.id)}/reveal/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: JSON.stringify({})
+                    }
+                );
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || result.detail ||
+                        (typeof result === "string" ? result : "بازگشایی پیشنهادها ناموفق بود.")
+                    );
+                }
+
+                alert("پیشنهادها بازگشایی شدند.");
+                await loadConsultantTender(Number(data.project_id));
+            } catch (error) {
+                alert(error.message || "بازگشایی پیشنهادها ناموفق بود.");
+                revealTenderButton.disabled = false;
+            }
+        });
     }
 
 
@@ -3094,6 +3838,8 @@ function renderConsultantTender(
             </div>
 
 
+
+            ${tenderActionHtml}
 
             <!-- =====================================
                  STATUS CARDS
@@ -3283,9 +4029,9 @@ function renderConsultantTender(
                             `
 
                             : ""
-                
+
     }
- 
+
                 </div>
 
 
@@ -3494,18 +4240,17 @@ function renderConsultantTender(
     }
 
 </div>
- 
+
 
 <!-- =====================================
 
                  CONTROL ACTION
-            
+
 ====================================== -->
 
 
 
 
-            ${tenderActionHtml}
 
 
 
@@ -3965,8 +4710,8 @@ function renderStandardizationItem(
                     )}</textarea>
 
                 </div>
-   
-            
+
+
                 <div class="standardization-col-files">
 
                      <button
@@ -3996,7 +4741,7 @@ function renderStandardizationItem(
                     "⚪ در انتظار"
                 }
 
-                </div> 
+                </div>
                 <div class="standardization-col-required">
 
                     <label

@@ -1,25 +1,29 @@
 const API_BASE = "/api";
 
 
-async function handleApiError(response){
-
+async function handleApiError(response) {
     let detail = "";
 
     try {
+        const responseText = await response.text();
 
-        const errorData = await response.json();
+        if (responseText) {
+            try {
+                const errorData = JSON.parse(responseText);
 
-        detail =
-            errorData.error ||
-            JSON.stringify(errorData);
-
+                detail =
+                    errorData.error ||
+                    errorData.detail ||
+                    JSON.stringify(errorData);
+            } catch (parseError) {
+                detail = responseText;
+            }
+        } else {
+            detail = "Empty error response";
+        }
+    } catch (readError) {
+        detail = "Unable to read error response";
     }
-    catch(e){
-
-        detail = await response.text();
-
-    }
-
 
     console.error(
         "FEEMAAS API ERROR:",
@@ -27,17 +31,13 @@ async function handleApiError(response){
         detail
     );
 
-
     throw new Error(
         "API Error: " +
         response.status +
         " - " +
         detail
     );
-
 }
-
-
 
 async function apiGet(endpoint){
 

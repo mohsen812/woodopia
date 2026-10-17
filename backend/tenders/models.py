@@ -32,6 +32,11 @@ class Tender(models.Model):
         blank=True
     )
 
+    cancellation_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+
     status = models.CharField(
         max_length=50,
         choices=STATUS_CHOICES,
@@ -78,6 +83,11 @@ class Tender(models.Model):
     )
 
     revealed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    pre_reveal_approved_at = models.DateTimeField(
         null=True,
         blank=True,
     )

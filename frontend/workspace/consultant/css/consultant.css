@@ -3372,3 +3372,571 @@ body {
         padding: 9px 12px;
     }
 }
+
+/* =========================================================
+   FEEMAAS — Consultant tender proposal cards
+   ========================================================= */
+
+.proposals-carousel {
+    position: relative;
+    min-width: 0;
+    width: 100%;
+    margin-top: 14px;
+}
+
+.proposals-carousel-controls {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin: 0 2px 14px;
+}
+
+.proposals-carousel.has-overflow .proposals-carousel-controls {
+    display: flex;
+}
+
+.proposals-scroll-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid rgba(0, 217, 255, .38);
+    border-radius: 12px;
+    background: linear-gradient(
+        145deg,
+        rgba(0, 217, 255, .13),
+        rgba(155, 100, 255, .13)
+    );
+    color: #8ceeff;
+    font-family: inherit;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+        0 0 12px rgba(0, 217, 255, .08),
+        inset 0 0 10px rgba(255, 255, 255, .025);
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+}
+
+.proposals-scroll-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: rgba(0, 217, 255, .8);
+    background: linear-gradient(
+        145deg,
+        rgba(0, 217, 255, .24),
+        rgba(155, 100, 255, .2)
+    );
+    box-shadow: 0 0 18px rgba(0, 217, 255, .18);
+}
+
+.proposals-scroll-btn:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.proposals-grid {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 5px 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 217, 255, .42) rgba(255, 255, 255, .035);
+    -webkit-overflow-scrolling: touch;
+}
+
+.proposals-grid::-webkit-scrollbar {
+    height: 7px;
+}
+
+.proposals-grid::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .035);
+}
+
+.proposals-grid::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: linear-gradient(
+        90deg,
+        rgba(0, 217, 255, .6),
+        rgba(155, 100, 255, .65),
+        rgba(100, 255, 204, .55)
+    );
+}
+
+.proposal-card {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex: 0 0 clamp(255px, 31%, 330px);
+    flex-direction: column;
+    align-self: stretch;
+    min-width: 0;
+    padding: 20px 18px 18px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 217, 255, .2);
+    border-radius: 18px;
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(0, 217, 255, .09),
+            transparent 42%
+        ),
+        linear-gradient(
+            155deg,
+            rgba(16, 34, 51, .98),
+            rgba(10, 20, 35, .98) 70%
+        );
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, .18),
+        inset 0 1px 0 rgba(255, 255, 255, .035);
+    scroll-snap-align: start;
+    transition:
+        transform .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+.proposal-card::before {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 12%;
+    left: 12%;
+    height: 2px;
+    border-radius: 0 0 8px 8px;
+    background: linear-gradient(
+        90deg,
+        #00d9ff,
+        #a477ff,
+        #65f0ca
+    );
+    opacity: .8;
+    content: "";
+}
+
+.proposal-card::after {
+    position: absolute;
+    z-index: -1;
+    top: 13px;
+    right: 13px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #65f0ca;
+    box-shadow: 0 0 8px rgba(101, 240, 202, .75);
+    content: "";
+    animation: proposal-led-pulse 2.8s ease-in-out infinite;
+}
+
+.proposal-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0, 217, 255, .48);
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, .24),
+        0 0 20px rgba(0, 217, 255, .075);
+}
+
+.proposal-card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, .09);
+}
+
+.proposal-card-heading h4 {
+    min-width: 0;
+    margin: 0;
+    color: #e8f7ff;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.8;
+}
+
+.proposal-card .proposal-facts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin: 15px 0;
+}
+
+.proposal-card .proposal-facts > span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid rgba(151, 184, 211, .12);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .035);
+    color: #b8cad8;
+    font-size: 12px;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+}
+
+.proposal-card .proposal-facts > span:nth-child(3n + 1) {
+    border-right: 2px solid rgba(0, 217, 255, .65);
+}
+
+.proposal-card .proposal-facts > span:nth-child(3n + 2) {
+    border-right: 2px solid rgba(164, 119, 255, .7);
+}
+
+.proposal-card .proposal-facts > span:nth-child(3n) {
+    border-right: 2px solid rgba(101, 240, 202, .65);
+}
+
+.proposal-card .proposal-facts strong,
+.proposal-card .proposal-facts b {
+    color: #f0f8ff;
+}
+
+.proposal-card .proposal-card-heading > * {
+    max-width: 100%;
+}
+
+@keyframes proposal-led-pulse {
+    0%, 100% {
+        opacity: .65;
+        box-shadow: 0 0 5px rgba(101, 240, 202, .45);
+    }
+    50% {
+        opacity: 1;
+        box-shadow:
+            0 0 11px rgba(101, 240, 202, .85),
+            0 0 20px rgba(0, 217, 255, .2);
+    }
+}
+
+@media (max-width: 760px) {
+    .proposal-card {
+        flex-basis: min(84%, 310px);
+        padding: 17px 15px;
+    }
+
+    .proposals-grid {
+        gap: 12px;
+    }
+
+    .proposals-scroll-btn {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .proposal-card,
+    .proposals-scroll-btn {
+        transition: none;
+    }
+
+    .proposal-card::after {
+        animation: none;
+    }
+
+    .proposals-grid {
+        scroll-behavior: auto;
+    }
+}
+
+/* =========================================================
+   FEEMAAS — Compact consultant project modal for 100% zoom
+   ========================================================= */
+
+.consultant-project-box {
+    width: min(1200px, 96vw);
+    height: 94vh;
+    max-height: 94vh;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.consultant-project-header {
+    flex: 0 0 auto;
+    margin-bottom: 4px;
+}
+
+.consultant-project-header h2 {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    font-size: 20px;
+    line-height: 1.5;
+}
+
+.consultant-project-journey {
+    flex: 0 0 auto;
+    margin: 5px 0;
+    padding: 5px 8px;
+}
+
+.consultant-project-tabs {
+    flex: 0 0 auto;
+    gap: 6px;
+    margin: 8px 0;
+    padding: 6px;
+    border-radius: 12px;
+}
+
+.consultant-project-tab {
+    min-height: 34px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    font-size: 11px;
+}
+
+.consultant-project-tab.active,
+.consultant-project-tab:hover {
+    transform: none;
+}
+
+.consultant-project-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    padding: 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.proposals-carousel {
+    margin-top: 5px;
+}
+
+.proposals-grid {
+    gap: 12px;
+    padding: 4px 4px 10px;
+}
+
+.proposal-card {
+    padding: 12px 13px;
+    border-radius: 14px;
+}
+
+.proposal-card-heading {
+    gap: 8px;
+    margin-bottom: 7px;
+    padding-bottom: 7px;
+}
+
+.proposal-card-heading h4 {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.proposal-card .proposal-facts {
+    gap: 5px;
+    margin: 8px 0;
+}
+
+.proposal-card .proposal-facts > span {
+    gap: 7px;
+    padding: 6px 9px;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.proposal-card p {
+    margin-top: 6px;
+    margin-bottom: 6px;
+    line-height: 1.6;
+}
+
+@media (max-height: 800px) {
+    .consultant-project-box {
+        height: 96vh;
+        max-height: 96vh;
+        padding: 10px 16px;
+    }
+
+    .consultant-project-journey {
+        margin: 3px 0;
+        padding: 3px 6px;
+    }
+
+    .consultant-project-tabs {
+        margin: 5px 0;
+        padding: 5px;
+    }
+
+    .consultant-project-content {
+        padding: 8px;
+    }
+
+    .proposal-card {
+        padding: 10px 12px;
+    }
+}
+
+@media (max-width: 760px) {
+    .consultant-project-box {
+        width: 96vw;
+        height: 96vh;
+        max-height: 96vh;
+        padding: 12px;
+    }
+
+    .consultant-project-content {
+        padding: 6px;
+    }
+}
+
+
+/* Modal close button */
+.consultant-project-box .consultant-project-close {
+    position: absolute !important;
+    top: 12px !important;
+    left: 14px !important;
+    right: auto !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    padding: 0 !important;
+    border: 1px solid #ff7183 !important;
+    border-radius: 50% !important;
+    background: #c9364e !important;
+    color: white !important;
+    font-size: 29px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+}
+
+.consultant-project-box .consultant-project-close:hover {
+    background: #ff4d63 !important;
+}
+/* FEEMAAS: consultant bid technical review */
+.proposal-review-status {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--workspace-border, rgba(140, 160, 190, 0.25));
+    border-radius: 12px;
+    background: rgba(120, 140, 170, 0.06);
+}
+
+.proposal-review-status-label {
+    font-size: 0.78rem;
+    opacity: 0.78;
+}
+
+.proposal-review-status strong {
+    font-size: 0.92rem;
+}
+
+.proposal-review-status-pending {
+    border-color: rgba(226, 170, 65, 0.45);
+}
+
+.proposal-review-status-approved {
+    border-color: rgba(49, 190, 130, 0.48);
+}
+
+.proposal-review-status-rejected {
+    border-color: rgba(225, 83, 100, 0.48);
+}
+
+.proposal-rejection-reason {
+    margin: 4px 0 0;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.proposal-review-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.proposal-review-actions-locked {
+    justify-content: flex-start;
+    margin-top: 8px;
+}
+
+.proposal-review-locked-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.proposal-review-locked-icon.approved {
+    color: #31be82;
+    background: rgba(49, 190, 130, 0.10);
+}
+
+.proposal-review-locked-icon.rejected {
+    color: #e15364;
+    background: rgba(225, 83, 100, 0.10);
+}
+
+.proposal-review-button {
+    min-height: 40px;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.proposal-review-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.proposal-review-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.proposal-review-approve {
+    color: var(--text-primary, #fff);
+    background: rgba(30, 160, 105, 0.18);
+    border-color: rgba(49, 190, 130, 0.55);
+}
+
+.proposal-review-reject {
+    color: var(--text-primary, #fff);
+    background: rgba(210, 65, 80, 0.12);
+    border-color: rgba(225, 83, 100, 0.48);
+}
+
+@media (max-width: 600px) {
+    .proposal-review-actions {
+        flex-direction: column;
+    }
+
+    .proposal-review-button {
+        width: 100%;
+    }
+}

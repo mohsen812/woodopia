@@ -1625,7 +1625,293 @@ class TenderVisibleBidsAPITests(TestCase):
         self.assertEqual(bid.review_status, "approved")
         self.assertEqual(bid.rejection_reason, "")
 
+class TenderReviewLifecycleContractTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.consultant_user = User.objects.create_user(
+            username="review_lifecycle_consultant",
+            password="test-password",
+        )
+        self.customer_user = User.objects.create_user(
+            username="review_lifecycle_customer",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Review Lifecycle Customer",
+            organization_type="customer",
+            owner=self.customer_user,
+        )
+        self.company = Organization.objects.create(
+            name="Review Lifecycle Consultant Company",
+            organization_type="company",
+            owner=self.consultant_user,
+        )
+
+        consultant_role = OrganizationRole.objects.create(
+            name="consultant",
+            organization_type="company",
+        )
+        membership = Membership.objects.create(
+            user=self.consultant_user,
+            organization=self.company,
+            role_fk=consultant_role,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Review Lifecycle Project",
+            customer=self.customer,
+            created_by=self.customer_user,
+            status="tender",
+        )
+        ProjectAssignment.objects.create(
+            project=self.project,
+            membership=membership,
+            assigned_by=self.consultant_user,
+            status="active",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Review Lifecycle Tender",
+            status="closed",
+            reveal_at=timezone.now() - timedelta(minutes=1),
+        )
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.workshops = []
+        for index in range(2):
+            workshop = Organization.objects.create(
+                name="Review Lifecycle Workshop {}".format(index),
+                organization_type="workshop",
+                owner=self.customer_user,
+            )
+            self.workshops.append(workshop)
+            TenderParticipant.objects.create(
+                tender=self.tender,
+                organization=workshop,
+                response_status="accepted",
+            )
+
+        self.bids = []
+        for index, workshop in enumerate(self.workshops):
+            bid = Bid.objects.create(
+                tender_round=self.round,
+                workshop=workshop,
+                total_amount=Decimal("1000.00") + index,
+                final_amount=Decimal("1000.00") + index,
+                production_days=10,
+                delivery_days=5,
+                warranty_months=12,
+                status="submitted",
+                review_status="pending",
+            )
+            self.bids.append(bid)
+
+        from tenders.alias_generator import assign_bid_alias
+
+        for bid in self.bids:
+            assign_bid_alias(bid)
+
+        self.consultant_client = APIClient()
+        self.consultant_client.force_authenticate(
+            user=self.consultant_user
+        )
+
+    def test_reveal_is_blocked_until_all_submitted_bids_are_reviewed(self):
+        response = self.consultant_client.post(
+            "/api/tenders/{}/reveal/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "closed")
+        self.assertIsNone(self.tender.revealed_at)
+
+    def test_rejected_bid_is_excluded_from_round_evaluation(self):
+        from evaluation.services import evaluate_round
+
+        rejected_bid = self.bids[0]
+        rejected_bid.review_status = "rejected"
+        rejected_bid.reviewed_at = timezone.now()
+        rejected_bid.reviewed_by = self.consultant_user
+        rejected_bid.rejection_reason = "عدم انطباق مشخصات فنی"
+        rejected_bid.save(update_fields=[
+            "review_status",
+            "reviewed_at",
+            "reviewed_by",
+            "rejection_reason",
+        ])
+
+        approved_bid = self.bids[1]
+        approved_bid.review_status = "approved"
+        approved_bid.reviewed_at = timezone.now()
+        approved_bid.reviewed_by = self.consultant_user
+        approved_bid.save(update_fields=[
+            "review_status",
+            "reviewed_at",
+            "reviewed_by",
+        ])
+
+        result = evaluate_round(self.round.id)
+        evaluated_bid_ids = [
+            item["bid_id"] for item in result["results"]
+        ]
+
+        self.assertNotIn(rejected_bid.id, evaluated_bid_ids)
+        self.assertIn(approved_bid.id, evaluated_bid_ids)
+        self.assertEqual(result["summary"]["total_bids"], 1)
+
+    def test_tender_cannot_be_revealed_when_all_bids_are_rejected(self):
+        for bid in self.bids:
+            bid.review_status = "rejected"
+            bid.reviewed_at = timezone.now()
+            bid.reviewed_by = self.consultant_user
+            bid.rejection_reason = "عدم احراز شرایط"
+            bid.save(update_fields=[
+                "review_status",
+                "reviewed_at",
+                "reviewed_by",
+                "rejection_reason",
+            ])
+
+        response = self.consultant_client.post(
+            "/api/tenders/{}/reveal/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "closed")
+        self.assertIsNone(self.tender.revealed_at)
+
+    def test_rejected_tender_keeps_tender_and_bid_records(self):
+        tender_id = self.tender.id
+        bid_ids = [bid.id for bid in self.bids]
+
+        response = self.consultant_client.post(
+            "/api/tenders/{}/reject/".format(tender_id),
+            {"reason": "پیشنهادهای واجد شرایط کافی نیستند"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "cancelled")
+        self.assertTrue(
+            Tender.objects.filter(id=tender_id).exists()
+        )
+        self.assertEqual(
+            Bid.objects.filter(id__in=bid_ids).count(),
+            len(bid_ids),
+        )
+
+    def test_rejected_tender_requires_a_reason(self):
+        response = self.consultant_client.post(
+            "/api/tenders/{}/reject/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "closed")
+
+
+    def test_preliminary_approval_uses_evaluated_round(self):
+        approved_bid = self.bids[0]
+        approved_bid.review_status = "approved"
+        approved_bid.reviewed_at = timezone.now()
+        approved_bid.reviewed_by = self.consultant_user
+        approved_bid.save(update_fields=[
+            "review_status",
+            "reviewed_at",
+            "reviewed_by",
+        ])
+
+        # Simulate the round already revealed and evaluated.
+        self.round.status = "evaluated"
+        self.round.save(update_fields=["status"])
+
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["status", "revealed_at"])
+
+        # A newer open round must not be used for preliminary approval.
+        newer_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=2,
+            status="open",
+        )
+
+        workshop = Organization.objects.create(
+            name="Newer Open Round Workshop",
+            organization_type="workshop",
+            owner=self.customer_user,
+        )
+        Bid.objects.create(
+            tender_round=newer_round,
+            workshop=workshop,
+            status="submitted",
+            review_status="pending",
+        )
+
+        response = self.consultant_client.post(
+            "/api/tenders/{}/preliminary-approve/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.tender.refresh_from_db()
+        self.assertIsNotNone(self.tender.preliminary_approved_at)
+
+    def test_preliminary_approval_requires_evaluated_round(self):
+        self.tender.status = "revealed"
+        self.tender.revealed_at = timezone.now()
+        self.tender.save(update_fields=["status", "revealed_at"])
+
+        response = self.consultant_client.post(
+            "/api/tenders/{}/preliminary-approve/".format(self.tender.id),
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.tender.refresh_from_db()
+        self.assertIsNone(self.tender.preliminary_approved_at)
+
+
 class TenderRevealWorkflowTests(TestCase):
+
+    def _add_approved_bid(self):
+        workshop = Organization.objects.create(
+            name="Approved Reveal Workshop {}".format(self.tender.id),
+            organization_type="workshop",
+            owner=self.user,
+        )
+        return Bid.objects.create(
+            tender_round=self.round,
+            workshop=workshop,
+            status="submitted",
+            review_status="approved",
+        )
 
     def setUp(self):
 
@@ -1701,6 +1987,7 @@ class TenderRevealWorkflowTests(TestCase):
         )
 
         self.tender.save()
+        self._add_approved_bid()
 
         tender = reveal_tender(
             self.tender.id
@@ -1729,6 +2016,7 @@ class TenderRevealWorkflowTests(TestCase):
         )
 
         self.tender.save()
+        self._add_approved_bid()
 
         reveal_tender(
             self.tender.id

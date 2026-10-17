@@ -2185,6 +2185,14 @@ class ConsultantBidReviewView(APIView):
                     "Only submitted bids can be reviewed."
                 )
 
+            if bid.review_status != "pending":
+                raise ValidationError({
+                    "review_status": (
+                        "This bid has already been reviewed "
+                        "and cannot be changed."
+                    )
+                })
+
             decision = request.data.get("decision")
             if decision not in ("approved", "rejected"):
                 raise ValidationError({
@@ -2217,6 +2225,226 @@ class ConsultantBidReviewView(APIView):
             "review_status": bid.review_status,
             "reviewed_at": bid.reviewed_at,
             "rejection_reason": bid.rejection_reason,
+        })
+
+
+class TenderPreRevealApprovalView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        with transaction.atomic():
+            tender = get_object_or_404(
+                Tender.objects.select_for_update(),
+                pk=pk,
+            )
+
+            if not has_consultant_tender_access(
+                request.user,
+                tender,
+            ):
+                raise PermissionDenied(
+                    "Consultant access required."
+                )
+
+            if (
+                tender.status != "closed"
+                or tender.revealed_at is not None
+            ):
+                raise ValidationError(
+                    "Only a closed, unrevealed tender can be approved."
+                )
+
+            if tender.pre_reveal_approved_at is not None:
+                return Response({
+                    "tender_id": tender.id,
+                    "status": tender.status,
+                    "pre_reveal_approved_at": (
+                        tender.pre_reveal_approved_at
+                    ),
+                })
+
+            active_round = (
+                tender.rounds
+                .filter(status="closed")
+                .order_by("-round_number")
+                .first()
+            )
+
+            if active_round is None:
+                raise ValidationError(
+                    "No closed tender round is available."
+                )
+
+            submitted_bids = Bid.objects.filter(
+                tender_round=active_round,
+                status="submitted",
+            )
+
+            if submitted_bids.filter(
+                review_status="pending",
+            ).exists():
+                raise ValidationError(
+                    "All submitted bids must be reviewed first."
+                )
+
+            if not submitted_bids.filter(
+                review_status="approved",
+            ).exists():
+                raise ValidationError(
+                    "At least one technically approved bid is required."
+                )
+
+            tender.pre_reveal_approved_at = timezone.now()
+            tender.save(update_fields=[
+                "pre_reveal_approved_at",
+                "updated_at",
+            ])
+
+        return Response({
+            "tender_id": tender.id,
+            "status": tender.status,
+            "pre_reveal_approved_at": (
+                tender.pre_reveal_approved_at
+            ),
+        })
+
+class TenderRejectView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        reason = str(request.data.get("reason", "")).strip()
+        if not reason:
+            raise ValidationError({
+                "reason": "A cancellation reason is required."
+            })
+
+        with transaction.atomic():
+            tender = get_object_or_404(
+                Tender.objects.select_for_update(),
+                pk=pk,
+            )
+
+            if not has_consultant_tender_access(request.user, tender):
+                raise PermissionDenied("Consultant access required.")
+
+            if tender.status == "cancelled":
+                return Response({
+                    "tender_id": tender.id,
+                    "status": tender.status,
+                    "cancellation_reason": tender.cancellation_reason,
+                })
+
+            if tender.status not in ("draft", "open", "closed"):
+                raise ValidationError(
+                    "Only a tender that has not been revealed can be cancelled."
+                )
+
+            if tender.status == "closed":
+                active_round = (
+                    tender.rounds
+                    .filter(status="closed")
+                    .order_by("-round_number")
+                    .first()
+                )
+
+                if active_round is None:
+                    raise ValidationError(
+                        "No closed tender round is available."
+                    )
+
+                pending_bids_exist = Bid.objects.filter(
+                    tender_round=active_round,
+                    status="submitted",
+                    review_status="pending",
+                ).exists()
+
+                if pending_bids_exist:
+                    raise ValidationError(
+                        "All submitted bids must be reviewed before cancellation."
+                    )
+            tender.status = "cancelled"
+            tender.cancellation_reason = reason
+            tender.save(update_fields=[
+                "status",
+                "cancellation_reason",
+                "updated_at",
+            ])
+
+        return Response({
+            "tender_id": tender.id,
+            "status": tender.status,
+            "cancellation_reason": tender.cancellation_reason,
+        })
+
+
+class TenderPreliminaryApprovalView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        with transaction.atomic():
+            tender = get_object_or_404(
+                Tender.objects.select_for_update(),
+                pk=pk,
+            )
+
+            if not has_consultant_tender_access(request.user, tender):
+                raise PermissionDenied("Consultant access required.")
+
+            if tender.status != "revealed" or tender.revealed_at is None:
+                raise ValidationError(
+                    "Tender must be revealed before preliminary approval."
+                )
+
+            if tender.preliminary_approved_at is not None:
+                return Response({
+                    "tender_id": tender.id,
+                    "status": tender.status,
+                    "preliminary_approved_at": tender.preliminary_approved_at,
+                })
+
+            latest_round = (
+                tender.rounds
+                .filter(status="evaluated")
+                .order_by("-round_number")
+                .first()
+            )
+            if latest_round is None:
+                raise ValidationError(
+                    "No evaluated tender round available for approval."
+                )
+
+            pending_exists = Bid.objects.filter(
+                tender_round=latest_round,
+                status="submitted",
+                review_status="pending",
+            ).exists()
+
+            if pending_exists:
+                raise ValidationError(
+                    "All submitted bids must be reviewed before approval."
+                )
+
+            eligible_exists = Bid.objects.filter(
+                tender_round=latest_round,
+                status="submitted",
+                review_status="approved",
+            ).exists()
+
+            if not eligible_exists:
+                raise ValidationError(
+                    "No eligible bids remain for approval."
+                )
+
+            tender.preliminary_approved_at = timezone.now()
+            tender.save(update_fields=[
+                "preliminary_approved_at",
+                "updated_at",
+            ])
+
+        return Response({
+            "tender_id": tender.id,
+            "status": tender.status,
+            "preliminary_approved_at": tender.preliminary_approved_at,
         })
 
 
