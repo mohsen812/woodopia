@@ -142,13 +142,15 @@ def select_tender_bid(
     user,
 ):
 
-    tender = Tender.objects.get(
-        id=tender_id
-    )
+    try:
+        tender = Tender.objects.get(id=tender_id)
+    except Tender.DoesNotExist:
+        raise ValueError("Tender does not exist.")
 
-    bid = Bid.objects.get(
-        id=bid_id
-    )
+    try:
+        bid = Bid.objects.get(id=bid_id)
+    except Bid.DoesNotExist:
+        raise ValueError("Bid does not exist.")
 
     if bid.tender_round.tender_id != tender.id:
         raise ValueError(
@@ -172,19 +174,6 @@ def select_tender_bid(
             "Tender already has a final award."
         )
 
-    evaluation = evaluate_tender(
-        tender.id
-    )
-
-    allowed_bid_ids = [
-        item["bid_id"]
-        for item in evaluation["results"][:3]
-    ]
-
-    if bid.id not in allowed_bid_ids:
-        raise ValueError(
-            "Selected bid is not in top 3."
-        )
 
     with transaction.atomic():
 

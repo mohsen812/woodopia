@@ -240,6 +240,11 @@ class BidSerializer(serializers.ModelSerializer):
 
 class AnonymousBidSerializer(serializers.ModelSerializer):
 
+    bid_id = serializers.IntegerField(
+        source="id",
+        read_only=True,
+    )
+
     payment_stage_count = serializers.SerializerMethodField()
 
     def get_payment_stage_count(self, obj):
@@ -254,6 +259,7 @@ class AnonymousBidSerializer(serializers.ModelSerializer):
             "warranty_months",
             "status",
             "payment_stage_count",
+            "bid_id",
         ]
         read_only_fields = fields
 
@@ -286,6 +292,11 @@ class PreRevealBidSerializer(serializers.ModelSerializer):
 
 
 class CustomerPriceBidSerializer(serializers.ModelSerializer):
+
+    bid_id = serializers.IntegerField(
+        source="id",
+        read_only=True,
+    )
     """
     Customer-visible bid fields after preliminary approval.
     Never expose the real workshop identity in this stage.
@@ -299,6 +310,7 @@ class CustomerPriceBidSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
         fields = [
+            "bid_id",
             "public_alias",
             "total_amount",
             "discount_amount",
@@ -313,6 +325,11 @@ class CustomerPriceBidSerializer(serializers.ModelSerializer):
 
 
 class CustomerRankedBidSerializer(serializers.ModelSerializer):
+
+    bid_id = serializers.IntegerField(
+        source="id",
+        read_only=True,
+    )
     """
     Ranked customer view. Real workshop identity is exposed
     only for the top three evaluated bids.
@@ -327,6 +344,7 @@ class CustomerRankedBidSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
         fields = [
+            "bid_id",
             "public_alias",
             "total_amount",
             "discount_amount",

@@ -2422,18 +2422,31 @@ function renderTenderDashboard(
         evaluation?.recommendation || {};
 
 
-    const roundBids = (tender.rounds || []).reduce(
-        (allBids, round) => {
-            return allBids.concat(round.bids || []);
-        },
-        []
-    );
+const roundBids = (tender.rounds || []).reduce(
+    (allBids, round) => {
+        return allBids.concat(round.bids || []);
+    },
+    []
+);
 
-    const results =
-        evaluation?.results?.length
-            ? evaluation.results
-            : roundBids;
+const bidById = new Map(
+    roundBids.map(bid => [
+        Number(bid.bid_id ?? bid.id),
+        bid,
+    ])
+);
 
+const results = evaluation?.results?.length
+    ? evaluation.results.map(result => {
+        const bid = bidById.get(
+            Number(result.bid_id ?? result.id)
+        );
+
+        return bid
+            ? { ...bid, ...result }
+            : result;
+    })
+    : roundBids;
     console.log("FEEMAAS EVALUATION:", evaluation);
     console.log("FEEMAAS ROUND BIDS:", roundBids);
     console.log("FEEMAAS RESULTS:", results);
@@ -2794,7 +2807,6 @@ await apiPost(
         );
 }
 
-
 /*
 ============================================================
  RENDER SINGLE TENDER BID
@@ -2806,13 +2818,20 @@ function renderTenderBid(
     tender,
     visibility
 ) {
-
-    console.log(
-        "RENDER BID:",
-        bid
+    const selectedBidId = Number(
+        tender?.customer_selection?.bid_id
     );
 
-	const rankClass =
+    const currentBidId = Number(
+        bid.bid_id ?? bid.id
+    );
+
+    const isCustomerSelectedBid =
+        Number.isFinite(selectedBidId) &&
+        selectedBidId > 0 &&
+        currentBidId === selectedBidId;
+
+    const rankClass =
         bid.rank === 1
             ? "rank-gold"
             : bid.rank === 2
@@ -2821,26 +2840,64 @@ function renderTenderBid(
                     ? "rank-green"
                     : "";
 
-    return `
-<div
-    class="
-        tender-bid
-        ${rankClass}
-        ${
-            bid.rank === 1
-                ? "tender-bid-winner"
-                : ""
-        }
-    "
->
+    const workshopIdentity = visibility.show_workshop_identity
+        ? `
+            <div class="bid-identity-row">
+                <div class="bid-identity-names">
+                    <span class="bid-workshop-name">
+                        ${escapeHtml(
+                            bid.workshop_name || "کارگاه نامشخص"
+                        )}
+                    </span>
 
-    <div class="bid-led"></div>
+                    <span class="bid-public-alias">
+                        ${escapeHtml(
+                            bid.public_alias || "بدون نام مستعار"
+                        )}
+                    </span>
+                </div>
+
+                ${
+                    isCustomerSelectedBid
+                        ? `
+                            <span
+                                class="customer-selection-marker"
+                                title="انتخاب‌شده توسط مشتری"
+                                aria-label="این کارگاه توسط مشتری انتخاب شده است"
+                            >
+                                <span aria-hidden="true">✓</span>
+                                انتخاب مشتری
+                            </span>
+                        `
+                        : ""
+                }
+            </div>
+        `
+        : `
+            <div class="bid-identity-row">
+                <div class="bid-identity-names">
+                    <span class="bid-public-alias">
+                        ${escapeHtml(
+                            bid.public_alias || "پیشنهاد ناشناس"
+                        )}
+                    </span>
+                </div>
+            </div>
+        `;
+
+    return `
+        <div
+            class="
+                tender-bid
+                ${rankClass}
+                ${isCustomerSelectedBid ? "customer-selected-bid" : ""}
+                ${bid.rank === 1 ? "tender-bid-winner" : ""}
+            "
+        >
+            <div class="bid-led"></div>
 
             <div class="tender-bid-rank">
-
-                <span>
-                    رتبه
-                </span>
+                <span>رتبه</span>
 
                 <strong>
                     ${
@@ -2849,38 +2906,16 @@ function renderTenderBid(
                             : "—"
                     }
                 </strong>
-
             </div>
 
-
             <div class="tender-bid-main">
+                <span class="eyebrow">WORKSHOP</span>
 
-                <span class="eyebrow">
-                    WORKSHOP
-                </span>
-
-                <h4>
-                    ${
-                        visibility.show_workshop_identity
-                            ? escapeHtml(
-                                bid.workshop_name ||
-                                "کارگاه نامشخص"
-                            )
-                            : (
-                                bid.public_alias ||
-                                "پیشنهاد ناشناس"
-                            )
-                    }
-                </h4>
-
+                ${workshopIdentity}
 
                 <div class="tender-bid-values">
-
                     <div>
-
-                        <span>
-                            مبلغ پیشنهادی
-                        </span>
+                        <span>مبلغ پیشنهادی</span>
 
                         <strong>
                             ${
@@ -2896,68 +2931,31 @@ function renderTenderBid(
 
                         ${
                             visibility.show_price
-                                ? `<small>تومان</small>`
+                                ? "<small>تومان</small>"
                                 : ""
                         }
                     </div>
 
-
                     <div>
-
-                        <span>
-                            تولید
-                        </span>
-
-                        <strong>
-                            ${bid.production_days ?? "—"}
-                        </strong>
-
-                        <small>
-                            روز
-                        </small>
-
+                        <span>تولید</span>
+                        <strong>${bid.production_days ?? "—"}</strong>
+                        <small>روز</small>
                     </div>
 
-
                     <div>
-
-                        <span>
-                            تحویل
-                        </span>
-
-                        <strong>
-                            ${bid.delivery_days ?? "—"}
-                        </strong>
-
-                        <small>
-                            روز
-                        </small>
-
+                        <span>تحویل</span>
+                        <strong>${bid.delivery_days ?? "—"}</strong>
+                        <small>روز</small>
                     </div>
 
-
                     <div>
-
-                        <span>
-                            گارانتی
-                        </span>
-
-                        <strong>
-                            ${bid.warranty_months ?? "—"}
-                        </strong>
-
-                        <small>
-                            ماه
-                        </small>
-
+                        <span>گارانتی</span>
+                        <strong>${bid.warranty_months ?? "—"}</strong>
+                        <small>ماه</small>
                     </div>
 
-
                     <div>
-
-                        <span>
-                            امتیاز
-                        </span>
+                        <span>امتیاز</span>
 
                         <strong>
                             ${
@@ -2969,52 +2967,38 @@ function renderTenderBid(
 
                         ${
                             visibility.show_score
-                                ? `<small>/ 100</small>`
+                                ? "<small>/ 100</small>"
                                 : ""
                         }
-
                     </div>
-
                 </div>
-
 
                 ${
                     bid.technical_notes
                         ? `
                             <p class="tender-bid-notes">
-
-                                ${escapeHtml(
-                                    bid.technical_notes
-                                )}
-
+                                ${escapeHtml(bid.technical_notes)}
                             </p>
                         `
                         : ""
                 }
+
                 ${
-                              visibility.show_rank &&
-                              bid.rank >= 1 &&
-                              bid.rank <= 3
+                    visibility.show_rank
                         ? `
                             <button
                                 class="tender-award-button"
-                                data-bid-id="${bid.bid_id}"
+                                data-bid-id="${bid.bid_id ?? bid.id}"
                             >
-                               انتخاب این کارگاه
+                                انتخاب این کارگاه
                             </button>
                         `
                         : ""
                 }
-
             </div>
-
-
         </div>
-
     `;
-
 }
-
 
 /*
 ============================================================

@@ -643,17 +643,33 @@ class CustomerTenderSelectionServiceTests(TestCase):
         )
 
 
-    def test_customer_cannot_select_bid_outside_top_3(self):
+    def test_customer_can_select_bid_outside_top_3(self):
 
-        with self.assertRaisesMessage(
-            ValueError,
-            "Selected bid is not in top 3.",
-        ):
-            select_tender_bid(
-                self.tender.id,
-                self.bid_delta.id,
-                self.user,
-            )
+        selection = select_tender_bid(
+            self.tender.id,
+            self.bid_delta.id,
+            self.user,
+        )
+
+        self.assertEqual(selection.tender, self.tender)
+        self.assertEqual(selection.bid, self.bid_delta)
+        self.assertEqual(selection.selected_by, self.user)
+        self.assertEqual(selection.status, "selected")
+
+        self.assertEqual(
+            CustomerTenderSelection.objects.filter(
+                tender=self.tender,
+            ).count(),
+            1,
+        )
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "revealed")
+        self.assertIsNone(self.tender.winner_bid)
+
+        self.assertFalse(
+            TenderAward.objects.filter(tender=self.tender).exists()
+        )
 
 
     def test_customer_selection_can_be_changed(self):

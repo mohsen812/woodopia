@@ -594,7 +594,6 @@ async function openConsultantProjectModal(
             error
         );
 
-
         content.innerHTML = `
 
             <div class="empty-state">
@@ -2756,6 +2755,13 @@ function renderConsultantProposals(data) {
         visibility.show_workshop_identity === true;
     const showRank = visibility.show_rank === true;
 
+    // Customer selection is separate from technical approval and official ranking.
+    const customerSelection = data.customer_selection || data.tender?.customer_selection || null;
+    const selectedBidId = customerSelection?.bid_id != null
+        ? String(customerSelection.bid_id)
+        : "";
+
+
     // Technical review is allowed only after closure
     // and before the tender is revealed.
     const reviewEnabled =
@@ -2838,6 +2844,21 @@ function renderConsultantProposals(data) {
             ? rank
             : null;
     };
+
+    const activeTenderTab = content.dataset.activeTenderTab || "bids";
+
+    // Sort by explicit evaluation rank, never by card/DB order.
+    if (showRank) {
+        bids.sort((a, b) => {
+            const rankA = findRanking(a);
+            const rankB = findRanking(b);
+
+            if (rankA == null && rankB == null) return 0;
+            if (rankA == null) return 1;
+            if (rankB == null) return -1;
+            return rankA - rankB;
+        });
+    }
 
     const rankClass = rank => {
         if (rank === 1) return "proposal-rank-gold";
@@ -3012,7 +3033,7 @@ function renderConsultantProposals(data) {
 
         return `
             <article
-                class="proposal-card ${rank ? rankClass(rank) : ""}"
+                class="proposal-card ${rank ? rankClass(rank) : ""} ${selectedBidId !== "" && bid.id != null && String(bid.id) === selectedBidId ? "proposal-card-customer-selected" : ""}"
                 data-proposal-bid-id="${escapeText(bid.id ?? "")}"
             >
 
@@ -3026,6 +3047,12 @@ function renderConsultantProposals(data) {
                 ${rankMarkup}
             </div>
                 ${aliasMarkup}
+                ${selectedBidId !== "" && bid.id != null && String(bid.id) === selectedBidId
+                    ? `<div class="proposal-customer-selection">
+                           <span class="proposal-customer-selection-check" aria-hidden="true">✓</span>
+                           <strong>انتخاب‌شده توسط مشتری</strong>
+                       </div>`
+                    : ""}
                 ${identityMarkup}
                 <div class="proposal-facts">
                     ${fields.join("")}
@@ -3054,8 +3081,110 @@ function renderConsultantProposals(data) {
                 : "هویت کارگاه‌ها و اطلاعات مجاز پیشنهادها قابل مشاهده است."
         );
 
+    const preliminaryApproved = Boolean(tender.preliminary_approved_at);
+    const commission1Approved = tender.commission_check_1 === true;
+    const commission2Approved = tender.commission_check_2 === true;
+    const rankingsPublished = Boolean(tender.rankings_published_at);
+    const tenderRevealed = Boolean(tender.revealed_at);
+    const canRunCommissionActions =
+        tender.status === "revealed" && tenderRevealed;
+
+    const commissionButton = (action, label, disabled) => `
+        <button type="button"
+                class="proposal-review-button"
+                data-commission-action="${action}"
+                ${disabled ? "disabled" : ""}>
+            ${label}
+        </button>
+    `;
+
     content.innerHTML = `
-        <section class="project-section proposals-section">
+        <nav class="tender-workflow-tabs"
+             aria-label="بخش‌های مناقصه"
+             style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+            <button type="button"
+                    class="proposal-review-button"
+                    data-tender-tab="bids"
+                    aria-selected="true">
+                پیشنهادها
+            </button>
+            <button type="button"
+                    class="proposal-review-button"
+                    data-tender-tab="commission"
+                    aria-selected="false">
+                تأیید کمیسیون و رتبه‌بندی
+            </button>
+        </nav>
+
+        <section class="project-section tender-commission-section"
+                 data-tender-panel="commission"
+                 hidden>
+            <div class="proposals-header">
+                <div>
+                    <div class="proposals-kicker">COMMISSION WORKFLOW</div>
+                    <h3>تأیید کمیسیون و انتشار رتبه‌ها</h3>
+                    <p>
+                        ابتدا تأیید اولیه، سپس هر دو تأیید کمیسیون،
+                        و در پایان انتشار رسمی رتبه‌بندی را ثبت کن.
+                    </p>
+                </div>
+            </div>
+
+            <div class="proposal-facts" style="display:grid;gap:12px">
+                <div><strong>وضعیت مناقصه:</strong>
+                    ${escapeText(tender.status || "نامشخص")}</div>
+                <div><strong>تأیید اولیه:</strong>
+                    ${preliminaryApproved ? "ثبت شده" : "ثبت نشده"}</div>
+                <div><strong>تأیید کمیسیون اول:</strong>
+                    ${commission1Approved ? "ثبت شده" : "ثبت نشده"}</div>
+                <div><strong>تأیید کمیسیون دوم:</strong>
+                    ${commission2Approved ? "ثبت شده" : "ثبت نشده"}</div>
+                <div><strong>انتشار رسمی رتبه‌ها:</strong>
+                    ${rankingsPublished ? "منتشر شده" : "منتشر نشده"}</div>
+            </div>
+
+            <div class="proposal-review-actions"
+                 style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+                ${commissionButton(
+                    "preliminary-approve",
+                    "تأیید اولیه پیشنهادها",
+                    !canRunCommissionActions || preliminaryApproved
+                )}
+                ${commissionButton(
+                    "commission-check-1",
+                    "ثبت تأیید کمیسیون اول",
+                    !canRunCommissionActions || !preliminaryApproved ||
+                        commission1Approved || rankingsPublished
+                )}
+                ${commissionButton(
+                    "commission-check-2",
+                    "ثبت تأیید کمیسیون دوم",
+                    !canRunCommissionActions || !preliminaryApproved ||
+                        commission2Approved || rankingsPublished
+                )}
+                ${commissionButton(
+                    "publish-rankings",
+                    "انتشار رسمی رتبه‌بندی",
+                    !canRunCommissionActions || !preliminaryApproved ||
+                        !commission1Approved || !commission2Approved ||
+                        rankingsPublished
+                )}
+            </div>
+
+            ${!canRunCommissionActions
+                ? `<p class="proposals-message">
+                       عملیات کمیسیون پس از افشای رسمی مناقصه و قرارگرفتن
+                       وضعیت آن روی «revealed» فعال می‌شود.
+                   </p>`
+                : rankingsPublished
+                    ? `<p class="proposals-message">
+                           رتبه‌بندی قبلاً منتشر شده است.
+                       </p>`
+                    : ""}
+        </section>
+
+        <section class="project-section proposals-section"
+                 data-tender-panel="bids">
             <div class="proposals-header">
                 <div>
                     <div class="proposals-kicker">BID REVIEW</div>
@@ -3080,6 +3209,99 @@ function renderConsultantProposals(data) {
             </div>
         </section>
     `;
+
+    // Switch tabs and preserve the selected tab across data reloads.
+    const setTenderTab = (selected) => {
+        content.dataset.activeTenderTab = selected;
+
+        content.querySelectorAll("[data-tender-panel]").forEach(panel => {
+            panel.hidden = panel.dataset.tenderPanel !== selected;
+        });
+
+        content.querySelectorAll("[data-tender-tab]").forEach(tab => {
+            tab.setAttribute(
+                "aria-selected",
+                String(tab.dataset.tenderTab === selected)
+            );
+        });
+    };
+
+    setTenderTab(activeTenderTab);
+
+    content.querySelectorAll("[data-tender-tab]").forEach(button => {
+        button.addEventListener("click", () => {
+            setTenderTab(button.dataset.tenderTab);
+        });
+    });
+
+    // Reuse the existing backend endpoints.
+    content.querySelectorAll("[data-commission-action]").forEach(button => {
+        button.addEventListener("click", async () => {
+            const action = button.dataset.commissionAction;
+            const endpoints = {
+                "preliminary-approve": "preliminary-approve",
+                "commission-check-1": "commission-check-1",
+                "commission-check-2": "commission-check-2",
+                "publish-rankings": "publish-rankings"
+            };
+
+            if (!tender.id || !endpoints[action]) {
+                window.alert("شناسه مناقصه یا عملیات معتبر نیست.");
+                return;
+            }
+
+            const messages = {
+                "preliminary-approve": "تأیید اولیه پیشنهادها ثبت شود؟",
+                "commission-check-1": "تأیید کمیسیون اول ثبت شود؟",
+                "commission-check-2": "تأیید کمیسیون دوم ثبت شود؟",
+                "publish-rankings":
+                    "رتبه‌بندی رسمی منتشر شود؟ پس از انتشار، تأییدها قابل تغییر نیستند."
+            };
+
+            if (!window.confirm(messages[action])) return;
+
+            button.disabled = true;
+
+            try {
+                const response = await fetch(
+                    `/api/tenders/${encodeURIComponent(tender.id)}/${endpoints[action]}/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: JSON.stringify({})
+                    }
+                );
+
+                let result = {};
+                try {
+                    result = await response.json();
+                } catch (_) {
+                    result = {};
+                }
+
+                if (!response.ok) {
+                    const message = result.detail || result.error ||
+                        "عملیات انجام نشد؛ وضعیت مناقصه و مجوز دسترسی را بررسی کن.";
+                    throw new Error(
+                        typeof message === "string"
+                            ? message
+                            : JSON.stringify(message)
+                    );
+                }
+
+                await loadConsultantProposals(Number(data.project_id));
+            } catch (error) {
+                console.error("Commission workflow action failed:", error);
+                window.alert(error.message || "ثبت عملیات کمیسیون ناموفق بود.");
+                button.disabled = false;
+            }
+        });
+    });
 
     // Connect technical approval/rejection to the existing API.
     content.querySelectorAll("[data-bid-review]").forEach(button => {

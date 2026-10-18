@@ -1,4 +1,4 @@
-﻿from django.db.models import Q
+from django.db.models import Q
 
 from workspace.services import (
     get_active_membership,
@@ -1625,7 +1625,20 @@ class ProjectTenderView(
                         many=True,
                     )
 
-                round_data["bids"] = bid_serializer.data
+                serialized_bids = list(bid_serializer.data)
+
+                # Use the actual rank only after official ranking publication.
+                if isinstance(getattr(bid_serializer, 'child', bid_serializer), CustomerRankedBidSerializer):
+                    serialized_bids.sort(
+                        key=lambda bid: (
+                            bid.get("rank") is None,
+                            bid.get("rank")
+                            if bid.get("rank") is not None
+                            else 10**9,
+                        )
+                    )
+
+                round_data["bids"] = serialized_bids
 
         elif workshop_view:
             # A workshop must never receive competitors' bids.
@@ -1679,6 +1692,53 @@ class ProjectTenderView(
 
         else:
             tender_data = TenderSerializer(tender).data
+
+        # Commission workflow state is visible only to consultants.
+        if consultant_view:
+            tender_data.update({
+                "preliminary_approved_at": tender.preliminary_approved_at,
+                "commission_check_1": tender.commission_check_1,
+                "commission_check_2": tender.commission_check_2,
+                "rankings_published_at": tender.rankings_published_at,
+            })
+
+        # Customer selection is separate from the official tender award.
+        from tenders.models import CustomerTenderSelection
+
+        selection = (
+            CustomerTenderSelection.objects
+            .filter(tender=tender)
+            .select_related("bid", "bid__workshop")
+            .first()
+        )
+
+        selection_data = None
+        if selection:
+            selected_bid = selection.bid
+            selection_data = {
+                "bid_id": selected_bid.id,
+                "public_alias": selected_bid.public_alias,
+                "status": selection.status,
+                "selected_at": selection.selected_at.isoformat(),
+            }
+
+            if consultant_view:
+                selection_data["workshop_name"] = (
+                    selected_bid.workshop.name
+                )
+                selection_data["workshop_id"] = (
+                    selected_bid.workshop_id
+                )
+
+            elif workshop_view:
+                selection_data["is_selected_for_this_workshop"] = (
+                    bool(active_membership)
+                    and active_workspace == "workshop"
+                    and selected_bid.workshop_id
+                    == active_membership.organization_id
+                )
+
+        tender_data["customer_selection"] = selection_data
 
         if not revealed:
 
@@ -1796,16 +1856,10 @@ class ProjectTenderSelectWinnerView(
 
 
         if not tender:
-
-            tender = Tender.objects.create(
-                project=project,
-                title=(
-                    f"{project.title} - "
-                    "مناقصه"
-                ),
-                description=project.description or "",
-                status="draft",
-        )
+            return Response(
+                {"error": "No tender exists for this project."},
+                status=404,
+            )
 
         serializer = self.get_serializer(
             data=request.data
