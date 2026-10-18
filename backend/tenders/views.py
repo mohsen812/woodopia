@@ -20,6 +20,7 @@ from organizations.models import (
 )
 
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 
 from projects.models import Project
 
@@ -48,6 +49,8 @@ from .models import (
     PaymentSchedule,
     Bid,
     BidItem,
+    CustomerTenderSelection,
+    TenderAward,
     ConsultantSpecification,
     SpecificationAttachment,
 )
@@ -2185,14 +2188,6 @@ class ConsultantBidReviewView(APIView):
                     "Only submitted bids can be reviewed."
                 )
 
-            if bid.review_status != "pending":
-                raise ValidationError({
-                    "review_status": (
-                        "This bid has already been reviewed "
-                        "and cannot be changed."
-                    )
-                })
-
             decision = request.data.get("decision")
             if decision not in ("approved", "rejected"):
                 raise ValidationError({
@@ -2789,6 +2784,77 @@ class TenderSelectBidView(
             },
             status=201
         )
+
+
+class TenderSelectionLockView(APIView):
+    """
+    Lock or unlock the customer's current selection.
+    This action does not award the tender.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        locked = request.data.get("locked")
+
+        if not isinstance(locked, bool):
+            raise ValidationError({
+                "locked": "This field must be true or false."
+            })
+
+        with transaction.atomic():
+            tender = get_object_or_404(
+                Tender.objects.select_for_update(),
+                pk=pk,
+            )
+
+            if not has_consultant_tender_access(
+                request.user,
+                tender,
+            ):
+                raise PermissionDenied(
+                    "Consultant access required."
+                )
+
+            selection = (
+                CustomerTenderSelection.objects
+                .select_for_update()
+                .filter(tender=tender)
+                .select_related("bid", "bid__workshop")
+                .first()
+            )
+
+            if selection is None:
+                raise ValidationError({
+                    "selection": (
+                        "The customer has not selected a bid yet."
+                    )
+                })
+
+            if TenderAward.objects.filter(tender=tender).exists():
+                raise ValidationError({
+                    "selection": (
+                        "The tender already has a final award."
+                    )
+                })
+
+            selection.is_locked = locked
+            selection.save(
+                update_fields=["is_locked", "updated_at"]
+            )
+
+        return Response({
+            "selection_id": selection.id,
+            "tender_id": tender.id,
+            "bid_id": selection.bid_id,
+            "is_locked": selection.is_locked,
+            "message": (
+                "Customer selection locked."
+                if selection.is_locked
+                else "Customer selection unlocked."
+            ),
+        }, status=200)
+
 class TenderAwardView(
     generics.GenericAPIView
 ):

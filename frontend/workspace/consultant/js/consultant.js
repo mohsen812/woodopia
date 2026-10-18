@@ -3051,7 +3051,20 @@ function renderConsultantProposals(data) {
                     ? `<div class="proposal-customer-selection">
                            <span class="proposal-customer-selection-check" aria-hidden="true">✓</span>
                            <strong>انتخاب‌شده توسط مشتری</strong>
-                       </div>`
+                       </div>
+                       <div class="proposal-selection-lock-state">
+                           ${customerSelection?.is_locked
+                               ? "🔒 انتخاب مشتری توسط مشاور قفل شده است."
+                               : "🔓 انتخاب مشتری هنوز قفل نشده است."}
+                       </div>
+                       <button
+                           type="button"
+                           class="proposal-selection-lock-button"
+                           data-selection-lock="${escapeText(tender.id)}"
+                           data-selection-locked="${customerSelection?.is_locked ? "true" : "false"}"
+                       >${customerSelection?.is_locked
+                           ? "بازکردن قفل انتخاب"
+                           : "قفل‌کردن انتخاب مشتری"}</button>`
                     : ""}
                 ${identityMarkup}
                 <div class="proposal-facts">
@@ -3298,6 +3311,71 @@ function renderConsultantProposals(data) {
             } catch (error) {
                 console.error("Commission workflow action failed:", error);
                 window.alert(error.message || "ثبت عملیات کمیسیون ناموفق بود.");
+                button.disabled = false;
+            }
+        });
+    });
+
+    // Lock or unlock the customer's current bid selection.
+    content.querySelectorAll("[data-selection-lock]").forEach(button => {
+        button.addEventListener("click", async () => {
+            const tenderId = button.dataset.selectionLock;
+            const currentlyLocked = button.dataset.selectionLocked === "true";
+            const nextLocked = !currentlyLocked;
+
+            if (!tenderId) {
+                window.alert("شناسه مناقصه معتبر نیست.");
+                return;
+            }
+
+            const confirmation = nextLocked
+                ? "انتخاب فعلی مشتری قفل شود؟ مشتری دیگر نمی‌تواند پیشنهاد دیگری انتخاب کند."
+                : "قفل انتخاب مشتری باز شود؟ مشتری دوباره امکان تغییر انتخاب خواهد داشت.";
+
+            if (!window.confirm(confirmation)) {
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+                const response = await fetch(
+                    `/api/tenders/${encodeURIComponent(tenderId)}/selection-lock/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            locked: nextLocked
+                        })
+                    }
+                );
+
+                let result = {};
+                try {
+                    result = await response.json();
+                } catch (_) {
+                    result = {};
+                }
+
+                if (!response.ok) {
+                    const message = result.detail || result.error || result.selection ||
+                        result.locked || "تغییر وضعیت قفل انجام نشد.";
+                    throw new Error(
+                        typeof message === "string"
+                            ? message
+                            : JSON.stringify(message)
+                    );
+                }
+
+                await loadConsultantProposals(Number(data.project_id));
+            } catch (error) {
+                console.error("Tender selection lock action failed:", error);
+                window.alert(error.message || "تغییر وضعیت قفل ناموفق بود.");
                 button.disabled = false;
             }
         });

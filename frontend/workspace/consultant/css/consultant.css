@@ -3972,3 +3972,82 @@ body {
     background: rgba(46, 204, 113, 0.18);
     font-weight: 800;
 }
+
+/* TENDER CUSTOMER-SELECTION LOCK CONTROLS */
+.proposal-selection-lock-state {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 8px 0;
+    color: var(--text-secondary, #aab4c5);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.proposal-selection-lock-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    margin: 4px 0 12px;
+    padding: 9px 15px;
+    border: 1px solid rgba(255, 190, 75, 0.48);
+    border-radius: 10px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 190, 75, 0.16),
+        rgba(255, 135, 55, 0.09)
+    );
+    color: #ffd28a;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.6;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.proposal-selection-lock-button::before {
+    content: "🔒";
+    font-size: 14px;
+}
+
+.proposal-selection-lock-button[data-selection-locked="true"] {
+    border-color: rgba(80, 220, 160, 0.48);
+    background: rgba(40, 190, 125, 0.12);
+    color: #83edbd;
+}
+
+.proposal-selection-lock-button[data-selection-locked="true"]::before {
+    content: "🔓";
+}
+
+.proposal-selection-lock-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: currentColor;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.proposal-selection-lock-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+.proposal-selection-lock-button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 600px) {
+    .proposal-selection-lock-button {
+        width: 100%;
+    }
+}

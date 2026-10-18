@@ -772,6 +772,9 @@ class CustomerTenderSelection(models.Model):
         default="selected",
     )
 
+    # Consultant lock; this is not a final award or payment approval.
+    is_locked = models.BooleanField(default=False)
+
     selected_at = models.DateTimeField(
         auto_now_add=True
     )

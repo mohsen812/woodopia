@@ -700,6 +700,95 @@ class CustomerTenderSelectionServiceTests(TestCase):
             CustomerTenderSelection.objects.count(),
             1,
         )
+
+    def test_customer_cannot_select_bid_from_another_tender(self):
+        other_project = Project.objects.create(
+            title="Other Selection Project",
+            customer=self.customer,
+        )
+        other_tender = Tender.objects.create(
+            project=other_project,
+            title="Other Selection Tender",
+            status="revealed",
+            revealed_at=timezone.now(),
+        )
+        other_round = TenderRound.objects.create(
+            tender=other_tender,
+            round_number=1,
+            status="closed",
+        )
+        other_bid = Bid.objects.create(
+            tender_round=other_round,
+            workshop=self.workshop_alpha,
+            total_amount=90000000,
+            production_days=8,
+            delivery_days=4,
+            warranty_months=24,
+            status="submitted",
+        )
+
+        with self.assertRaisesMessage(
+            ValueError,
+            "Bid does not belong to this tender.",
+        ):
+            select_tender_bid(
+                self.tender.id,
+                other_bid.id,
+                self.user,
+            )
+
+        self.assertFalse(
+            CustomerTenderSelection.objects.filter(
+                tender=self.tender,
+            ).exists()
+        )
+
+    def test_customer_cannot_change_selection_after_consultant_lock(self):
+        selection = select_tender_bid(
+            self.tender.id,
+            self.bid_alpha.id,
+            self.user,
+        )
+        selection.is_locked = True
+        selection.save(update_fields=["is_locked"])
+
+        with self.assertRaisesMessage(
+            ValueError,
+            "Customer selection is locked by the consultant.",
+        ):
+            select_tender_bid(
+                self.tender.id,
+                self.bid_beta.id,
+                self.user,
+            )
+
+        selection.refresh_from_db()
+        self.assertEqual(selection.bid_id, self.bid_alpha.id)
+        self.assertTrue(selection.is_locked)
+
+    def test_customer_cannot_change_selection_after_final_award(self):
+        TenderAward.objects.create(
+            tender=self.tender,
+            bid=self.bid_alpha,
+            awarded_by=self.user,
+        )
+
+        with self.assertRaisesMessage(
+            ValueError,
+            "Tender already has a final award.",
+        ):
+            select_tender_bid(
+                self.tender.id,
+                self.bid_beta.id,
+                self.user,
+            )
+
+        self.assertFalse(
+            CustomerTenderSelection.objects.filter(
+                tender=self.tender,
+            ).exists()
+        )
+
     def test_non_customer_user_cannot_select_tender_bid(self):
 
         User = get_user_model()
@@ -1648,10 +1737,12 @@ class TenderReviewLifecycleContractTests(TestCase):
 
         self.consultant_user = User.objects.create_user(
             username="review_lifecycle_consultant",
+            email="review-lifecycle-consultant@test.local",
             password="test-password",
         )
         self.customer_user = User.objects.create_user(
             username="review_lifecycle_customer",
+            email="review-lifecycle-customer@test.local",
             password="test-password",
         )
 
@@ -1817,12 +1908,31 @@ class TenderReviewLifecycleContractTests(TestCase):
         tender_id = self.tender.id
         bid_ids = [bid.id for bid in self.bids]
 
+        for bid in self.bids:
+            bid.review_status = "rejected"
+            bid.reviewed_at = timezone.now()
+            bid.reviewed_by = self.consultant_user
+            bid.rejection_reason = "پیشنهاد واجد شرایط نیست"
+            bid.save(update_fields=[
+                "review_status",
+                "reviewed_at",
+                "reviewed_by",
+                "rejection_reason",
+            ])
+
         response = self.consultant_client.post(
             "/api/tenders/{}/reject/".format(tender_id),
             {"reason": "پیشنهادهای واجد شرایط کافی نیستند"},
             format="json",
         )
 
+        self.assertEqual(response.status_code, 200)
+
+        self.tender.refresh_from_db()
+        self.assertEqual(self.tender.status, "cancelled")
+        self.assertTrue(
+            Tender.objects.filter(id=tender_id).exists()
+        )
         self.assertEqual(response.status_code, 200)
 
         self.tender.refresh_from_db()
@@ -1857,6 +1967,18 @@ class TenderReviewLifecycleContractTests(TestCase):
             "review_status",
             "reviewed_at",
             "reviewed_by",
+        ])
+
+        rejected_bid = self.bids[1]
+        rejected_bid.review_status = "rejected"
+        rejected_bid.reviewed_at = timezone.now()
+        rejected_bid.reviewed_by = self.consultant_user
+        rejected_bid.rejection_reason = "پیشنهاد واجد شرایط نیست"
+        rejected_bid.save(update_fields=[
+            "review_status",
+            "reviewed_at",
+            "reviewed_by",
+            "rejection_reason",
         ])
 
         # Simulate the round already revealed and evaluated.
@@ -1982,7 +2104,11 @@ class TenderRevealWorkflowTests(TestCase):
         )
 
         self.tender.reveal_at = timezone.now() - timedelta(minutes=1)
-        self.tender.save(update_fields=["reveal_at"])
+        self.tender.pre_reveal_approved_at = timezone.now()
+        self.tender.save(update_fields=[
+            "reveal_at",
+            "pre_reveal_approved_at",
+        ])
 
         with self.assertRaisesMessage(
             ValueError,
@@ -2002,6 +2128,7 @@ class TenderRevealWorkflowTests(TestCase):
             timedelta(minutes=1)
         )
 
+        self.tender.pre_reveal_approved_at = timezone.now()
         self.tender.save()
         self._add_approved_bid()
 
@@ -2030,6 +2157,7 @@ class TenderRevealWorkflowTests(TestCase):
             -
             timedelta(minutes=1)
         )
+        self.tender.pre_reveal_approved_at = timezone.now()
 
         self.tender.save()
         self._add_approved_bid()
@@ -3527,3 +3655,171 @@ class TenderCommissionAndRankingPublicationAPITests(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+
+class ConsultantSelectionLockAPITests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.consultant = User.objects.create_user(
+            username="selection_lock_consultant",
+            email="selection-lock-consultant@test.local",
+            password="test-password",
+            is_staff=True,
+            is_superuser=True,
+        )
+
+        self.customer_user = User.objects.create_user(
+            username="selection_lock_customer",
+            email="selection-lock-customer@test.local",
+            password="test-password",
+        )
+
+        self.unauthorized_user = User.objects.create_user(
+            username="selection_lock_unauthorized",
+            email="selection-lock-unauthorized@test.local",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Selection Lock Customer",
+            organization_type="customer",
+            owner=self.customer_user,
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Selection Lock Workshop",
+            organization_type="workshop",
+            owner=self.customer_user,
+        )
+
+        self.project = Project.objects.create(
+            title="Selection Lock Project",
+            customer=self.customer,
+            created_by=self.customer_user,
+            status="tender",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Selection Lock Tender",
+            status="revealed",
+            revealed_at=timezone.now(),
+        )
+
+        self.round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        self.bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=self.workshop,
+            total_amount=100000000,
+            production_days=10,
+            delivery_days=5,
+            warranty_months=24,
+            status="submitted",
+        )
+
+        self.lock_url = (
+            f"/api/tenders/{self.tender.id}/selection-lock/"
+        )
+        self.select_url = (
+            f"/api/tenders/{self.tender.id}/select/"
+        )
+
+        self.consultant_client = APIClient()
+        self.consultant_client.force_authenticate(
+            user=self.consultant
+        )
+
+        self.customer_client = APIClient()
+        self.customer_client.force_authenticate(
+            user=self.customer_user
+        )
+
+        self.unauthorized_client = APIClient()
+        self.unauthorized_client.force_authenticate(
+            user=self.unauthorized_user
+        )
+
+        selection_response = self.customer_client.post(
+            self.select_url,
+            {"bid_id": self.bid.id},
+            format="json",
+        )
+        self.assertEqual(selection_response.status_code, 201)
+
+    def test_consultant_can_lock_customer_selection(self):
+        response = self.consultant_client.post(
+            self.lock_url,
+            {"locked": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["is_locked"])
+
+    def test_consultant_can_unlock_customer_selection(self):
+        lock_response = self.consultant_client.post(
+            self.lock_url,
+            {"locked": True},
+            format="json",
+        )
+        self.assertEqual(lock_response.status_code, 200)
+
+        response = self.consultant_client.post(
+            self.lock_url,
+            {"locked": False},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data["is_locked"])
+
+    def test_customer_cannot_change_selection_after_lock(self):
+        lock_response = self.consultant_client.post(
+            self.lock_url,
+            {"locked": True},
+            format="json",
+        )
+        self.assertEqual(lock_response.status_code, 200)
+
+        another_bid = Bid.objects.create(
+            tender_round=self.round,
+            workshop=Organization.objects.create(
+                name="Alternative Lock Workshop",
+                organization_type="workshop",
+                owner=self.customer_user,
+            ),
+            total_amount=110000000,
+            production_days=12,
+            delivery_days=6,
+            warranty_months=18,
+            status="submitted",
+        )
+
+        response = self.customer_client.post(
+            self.select_url,
+            {"bid_id": another_bid.id},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        selection = CustomerTenderSelection.objects.get(
+            tender=self.tender
+        )
+        self.assertEqual(selection.bid_id, self.bid.id)
+
+    def test_unauthorized_user_cannot_lock_selection(self):
+        response = self.unauthorized_client.post(
+            self.lock_url,
+            {"locked": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)

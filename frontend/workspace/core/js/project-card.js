@@ -2793,10 +2793,65 @@ await apiPost(
         error
     );
 
-    alert(
-        error.message ||
-        "خطا در انتخاب برنده."
-    );
+    const errorMessage = String(error?.message || "");
+
+    if (
+        /Customer selection is locked by the consultant/i.test(
+            errorMessage
+        )
+    ) {
+        const existingToast = document.querySelector(
+            ".customer-selection-error-toast"
+        );
+
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement("div");
+        toast.className = "customer-selection-error-toast";
+        toast.setAttribute("role", "alert");
+        toast.setAttribute("aria-live", "assertive");
+
+        const icon = document.createElement("span");
+        icon.className = "customer-selection-error-toast__icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "🔒";
+
+        const content = document.createElement("div");
+        content.className = "customer-selection-error-toast__content";
+
+        const title = document.createElement("strong");
+        title.textContent = "امکان تغییر انتخاب وجود ندارد";
+
+        const message = document.createElement("p");
+        message.textContent =
+            "انتخاب کارگاه توسط مشاور قفل شده است. " +
+            "برای انتخاب کارگاه دیگر، ابتدا باید مشاور قفل را باز کند.";
+
+        const closeButton = document.createElement("button");
+        closeButton.className = "customer-selection-error-toast__close";
+        closeButton.type = "button";
+        closeButton.setAttribute("aria-label", "بستن پیام");
+        closeButton.textContent = "×";
+        closeButton.addEventListener("click", () => toast.remove());
+
+        content.append(title, message);
+        toast.append(icon, content, closeButton);
+        document.body.appendChild(toast);
+
+        window.setTimeout(() => {
+            if (toast.isConnected) {
+                toast.remove();
+            }
+        }, 7000);
+
+    } else {
+        alert(
+            error.message ||
+            "خطا در انتخاب برنده."
+        );
+    }
 
 }
 
@@ -2822,6 +2877,7 @@ function renderTenderBid(
         tender?.customer_selection?.bid_id
     );
 
+    const customerSelection = tender?.customer_selection || null;
     const currentBidId = Number(
         bid.bid_id ?? bid.id
     );
@@ -2830,6 +2886,16 @@ function renderTenderBid(
         Number.isFinite(selectedBidId) &&
         selectedBidId > 0 &&
         currentBidId === selectedBidId;
+
+    const isCustomerSelectionLocked =
+       isCustomerSelectedBid &&
+       customerSelection?.is_locked === true;
+
+    const isSelectedForThisWorkshop =
+        customerSelection?.is_selected_for_this_workshop === true;
+    const isSelectionLocked =
+        isSelectedForThisWorkshop &&
+        customerSelection?.is_locked === true;
 
     const rankClass =
         bid.rank === 1
@@ -2861,12 +2927,12 @@ function renderTenderBid(
                     isCustomerSelectedBid
                         ? `
                             <span
-                                class="customer-selection-marker"
-                                title="انتخاب‌شده توسط مشتری"
-                                aria-label="این کارگاه توسط مشتری انتخاب شده است"
+                                class="customer-selection-marker${isCustomerSelectionLocked ? " customer-selection-locked" : ""}"
+                                title="${isCustomerSelectionLocked ? "پیشنهاد منتخب؛ انتخاب توسط مشاور قفل شده است" : "انتخاب‌شده توسط مشتری"}"
+                                aria-label="${isCustomerSelectionLocked ? "پیشنهاد منتخب مشتری با انتخاب قفل‌شده" : "این کارگاه توسط مشتری انتخاب شده است"}"
                             >
-                                <span aria-hidden="true">✓</span>
-                                انتخاب مشتری
+                                <span aria-hidden="true">${isCustomerSelectionLocked ? "🔒" : "✓"}</span>
+                                ${isCustomerSelectionLocked ? "انتخاب نهایی" : "انتخاب مشتری"}
                             </span>
                         `
                         : ""
@@ -2912,6 +2978,27 @@ function renderTenderBid(
                 <span class="eyebrow">WORKSHOP</span>
 
                 ${workshopIdentity}
+
+                ${
+                    isSelectedForThisWorkshop
+                        ? `
+                            <div class="customer-selection-marker">
+                                <span aria-hidden="true">✓</span>
+                                پیشنهاد شما انتخاب شده است
+                            </div>
+                            ${
+                                isSelectionLocked
+                                    ? `
+                                        <div class="customer-selection-lock-notice" role="status">
+                                            🔒 انتخاب شما توسط مشاور قفل شده است.
+                                            برای تغییر انتخاب، ابتدا باید مشاور قفل را باز کند.
+                                        </div>
+                                    `
+                                    : ""
+                            }
+                        `
+                        : ""
+                }
 
                 <div class="tender-bid-values">
                     <div>

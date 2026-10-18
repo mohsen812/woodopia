@@ -1715,28 +1715,52 @@ class ProjectTenderView(
         selection_data = None
         if selection:
             selected_bid = selection.bid
-            selection_data = {
-                "bid_id": selected_bid.id,
-                "public_alias": selected_bid.public_alias,
-                "status": selection.status,
-                "selected_at": selection.selected_at.isoformat(),
-            }
 
             if consultant_view:
-                selection_data["workshop_name"] = (
-                    selected_bid.workshop.name
-                )
-                selection_data["workshop_id"] = (
-                    selected_bid.workshop_id
-                )
+                selection_data = {
+                    "bid_id": selected_bid.id,
+                    "public_alias": selected_bid.public_alias,
+                    "status": selection.status,
+                    "selected_at": selection.selected_at.isoformat(),
+                    "is_locked": selection.is_locked,
+                    "workshop_name": (
+                        selected_bid.workshop.name
+                        if selected_bid.workshop
+                        else None
+                    ),
+                    "workshop_id": selected_bid.workshop_id,
+                }
+
+            elif customer_view:
+                selection_data = {
+                    "bid_id": selected_bid.id,
+                    "public_alias": selected_bid.public_alias,
+                    "status": selection.status,
+                    "selected_at": selection.selected_at.isoformat(),
+                    "is_locked": selection.is_locked,
+                }
 
             elif workshop_view:
-                selection_data["is_selected_for_this_workshop"] = (
+                is_selected_for_this_workshop = (
                     bool(active_membership)
                     and active_workspace == "workshop"
                     and selected_bid.workshop_id
                     == active_membership.organization_id
                 )
+
+                selection_data = {
+                    "is_selected_for_this_workshop":
+                        is_selected_for_this_workshop,
+                }
+
+                if is_selected_for_this_workshop:
+                    selection_data.update({
+                        "bid_id": selected_bid.id,
+                        "public_alias": selected_bid.public_alias,
+                        "status": selection.status,
+                        "selected_at": selection.selected_at.isoformat(),
+                        "is_locked": selection.is_locked,
+                    })
 
         tender_data["customer_selection"] = selection_data
 

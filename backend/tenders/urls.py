@@ -26,6 +26,7 @@ from .views import (
     TenderPublishRankingsView,
     AnonymousTenderBidListView,
     TenderSelectBidView,
+    TenderSelectionLockView,
     TenderAwardView,
     ConsultantSpecificationListCreateView,
     WorkshopSpecificationListView,
@@ -160,6 +161,11 @@ urlpatterns = [
         "<int:tender_id>/select/",
         TenderSelectBidView.as_view(),
         name="tender-select-bid",
+    ),
+    path(
+        "<int:pk>/selection-lock/",
+        TenderSelectionLockView.as_view(),
+        name="tender-selection-lock",
     ),
     path(
         "<int:pk>/award/",

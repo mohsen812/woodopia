@@ -141,52 +141,76 @@ def select_tender_bid(
     bid_id,
     user,
 ):
-
-    try:
-        tender = Tender.objects.get(id=tender_id)
-    except Tender.DoesNotExist:
-        raise ValueError("Tender does not exist.")
-
-    try:
-        bid = Bid.objects.get(id=bid_id)
-    except Bid.DoesNotExist:
-        raise ValueError("Bid does not exist.")
-
-    if bid.tender_round.tender_id != tender.id:
-        raise ValueError(
-            "Bid does not belong to this tender."
-        )
-
-    if tender.status != "revealed":
-        raise ValueError(
-            "Tender is not available for selection."
-        )
-
-    if not get_customer_membership(user, tender):
-        raise ValueError(
-            "User is not authorized to select this tender."
-        )
-
-    if TenderAward.objects.filter(
-        tender=tender
-    ).exists():
-        raise ValueError(
-            "Tender already has a final award."
-        )
-
-
     with transaction.atomic():
-
-        selection, created = (
-            CustomerTenderSelection.objects.update_or_create(
-                tender=tender,
-                defaults={
-                    "bid": bid,
-                    "selected_by": user,
-                    "status": "selected",
-                },
+        try:
+            tender = (
+                Tender.objects
+                .select_for_update()
+                .get(id=tender_id)
             )
+        except Tender.DoesNotExist:
+            raise ValueError("Tender does not exist.")
+
+        try:
+            bid = Bid.objects.select_related(
+                "tender_round"
+            ).get(id=bid_id)
+        except Bid.DoesNotExist:
+            raise ValueError("Bid does not exist.")
+
+        if bid.tender_round.tender_id != tender.id:
+            raise ValueError(
+                "Bid does not belong to this tender."
+            )
+
+        if tender.status != "revealed":
+            raise ValueError(
+                "Tender is not available for selection."
+            )
+
+        if not get_customer_membership(user, tender):
+            raise ValueError(
+                "User is not authorized to select this tender."
+            )
+
+        if TenderAward.objects.filter(tender=tender).exists():
+            raise ValueError(
+                "Tender already has a final award."
+            )
+
+        selection = (
+            CustomerTenderSelection.objects
+            .select_for_update()
+            .filter(tender=tender)
+            .first()
         )
+
+        if selection and selection.is_locked:
+            if selection.bid_id != bid.id:
+                raise ValueError(
+                    "Customer selection is locked by the consultant."
+                )
+            return selection
+
+        if selection is None:
+            selection = CustomerTenderSelection.objects.create(
+                tender=tender,
+                bid=bid,
+                selected_by=user,
+                status="selected",
+            )
+        else:
+            selection.bid = bid
+            selection.selected_by = user
+            selection.status = "selected"
+            selection.save(
+                update_fields=[
+                    "bid",
+                    "selected_by",
+                    "status",
+                    "updated_at",
+                ]
+            )
 
     return selection
 
