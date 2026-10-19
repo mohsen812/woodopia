@@ -1397,3 +1397,815 @@ body {
 
 }
 
+
+
+/* ==================================================
+   WORKSHOP DASHBOARD — INVITATION CARD GRID
+   Scoped to dashboard; invitation behavior unchanged
+================================================== */
+
+#dashboard-invitations.invitation-list {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(100%, 245px), 1fr)
+    );
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+}
+
+#dashboard-invitations > .empty-state {
+    grid-column: 1 / -1;
+}
+
+#dashboard-invitations .invitation-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    min-width: 0;
+    min-height: 205px;
+    padding: 18px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(85, 232, 255, .14);
+    border-radius: 15px;
+    background:
+        radial-gradient(
+            circle at 100% 0,
+            rgba(85, 232, 255, .075),
+            transparent 45%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(20, 35, 43, .72),
+            rgba(12, 20, 27, .94)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .025),
+        0 8px 22px rgba(0, 0, 0, .12);
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease;
+}
+
+#dashboard-invitations .invitation-item::before {
+    content: "";
+    position: absolute;
+    top: 17px;
+    left: 17px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #55e8ff;
+    box-shadow: 0 0 9px rgba(85, 232, 255, .65);
+    animation: workshop-invitation-led 2.4s ease-in-out infinite;
+}
+
+#dashboard-invitations .invitation-item:hover {
+    transform: translateY(-3px);
+    border-color: rgba(85, 232, 255, .36);
+    background:
+        radial-gradient(
+            circle at 100% 0,
+            rgba(85, 232, 255, .11),
+            transparent 48%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(23, 43, 51, .9),
+            rgba(12, 22, 29, .98)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .035),
+        0 10px 28px rgba(0, 0, 0, .2),
+        0 0 16px rgba(85, 232, 255, .045);
+}
+
+#dashboard-invitations .invitation-main {
+    min-width: 0;
+}
+
+#dashboard-invitations .invitation-main h4 {
+    margin: 0 0 10px;
+    padding-left: 17px;
+    color: var(--text, #e8f5f7);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+}
+
+#dashboard-invitations .invitation-main p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+}
+
+#dashboard-invitations .invitation-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin-top: 13px;
+}
+
+#dashboard-invitations .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 5px 8px;
+    border: 1px solid rgba(85, 232, 255, .09);
+    border-radius: 7px;
+    background: rgba(85, 232, 255, .045);
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+#dashboard-invitations .invitation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin-top: auto;
+    padding-top: 13px;
+    border-top: 1px solid rgba(130, 220, 240, .09);
+}
+
+#dashboard-invitations .invitation-actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 32px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    line-height: 1.6;
+    white-space: normal;
+}
+
+@keyframes workshop-invitation-led {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 9px rgba(85, 232, 255, .65);
+    }
+
+    50% {
+        opacity: .45;
+        box-shadow: 0 0 3px rgba(85, 232, 255, .25);
+    }
+}
+
+@media (max-width: 760px) {
+    #dashboard-invitations.invitation-list {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 11px;
+        padding: 12px;
+    }
+
+    #dashboard-invitations .invitation-item {
+        min-height: 0;
+        padding: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #dashboard-invitations .invitation-item,
+    #dashboard-invitations .invitation-item::before {
+        animation: none;
+        transition: none;
+    }
+
+    #dashboard-invitations .invitation-item:hover {
+        transform: none;
+    }
+}
+
+/* PROJECT STAGE CHIP — WORKSHOP INVITATIONS */
+
+#dashboard-invitations .meta-chip.project-stage-chip {
+    border-color: rgba(85, 232, 255, .24);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(85, 232, 255, .10),
+            rgba(85, 232, 255, .035)
+        );
+    color: var(--text, #e8f5f7);
+    font-weight: 600;
+}
+/* COMPACT NEON PROJECT STAGE CHIP */
+
+#dashboard-invitations .meta-chip.project-stage-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    padding: 3px 8px;
+    border: 1px solid rgba(85, 232, 255, .28);
+    border-radius: 6px;
+    background: linear-gradient(
+        110deg,
+        rgba(85, 232, 255, .11),
+        rgba(85, 232, 255, .025) 80%
+    );
+    color: #a5f2ff;
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1.7;
+    box-shadow:
+        inset 0 0 8px rgba(85, 232, 255, .04),
+        0 0 7px rgba(85, 232, 255, .07);
+    overflow-wrap: anywhere;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+#dashboard-invitations .stage-chip-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border: 1px solid rgba(85, 232, 255, .3);
+    border-radius: 4px;
+    color: #55e8ff;
+    font-size: 13px;
+    line-height: 1;
+    text-shadow: 0 0 6px rgba(85, 232, 255, .7);
+    background: rgba(85, 232, 255, .07);
+}
+
+#dashboard-invitations .meta-chip.project-stage-chip:hover {
+    border-color: rgba(85, 232, 255, .55);
+    box-shadow:
+        inset 0 0 10px rgba(85, 232, 255, .05),
+        0 0 10px rgba(85, 232, 255, .12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #dashboard-invitations .meta-chip.project-stage-chip {
+        transition: none;
+    }
+}
+
+/* WORKSHOP FILE CENTER - customer visual alignment */
+
+.workshop-files-panel {
+    width: 100%;
+    min-width: 0;
+    direction: rtl;
+}
+
+.workshop-files-panel .workshop-files-center-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 20px;
+    padding: 20px;
+    border: 1px solid rgba(85, 230, 208, .14);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 100% 0, rgba(0, 220, 195, .09), transparent 48%),
+        linear-gradient(135deg, rgba(17, 37, 51, .94), rgba(10, 24, 36, .92));
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+.workshop-files-panel .workshop-files-center-head h3 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    color: #f1f7fa;
+    font-size: 19px;
+    font-weight: 750;
+    line-height: 1.8;
+}
+
+.workshop-files-panel .workshop-files-center-head p {
+    margin: 5px 0 0;
+    color: #91a5b6;
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+.workshop-files-panel .project-files-total {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 7px;
+    border: 1px solid rgba(85, 230, 208, .22);
+    border-radius: 8px;
+    background: rgba(85, 230, 208, .08);
+    color: #8af4e5;
+    font-size: 12px;
+}
+
+.workshop-files-panel .project-files-add-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 15px;
+    border: 1px solid rgba(85, 230, 208, .35);
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(28, 183, 164, .22), rgba(20, 111, 121, .18));
+    color: #8af4e5;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.workshop-files-panel .project-files-add-button:hover {
+    border-color: rgba(85, 230, 208, .65);
+    background: rgba(28, 183, 164, .25);
+    box-shadow: 0 5px 18px rgba(0, 220, 195, .10);
+}
+
+.workshop-project-files-center {
+    width: 100%;
+    min-width: 0;
+    color: #e3edf3;
+}
+
+.workshop-project-files-center .project-files-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.workshop-project-files-center .project-files-search {
+    display: flex;
+    align-items: center;
+    flex: 1 1 220px;
+    min-width: 0;
+    gap: 9px;
+    padding: 0 12px;
+    border: 1px solid rgba(145, 177, 195, .16);
+    border-radius: 11px;
+    background: rgba(8, 22, 34, .72);
+}
+
+.workshop-project-files-center .project-files-search-icon {
+    color: #7f9bab;
+    font-size: 21px;
+}
+
+.workshop-project-files-center .project-files-search-input {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #edf7fa;
+    font: inherit;
+    font-size: 12px;
+}
+
+.workshop-project-files-center .project-files-search-input::placeholder {
+    color: #718899;
+}
+
+.workshop-project-files-center .project-files-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.workshop-project-files-center .project-files-filter {
+    min-height: 35px;
+    padding: 6px 12px;
+    border: 1px solid rgba(145, 177, 195, .14);
+    border-radius: 9px;
+    background: rgba(14, 31, 44, .72);
+    color: #9eb2c0;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.workshop-project-files-center .project-files-filter.is-active {
+    border-color: rgba(85, 230, 208, .32);
+    background: rgba(35, 170, 155, .12);
+    color: #8af4e5;
+}
+
+.workshop-project-files-center .project-files-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 13px;
+}
+
+.workshop-project-files-center .project-file-role-card {
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid rgba(145, 177, 195, .12);
+    border-radius: 15px;
+    background: linear-gradient(145deg, rgba(18, 37, 51, .72), rgba(9, 23, 35, .72));
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .13);
+}
+
+.workshop-project-files-center .project-file-role-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.workshop-project-files-center .project-file-role-title {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 10px;
+}
+
+.workshop-project-files-center .project-file-role-icon {
+    display: inline-flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(85, 230, 208, .16);
+    border-radius: 10px;
+    background: rgba(85, 230, 208, .06);
+    color: #55e6d0;
+    font-size: 17px;
+}
+
+.workshop-project-files-center .project-file-role-title > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 3px;
+}
+
+.workshop-project-files-center .project-file-role-title strong {
+    color: #e8f2f6;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.workshop-project-files-center .project-file-role-title small {
+    color: #849aaa;
+    font-size: 10px;
+}
+
+.workshop-project-files-center .project-file-role-count {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 27px;
+    padding: 0 6px;
+    border: 1px solid rgba(145, 177, 195, .14);
+    border-radius: 8px;
+    color: #91a8b7;
+    font-size: 11px;
+}
+
+.workshop-project-files-center .project-file-role-count.has-files {
+    border-color: rgba(85, 230, 208, .2);
+    background: rgba(85, 230, 208, .07);
+    color: #8af4e5;
+}
+
+.workshop-project-files-center .project-file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    align-content: start;
+    gap: 9px;
+}
+
+.workshop-project-files-center .project-file-card {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 70px;
+    gap: 9px;
+    padding: 8px;
+    border: 1px solid rgba(145, 177, 195, .11);
+    border-radius: 11px;
+    background: rgba(5, 18, 29, .48);
+    box-shadow: none;
+}
+
+.workshop-project-files-center .project-file-card-preview {
+    display: block;
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgba(16, 36, 50, .8);
+}
+
+.workshop-project-files-center .project-file-card-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.workshop-project-files-center .project-file-card-preview-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.workshop-project-files-center .project-file-card-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #8af4e5;
+}
+
+.workshop-project-files-center .project-file-card-type-icon {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .3px;
+}
+
+.workshop-project-files-center .project-file-card-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-file-card-title {
+    overflow-wrap: anywhere;
+    color: #e3edf3;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.workshop-project-files-center .project-file-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+    color: #8298a9;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+.workshop-project-files-center .project-file-empty,
+.workshop-project-files-center .project-files-empty-search {
+    padding: 18px 12px;
+    border: 1px dashed rgba(145, 177, 195, .15);
+    border-radius: 10px;
+    color: #8197a7;
+    text-align: center;
+    font-size: 11px;
+}
+
+.workshop-project-files-center .project-file-empty {
+    grid-column: 1 / -1;
+}
+
+.workshop-project-files-center .project-files-empty-search.hidden,
+.workshop-project-files-center .project-file-card.is-filtered-out,
+.workshop-project-files-center .project-file-role-card.is-filter-empty {
+    display: none !important;
+}
+
+@media (max-width: 760px) {
+    .workshop-files-panel .workshop-files-center-head {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 13px;
+        padding: 15px;
+    }
+
+    .workshop-files-panel .project-files-add-button {
+        align-self: flex-start;
+    }
+
+    .workshop-project-files-center .project-files-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .workshop-project-files-center .project-files-role-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+/* Workshop file preview and own-file deletion */
+#workshop-project-files .project-file-card {
+    position: relative;
+}
+
+#workshop-project-files .project-file-card-preview {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-align: inherit;
+}
+
+#workshop-project-files .project-file-card-preview:disabled {
+    cursor: default;
+}
+
+#workshop-project-files .workshop-file-delete {
+    position: absolute;
+    z-index: 3;
+    top: 8px;
+    left: 8px;
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    background: rgba(20, 24, 32, 0.58);
+    color: rgba(255, 255, 255, 0.72);
+    font-family: Arial, sans-serif;
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.78;
+    transition:
+        background 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease,
+        opacity 160ms ease,
+        transform 160ms ease;
+}
+
+#workshop-project-files .workshop-file-delete:hover {
+    background: rgba(20, 24, 32, 0.9);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    opacity: 1;
+    transform: scale(1.06);
+}
+
+#workshop-project-files .workshop-file-delete:focus-visible {
+    outline: 2px solid rgba(150, 205, 255, 0.9);
+    outline-offset: 2px;
+}
+
+#workshop-project-files .workshop-file-delete:disabled {
+    opacity: 0.45;
+    cursor: wait;
+    transform: none;
+}
+
+.workshop-file-preview-modal[hidden] {
+    display: none !important;
+}
+
+.workshop-file-preview-modal {
+    position: fixed;
+    z-index: 99999;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.workshop-file-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 12, 20, .82);
+    backdrop-filter: blur(5px);
+}
+
+.workshop-file-preview-dialog {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 1000px);
+    max-height: 90vh;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 16px;
+    background: #151923;
+    color: #f5f7fb;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .4);
+}
+
+.workshop-file-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.workshop-file-preview-header strong {
+    overflow-wrap: anywhere;
+}
+
+.workshop-file-preview-close {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .1);
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.workshop-file-preview-content {
+    min-height: 120px;
+    overflow: auto;
+    padding: 16px;
+    text-align: center;
+}
+
+.workshop-file-preview-content img {
+    display: block;
+    max-width: 100%;
+    max-height: 75vh;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.workshop-file-preview-content iframe {
+    display: block;
+    width: 100%;
+    height: 72vh;
+    border: 0;
+    background: #fff;
+}
+
+.workshop-file-preview-content a {
+    display: inline-block;
+    margin: 12px;
+    color: #8ecbff;
+}
+
+body.workshop-file-preview-open {
+    overflow: hidden;
+}
+
+@media (max-width: 600px) {
+    .workshop-file-preview-modal {
+        padding: 8px;
+    }
+
+    .workshop-file-preview-dialog {
+        max-height: 94vh;
+    }
+
+    .workshop-file-preview-content {
+        padding: 8px;
+    }
+
+    .workshop-file-preview-content iframe {
+        height: 78vh;
+    }
+}
