@@ -3823,3 +3823,94 @@ class ConsultantSelectionLockAPITests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+
+class WorkshopTenderInvitationProgressAPITests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="workshop_invitation_progress_test",
+            password="test-password",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Progress Test Customer",
+            organization_type="customer",
+            owner=self.user,
+        )
+
+        self.workshop = Organization.objects.create(
+            name="Progress Test Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        Membership.objects.create(
+            user=self.user,
+            organization=self.workshop,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Invitation Progress Test Project",
+            description="test",
+            customer=self.customer,
+            created_by=self.user,
+            status="tender",
+        )
+
+        self.tender = Tender.objects.create(
+            project=self.project,
+            title="Invitation Progress Test Tender",
+            status="open",
+        )
+
+        self.participant = TenderParticipant.objects.create(
+            tender=self.tender,
+            organization=self.workshop,
+        )
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_invitation_response_contains_canonical_project_progress(self):
+        from projects.services import get_project_progress
+
+        response = self.client.get(
+            "/api/tenders/workshop/invitations/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        invitations = (
+            response.data["results"]
+            if isinstance(response.data, dict)
+            else response.data
+        )
+
+        self.assertEqual(len(invitations), 1)
+
+        invitation = invitations[0]
+
+        self.assertIn("project_progress", invitation)
+
+        expected_progress = get_project_progress(
+            project=self.project,
+            user=self.user,
+        )
+
+        self.assertEqual(
+            invitation["project_progress"],
+            expected_progress,
+        )
+
+        self.assertIn(
+            "current_stage",
+            invitation["project_progress"],
+        )
+
+        self.assertIn(
+            "stages",
+            invitation["project_progress"],
+        )

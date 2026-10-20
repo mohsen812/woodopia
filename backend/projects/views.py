@@ -18,7 +18,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from tenders.models import Tender, Bid
+from tenders.models import Tender, Bid, TenderParticipant
 
 from tenders.serializers import (
     TenderSerializer,
@@ -54,6 +54,37 @@ from .serializers import (
     ConsultantStandardizationSerializer,
     ProjectActivitySerializer,
 )
+
+def get_project_file_access_queryset(user):
+    """
+    Include customer-visible projects, active consultant assignments,
+    and projects with a tender participation for the active workshop user.
+    """
+    if user.is_superuser or user.is_staff:
+        return get_visible_projects(user)
+
+    visible_ids = get_visible_projects(user).values("pk")
+
+    consultant_ids = ProjectAssignment.objects.filter(
+        membership__user=user,
+        membership__status="active",
+        membership__role_fk__name="consultant",
+        status="active",
+    ).values_list("project_id", flat=True)
+
+    workshop_project_ids = TenderParticipant.objects.filter(
+        organization__organization_type="workshop",
+        organization__members__user=user,
+        organization__members__status="active",
+    ).values_list("tender__project_id", flat=True)
+
+    return Project.objects.filter(
+        Q(pk__in=visible_ids)
+        | Q(pk__in=consultant_ids)
+        | Q(pk__in=workshop_project_ids)
+    ).distinct()
+
+
 def get_visible_projects(user):
     """
     Return projects visible to the current user.
@@ -1102,7 +1133,7 @@ class ProjectAttachmentListCreateView(
 
     def get_project_queryset(self):
 
-        return get_visible_projects(
+        return get_project_file_access_queryset(
             self.request.user
         )
 
@@ -1127,67 +1158,70 @@ class ProjectAttachmentListCreateView(
     def perform_create(self, serializer):
 
         project = self.get_project()
-
         user = self.request.user
-
 
         # FEEMAAS internal users
         if user.is_superuser or user.is_staff:
-
             owner_role = "company"
 
         else:
+            # A workshop may access the project through its tender
+            # participation without having a ProjectAssignment.
+            workshop_access = TenderParticipant.objects.filter(
+                tender__project=project,
+                organization__organization_type="workshop",
+                organization__members__user=user,
+                organization__members__status="active",
+            ).exists()
 
-            assignment = (
-                project.assignments
-                .filter(
-                    membership__user=user,
-                    membership__status="active",
-                    status="active",
-                )
-                .select_related(
-                    "membership__role_fk",
-                    "membership__organization",
-                )
-                .first()
-            )
-
-
-            if assignment:
-
-                role_name = (
-                    assignment.membership.role_fk.name
-                    if assignment.membership.role_fk
-                    else ""
-                )
-
-
-                role_map = {
-                    "customer": "customer",
-                    "consultant": "consultant",
-                    "workshop": "workshop",
-                    "designer": "designer",
-                    "company": "company",
-                }
-
-
-                owner_role = role_map.get(
-                    role_name,
-                    "customer",
-                )
+            if workshop_access:
+                owner_role = "workshop"
 
             else:
+                assignment = (
+                    project.assignments
+                    .filter(
+                        membership__user=user,
+                        membership__status="active",
+                        status="active",
+                    )
+                    .select_related(
+                        "membership__role_fk",
+                        "membership__organization",
+                    )
+                    .first()
+                )
 
-                # Project customer who is not represented
-                # by a project assignment.
-                owner_role = "customer"
+                if assignment:
+                    role_name = (
+                        assignment.membership.role_fk.name
+                        if assignment.membership.role_fk
+                        else ""
+                    )
 
+                    role_map = {
+                        "customer": "customer",
+                        "consultant": "consultant",
+                        "workshop": "workshop",
+                        "designer": "designer",
+                        "company": "company",
+                    }
+
+                    owner_role = role_map.get(
+                        role_name,
+                        "customer",
+                    )
+
+                else:
+                    # Project customer without a project assignment.
+                    owner_role = "customer"
 
         serializer.save(
             project=project,
             uploaded_by=user,
             owner_role=owner_role,
         )
+
 
 class ProjectFileCenterView(
     generics.ListAPIView
@@ -1202,7 +1236,7 @@ class ProjectFileCenterView(
     def get_queryset(self):
 
         project = get_object_or_404(
-            get_visible_projects(
+            get_project_file_access_queryset(
                 self.request.user
             ),
             id=self.kwargs["pk"]
@@ -1224,7 +1258,7 @@ class ProjectFileCenterView(
     ):
 
         project = get_object_or_404(
-            get_visible_projects(
+            get_project_file_access_queryset(
                 request.user
             ),
             id=kwargs["pk"]
@@ -1351,6 +1385,34 @@ class ProjectAttachmentDeleteView(
 
         return ProjectAttachment.objects.filter(
             uploaded_by=self.request.user
+        )
+class WorkshopProjectAttachmentDeleteView(generics.DestroyAPIView):
+    serializer_class = ProjectAttachmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project_id = self.kwargs["project_id"]
+        user = self.request.user
+
+        project = get_object_or_404(
+            get_project_file_access_queryset(user),
+            id=project_id,
+        )
+
+        is_workshop_participant = TenderParticipant.objects.filter(
+            tender__project=project,
+            organization__organization_type="workshop",
+            organization__members__user=user,
+            organization__members__status="active",
+        ).exists()
+
+        if not is_workshop_participant:
+            return ProjectAttachment.objects.none()
+
+        return ProjectAttachment.objects.filter(
+            project=project,
+            uploaded_by=user,
+            owner_role="workshop",
         )
 # =====================================
 # PROJECT TENDER

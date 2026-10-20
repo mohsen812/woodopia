@@ -6849,3 +6849,1205 @@ body.project-file-center-preview-open {
         transition: none;
     }
 }
+
+/* =========================================================
+   CUSTOMER FILE CENTER — POLISHED RTL UI
+   Scoped overrides; no changes to upload/filter behavior
+   ========================================================= */
+
+#project-detail-view .project-files-center {
+    direction: rtl;
+    width: 100%;
+    min-width: 0;
+    color: #e8f1f7;
+}
+
+/* Header */
+
+#project-detail-view .project-files-center-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 20px;
+    padding: 20px;
+    border: 1px solid rgba(85, 230, 208, .14);
+    border-radius: 18px;
+    background:
+        radial-gradient(
+            circle at 100% 0,
+            rgba(0, 220, 195, .09),
+            transparent 48%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(17, 37, 51, .94),
+            rgba(10, 24, 36, .92)
+        );
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+#project-detail-view .project-files-center-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#project-detail-view .project-files-eyebrow {
+    display: block;
+    margin-bottom: 7px;
+    color: #55e6d0;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+}
+
+#project-detail-view .project-files-center-head h3 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    color: #f1f7fa;
+    font-size: 19px;
+    font-weight: 750;
+    line-height: 1.8;
+}
+
+#project-detail-view .project-files-total {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 27px;
+    padding: 0 7px;
+    border: 1px solid rgba(85, 230, 208, .25);
+    border-radius: 9px;
+    background: rgba(85, 230, 208, .10);
+    color: #72f0dd;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    direction: ltr;
+}
+
+#project-detail-view .project-files-center-head p {
+    margin: 5px 0 0;
+    color: #91a5b6;
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+/* Add file button */
+
+#project-detail-view .project-files-add-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 9px 15px;
+    border: 1px solid rgba(85, 230, 208, .35);
+    border-radius: 11px;
+    background: linear-gradient(
+        135deg,
+        rgba(28, 183, 164, .22),
+        rgba(20, 111, 121, .18)
+    );
+    color: #8af4e5;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+#project-detail-view .project-files-add-button > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 23px;
+    height: 23px;
+    border-radius: 7px;
+    background: rgba(85, 230, 208, .14);
+    color: #a1fff1;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+#project-detail-view .project-files-add-button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(85, 230, 208, .65);
+    background: rgba(28, 183, 164, .25);
+    box-shadow: 0 5px 18px rgba(0, 220, 195, .10);
+}
+
+#project-detail-view .project-files-add-button:focus-visible {
+    outline: 2px solid #55e6d0;
+    outline-offset: 3px;
+}
+
+/* Search and filters */
+
+#project-detail-view .project-files-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, .065);
+    border-radius: 14px;
+    background: rgba(8, 21, 32, .58);
+}
+
+#project-detail-view .project-files-search {
+    display: flex;
+    flex: 1 1 220px;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 11px;
+    border: 1px solid rgba(255, 255, 255, .075);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .025);
+    transition: border-color .18s ease, background .18s ease;
+}
+
+#project-detail-view .project-files-search:focus-within {
+    border-color: rgba(85, 230, 208, .42);
+    background: rgba(85, 230, 208, .035);
+}
+
+#project-detail-view .project-files-search-icon {
+    flex: 0 0 auto;
+    color: #70dccc;
+    font-size: 22px;
+    line-height: 1;
+}
+
+#project-detail-view .project-files-search-input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #e8f1f7;
+    font-family: inherit;
+    font-size: 11px;
+    box-shadow: none;
+}
+
+#project-detail-view .project-files-search-input::placeholder {
+    color: #71889a;
+    opacity: 1;
+}
+
+#project-detail-view .project-files-filters {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+#project-detail-view .project-files-filter {
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #8fa4b5;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color .18s ease,
+        border-color .18s ease,
+        background .18s ease;
+}
+
+#project-detail-view .project-files-filter:hover {
+    border-color: rgba(255, 255, 255, .09);
+    background: rgba(255, 255, 255, .035);
+    color: #e4f4f5;
+}
+
+#project-detail-view .project-files-filter.is-active {
+    border-color: rgba(85, 230, 208, .24);
+    background: rgba(85, 230, 208, .11);
+    color: #83f0df;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+#project-detail-view .project-files-filter:focus-visible {
+    outline: 2px solid #55e6d0;
+    outline-offset: 2px;
+}
+
+/* Role cards */
+
+#project-detail-view .project-files-role-grid {
+    align-items: start;
+    gap: 13px;
+}
+
+#project-detail-view .project-file-role-card {
+    min-width: 0;
+    margin-top: 0;
+    padding: 13px;
+    border-color: rgba(145, 177, 195, .12);
+    border-radius: 15px;
+    background: linear-gradient(
+        145deg,
+        rgba(18, 37, 51, .72),
+        rgba(9, 23, 35, .72)
+    );
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, .13),
+        inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+#project-detail-view .project-file-role-card:hover {
+    border-color: rgba(85, 230, 208, .23);
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, .17),
+        inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+/* File cards */
+
+#project-detail-view .project-file-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 9px;
+}
+
+#project-detail-view .project-file-card {
+    min-height: 70px;
+    gap: 9px;
+    padding: 8px;
+    border-color: rgba(145, 177, 195, .11);
+    border-radius: 11px;
+    background: rgba(5, 18, 29, .48);
+    box-shadow: none;
+}
+
+#project-detail-view .project-file-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(85, 230, 208, .27);
+    background: rgba(18, 49, 59, .55);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .14);
+}
+
+#project-detail-view .project-file-card-title {
+    color: #e3edf3;
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+#project-detail-view .project-file-card-meta {
+    color: #8298a9;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+#project-detail-view .project-file-card-delete {
+    border-radius: 7px;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+    #project-detail-view .project-files-center-head {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 13px;
+        padding: 15px;
+    }
+
+    #project-detail-view .project-files-center-head h3 {
+        font-size: 17px;
+    }
+
+    #project-detail-view .project-files-add-button {
+        align-self: flex-start;
+    }
+
+    #project-detail-view .project-files-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 9px;
+        padding: 9px;
+    }
+
+    #project-detail-view .project-files-search {
+        flex-basis: auto;
+        width: 100%;
+    }
+
+    #project-detail-view .project-files-filters {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    #project-detail-view .project-files-filter {
+        padding-right: 5px;
+        padding-left: 5px;
+        text-align: center;
+    }
+
+    #project-detail-view .project-files-role-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    #project-detail-view .project-file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    #project-detail-view .project-file-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+
+/* WORKSHOP FILE CENTER — align with customer File Center */
+
+.workshop-project-files-center {
+    width: 100%;
+    direction: rtl;
+}
+
+.workshop-project-files-center .project-files-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 13px;
+    background: rgba(255,255,255,.018);
+}
+
+.workshop-project-files-center .project-files-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-files-search-icon {
+    color: #55e6d0;
+    font-size: 19px;
+}
+
+.workshop-project-files-center .project-files-search-input {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 9px;
+    outline: none;
+    color: #eaf2f7;
+    background: rgba(4,10,18,.35);
+    font-size: 11px;
+}
+
+.workshop-project-files-center .project-files-search-input:focus {
+    border-color: rgba(85,230,208,.4);
+}
+
+.workshop-project-files-center .project-files-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.workshop-project-files-center .project-files-filter {
+    padding: 8px 11px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 8px;
+    color: #8999ac;
+    background: rgba(255,255,255,.025);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.workshop-project-files-center .project-files-filter.is-active {
+    color: #55e6d0;
+    border-color: rgba(85,230,208,.28);
+    background: rgba(0,255,210,.06);
+}
+
+.workshop-project-files-center .project-files-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.workshop-project-files-center .project-file-role-card {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+    box-shadow: 0 12px 32px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.025);
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.workshop-project-files-center .project-file-role-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 38px rgba(0,0,0,.28);
+}
+
+.workshop-project-files-center .project-file-role-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 42px;
+    margin-bottom: 11px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,.055);
+}
+
+.workshop-project-files-center .project-file-role-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.workshop-project-files-center .project-file-role-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    background: rgba(255,255,255,.035);
+    font-size: 14px;
+}
+
+.workshop-project-files-center .project-file-role-title strong {
+    display: block;
+    color: #edf4f8;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.workshop-project-files-center .project-file-role-title small {
+    display: block;
+    margin-top: 2px;
+    color: #68788c;
+    font-size: 9px;
+}
+
+.workshop-project-files-center .project-file-role-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 27px;
+    width: 27px;
+    height: 27px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 50%;
+    color: #718195;
+    background: rgba(255,255,255,.025);
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.workshop-project-files-center .project-file-role-count.has-files {
+    color: #55e6d0;
+    border-color: rgba(85,230,208,.38);
+    background: rgba(0,255,210,.055);
+    box-shadow: 0 0 13px rgba(0,255,210,.16);
+}
+
+.workshop-project-files-center .project-file-role-customer { border-color: rgba(85,230,208,.13); }
+.workshop-project-files-center .project-file-role-customer .project-file-role-icon { color: #55e6d0; }
+.workshop-project-files-center .project-file-role-consultant { border-color: rgba(130,110,255,.16); }
+.workshop-project-files-center .project-file-role-consultant .project-file-role-icon { color: #9b8cff; }
+.workshop-project-files-center .project-file-role-workshop { border-color: rgba(255,185,80,.15); }
+.workshop-project-files-center .project-file-role-workshop .project-file-role-icon { color: #ffc66d; }
+.workshop-project-files-center .project-file-role-designer { border-color: rgba(255,105,190,.15); }
+.workshop-project-files-center .project-file-role-designer .project-file-role-icon { color: #ff83c8; }
+.workshop-project-files-center .project-file-role-company { border-color: rgba(90,170,255,.15); }
+.workshop-project-files-center .project-file-role-company .project-file-role-icon { color: #78b9ff; }
+
+.workshop-project-files-center .project-file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.workshop-project-files-center .project-file-card {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 66px;
+    padding: 7px 9px;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 11px;
+    background: rgba(4,10,18,.38);
+    transition: background .16s ease, border-color .16s ease;
+}
+
+.workshop-project-files-center .project-file-card:hover {
+    border-color: rgba(85,230,208,.18);
+    background: rgba(255,255,255,.035);
+}
+
+.workshop-project-files-center .project-file-card-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    text-decoration: none;
+}
+
+.workshop-project-files-center .project-file-card-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 8px;
+    background: rgba(0,0,0,.24);
+}
+
+.workshop-project-files-center .project-file-card-preview-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.workshop-project-files-center .project-file-card-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #55e6d0;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.workshop-project-files-center .project-file-card-type-document { color: #9b8cff; }
+.workshop-project-files-center .project-file-card-type-design { color: #ffc66d; }
+
+.workshop-project-files-center .project-file-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-file-card-title {
+    overflow: hidden;
+    color: #dce7ee;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.workshop-project-files-center .project-file-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+    color: #8298a9;
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.workshop-project-files-center .project-file-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 48px;
+    color: #596a7e;
+    font-size: 10px;
+}
+
+.workshop-project-files-center .project-file-empty span {
+    font-size: 16px;
+}
+
+.workshop-project-files-center .project-files-empty-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 10px;
+    color: #8191a5;
+    font-size: 11px;
+}
+
+.workshop-project-files-center .project-files-empty-search.hidden {
+    display: none;
+}
+
+.workshop-project-files-center .project-file-card.is-filtered-out {
+    display: none;
+}
+
+.workshop-project-files-center .project-file-role-card.is-filter-empty {
+    border-color: rgba(255,255,255,.045);
+}
+
+@media (max-width: 900px) {
+    .workshop-project-files-center .project-files-role-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .workshop-project-files-center .project-files-center-head,
+    .workshop-project-files-center .project-files-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .workshop-project-files-center .project-files-filters {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    }
+}
+
+
+/* WORKSHOP FILE CENTER HEADER + COMPACT PREVIEWS */
+.workshop-files-center-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 18px;
+    padding: 18px 20px;
+    direction: rtl;
+    border: 1px solid rgba(85, 230, 208, .16);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(85, 230, 208, .075), rgba(155, 140, 255, .055));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .12);
+}
+
+.workshop-files-center-head > div {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.workshop-files-center-head h3 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+}
+
+.workshop-files-center-head p {
+    margin: 6px 0 0;
+    color: var(--text-muted, rgba(235, 242, 250, .65));
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.workshop-files-center-head .project-files-total {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 27px;
+    padding: 0 7px;
+    border: 1px solid rgba(85, 230, 208, .25);
+    border-radius: 9px;
+    background: rgba(85, 230, 208, .10);
+    color: #55e6d0;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.workshop-files-center-head #workshop-upload-file-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.workshop-project-files-center .project-file-card-preview,
+.workshop-project-files-center .project-file-card-visual {
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    max-height: 36px;
+}
+
+.workshop-project-files-center .project-file-card-preview-image {
+    display: block;
+    width: 36px;
+    height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+    object-fit: cover;
+}
+
+@media (max-width: 640px) {
+    .workshop-files-center-head {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .workshop-files-center-head #workshop-upload-file-button {
+        align-self: flex-start;
+    }
+}
+
+/* WORKSHOP FILE CENTER — customer-style role cards and compact files */
+.workshop-project-files-center {
+    direction: rtl;
+    width: 100%;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-files-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 14px;
+    background: rgba(255,255,255,.025);
+}
+
+.workshop-project-files-center .project-files-search {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-files-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.workshop-project-files-center .project-files-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+    width: 100%;
+}
+
+.workshop-project-files-center .project-file-role-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 16px;
+    background:
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    transition: border-color .18s ease, background .18s ease;
+}
+
+.workshop-project-files-center .project-file-role-card:hover {
+    border-color: rgba(85,230,208,.23);
+}
+
+.workshop-project-files-center .project-file-role-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    margin: 0 0 12px;
+    padding: 0 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.workshop-project-files-center .project-file-role-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-file-role-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(85,230,208,.20);
+    border-radius: 12px;
+    background: rgba(85,230,208,.08);
+    font-size: 19px;
+}
+
+.workshop-project-files-center .project-file-role-title > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-file-role-title strong {
+    color: var(--text-primary, #f0f4f8);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.workshop-project-files-center .project-file-role-title small {
+    color: var(--text-muted, #929eac);
+    font-size: 11px;
+}
+
+.workshop-project-files-center .project-file-role-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 9px;
+    background: rgba(255,255,255,.04);
+    color: #aab4c0;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.workshop-project-files-center .project-file-role-count.has-files {
+    border-color: rgba(85,230,208,.23);
+    background: rgba(85,230,208,.09);
+    color: #55e6d0;
+}
+
+.workshop-project-files-center .project-file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-file-card {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 60px;
+    padding: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 11px;
+    background: rgba(0,0,0,.12);
+    box-shadow: none;
+    transition: border-color .16s ease, background .16s ease;
+}
+
+.workshop-project-files-center .project-file-card:hover {
+    border-color: rgba(85,230,208,.24);
+    background: rgba(85,230,208,.035);
+}
+
+.workshop-project-files-center .project-file-card-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    max-height: 42px;
+    overflow: hidden;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.workshop-project-files-center .project-file-card-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 8px;
+    background: rgba(0,0,0,.20);
+}
+
+.workshop-project-files-center .project-file-card-preview-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    border-radius: 7px;
+}
+
+.workshop-project-files-center .project-file-card > div,
+.workshop-project-files-center .project-file-card-info,
+.workshop-project-files-center .project-file-card-details {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.workshop-project-files-center .project-file-card a {
+    overflow-wrap: anywhere;
+}
+
+.workshop-project-files-center .project-file-card-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #55e6d0;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.workshop-project-files-center .project-file-card-type-document {
+    color: #9b8cff;
+}
+
+.workshop-project-files-center .project-file-role-empty,
+.workshop-project-files-center .project-file-role-card .empty-state {
+    padding: 14px 8px;
+    border: 1px dashed rgba(255,255,255,.10);
+    border-radius: 10px;
+    color: var(--text-muted, #929eac);
+    font-size: 12px;
+    text-align: center;
+}
+
+.workshop-project-files-center .project-file-role-card.is-filter-empty {
+    display: none;
+}
+
+.workshop-project-files-center .project-file-card.is-filtered-out {
+    display: none !important;
+}
+
+@media (max-width: 760px) {
+    .workshop-project-files-center .project-files-role-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .workshop-project-files-center .project-file-role-card {
+        padding: 10px;
+    }
+
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* WORKSHOP FILE CENTER — customer visual alignment */
+
+.workshop-files-panel {
+    width: 100%;
+    min-width: 0;
+    direction: rtl;
+}
+
+.workshop-files-panel .workshop-files-center-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 20px;
+    padding: 20px;
+    border: 1px solid rgba(85, 230, 208, .14);
+    border-radius: 18px;
+    background:
+        radial-gradient(
+            circle at 100% 0,
+            rgba(0, 220, 195, .09),
+            transparent 48%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(17, 37, 51, .94),
+            rgba(10, 24, 36, .92)
+        );
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+.workshop-files-panel .workshop-files-center-head h3 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    color: #f1f7fa;
+    font-size: 19px;
+    font-weight: 750;
+    line-height: 1.8;
+}
+
+.workshop-files-panel .workshop-files-center-head p {
+    margin: 5px 0 0;
+    color: #91a5b6;
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+.workshop-files-panel .project-files-add-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 15px;
+    border: 1px solid rgba(85, 230, 208, .35);
+    border-radius: 11px;
+    background: linear-gradient(
+        135deg,
+        rgba(28, 183, 164, .22),
+        rgba(20, 111, 121, .18)
+    );
+    color: #8af4e5;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.workshop-files-panel .workshop-files-center-head
+#workshop-upload-file-button:hover {
+    border-color: rgba(85, 230, 208, .65);
+    background: rgba(28, 183, 164, .25);
+    box-shadow: 0 5px 18px rgba(0, 220, 195, .10);
+}
+
+.workshop-project-files-center .project-files-role-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 13px;
+}
+
+.workshop-project-files-center .project-file-role-card {
+    padding: 13px;
+    border-color: rgba(145, 177, 195, .12);
+    border-radius: 15px;
+    background: linear-gradient(
+        145deg,
+        rgba(18, 37, 51, .72),
+        rgba(9, 23, 35, .72)
+    );
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, .13),
+        inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+.workshop-project-files-center .project-file-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    align-content: start;
+    gap: 9px;
+}
+
+.workshop-project-files-center .project-file-card {
+    min-height: 70px;
+    gap: 9px;
+    padding: 8px;
+    border-color: rgba(145, 177, 195, .11);
+    border-radius: 11px;
+    background: rgba(5, 18, 29, .48);
+    box-shadow: none;
+}
+
+.workshop-project-files-center .project-file-card-title {
+    color: #e3edf3;
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.workshop-project-files-center .project-file-card-meta {
+    color: #8298a9;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+@media (max-width: 640px) {
+    .workshop-files-panel .workshop-files-center-head {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 13px;
+        padding: 15px;
+    }
+
+    .workshop-files-panel .project-files-add-button {
+        align-self: flex-start;
+    }
+
+    .workshop-project-files-center .project-files-role-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    .workshop-project-files-center .project-file-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

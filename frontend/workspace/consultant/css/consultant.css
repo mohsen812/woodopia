@@ -4051,3 +4051,941 @@ body {
         width: 100%;
     }
 }
+
+/* ==================================================
+   CONSULTANT PROJECT FILES — CARD POLISH
+   Scoped to the project files tab only
+================================================== */
+
+.consultant-project-content .project-section:has(.file-card) {
+    direction: rtl;
+    width: 100%;
+    padding: 20px;
+    border: 1px solid rgba(120, 190, 210, 0.14);
+    border-radius: 18px;
+    background: linear-gradient(
+        145deg,
+        rgba(16, 35, 48, 0.96),
+        rgba(10, 24, 35, 0.96)
+    );
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.consultant-project-content .project-section:has(.file-card) > h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(140, 190, 210, 0.13);
+    color: #edf7fb;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.8;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 10px;
+    padding: 14px 16px;
+    border: 1px solid rgba(140, 190, 210, 0.12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.035);
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-card:hover {
+    border-color: rgba(85, 230, 208, 0.35);
+    background: rgba(85, 230, 208, 0.055);
+    transform: translateY(-1px);
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(85, 230, 208, 0.18);
+    border-radius: 12px;
+    background: rgba(85, 230, 208, 0.08);
+    font-size: 21px;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-info {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    text-align: right;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-info strong {
+    overflow-wrap: anywhere;
+    color: #eaf4f8;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.8;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-info span {
+    color: #91a8b7;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 7px 14px;
+    border: 1px solid rgba(85, 230, 208, 0.24);
+    border-radius: 10px;
+    background: rgba(85, 230, 208, 0.08);
+    color: #65e8d5;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.consultant-project-content .project-section:has(.file-card) .file-open:hover {
+    background: #55e6d0;
+    color: #08242a;
+}
+
+.consultant-project-content .project-section:has(.file-card) .empty-state {
+    padding: 36px 18px;
+    border: 1px dashed rgba(140, 190, 210, 0.2);
+    border-radius: 14px;
+    color: #91a8b7;
+    font-size: 13px;
+    line-height: 2;
+}
+
+@media (max-width: 600px) {
+    .consultant-project-content .project-section:has(.file-card) {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .consultant-project-content .project-section:has(.file-card) > h3 {
+        margin-bottom: 14px;
+        font-size: 16px;
+    }
+
+    .consultant-project-content .project-section:has(.file-card) .file-card {
+        gap: 9px;
+        padding: 11px;
+    }
+
+    .consultant-project-content .project-section:has(.file-card) .file-icon {
+        flex-basis: 38px;
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+    }
+
+    .consultant-project-content .project-section:has(.file-card) .file-open {
+        min-height: 34px;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+
+
+/* ==================================================
+   CONSULTANT FILE CENTER — CARDS & PREVIEW
+================================================== */
+
+.consultant-file-center {
+    direction: rtl;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.consultant-file-center .consultant-files-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.consultant-file-center .consultant-files-header h3 {
+    margin: 0 0 7px;
+}
+
+.consultant-file-center .consultant-files-header p {
+    margin: 0;
+    color: #9fb6c4;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.consultant-file-center .consultant-files-upload {
+    border: 1px solid rgba(72, 211, 190, .4);
+    border-radius: 12px;
+    padding: 11px 17px;
+    background: linear-gradient(135deg, #1d665f, #174b56);
+    color: #f2fffc;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform .2s ease, filter .2s ease;
+}
+
+.consultant-file-center .consultant-files-upload:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+}
+
+.consultant-file-center .consultant-files-upload:disabled {
+    opacity: .55;
+    cursor: wait;
+    transform: none;
+}
+
+.consultant-file-center .consultant-files-status {
+    margin: 10px 0 16px;
+    color: #9fb6c4;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.consultant-file-center .consultant-files-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 15px;
+    align-items: stretch;
+}
+
+.consultant-file-center .consultant-file-card {
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(133, 185, 204, .17);
+    border-radius: 15px;
+    background: linear-gradient(150deg, rgba(22, 43, 56, .98), rgba(12, 27, 39, .98));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.consultant-file-center .consultant-file-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(72, 211, 190, .42);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+}
+
+.consultant-file-center .consultant-file-preview {
+    width: 100%;
+    height: 150px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 0;
+    border-bottom: 1px solid rgba(133, 185, 204, .12);
+    background: rgba(4, 15, 24, .52);
+    cursor: pointer;
+}
+
+.consultant-file-center .consultant-file-preview:disabled {
+    cursor: default;
+}
+
+.consultant-file-center .consultant-file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .25s ease;
+}
+
+.consultant-file-center .consultant-file-card:hover .consultant-file-preview img {
+    transform: scale(1.035);
+}
+
+.consultant-file-center .consultant-file-type-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 74px;
+    height: 74px;
+    border: 1px solid rgba(72, 211, 190, .2);
+    border-radius: 20px;
+    background: rgba(72, 211, 190, .07);
+    font-size: 37px;
+}
+
+.consultant-file-center .consultant-file-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 14px 14px 8px;
+    min-width: 0;
+}
+
+.consultant-file-center .consultant-file-details strong {
+    max-width: 100%;
+    color: #edf7fb;
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.consultant-file-center .consultant-file-details span {
+    color: #65d8c2;
+    font-size: 11px;
+    direction: ltr;
+}
+
+.consultant-file-center .consultant-file-details small {
+    color: #92aab9;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.consultant-file-center .consultant-file-delete {
+    align-self: flex-start;
+    margin: 5px 14px 14px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 116, 116, .25);
+    border-radius: 8px;
+    background: rgba(150, 45, 55, .13);
+    color: #ffaaaa;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.consultant-file-center .consultant-file-delete:hover {
+    background: rgba(190, 48, 58, .24);
+}
+
+.consultant-file-center .consultant-file-delete:disabled {
+    opacity: .5;
+    cursor: wait;
+}
+
+/* Preview modal */
+
+body.consultant-file-preview-open {
+    overflow: hidden;
+}
+
+.consultant-file-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    direction: rtl;
+}
+
+.consultant-file-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 9, 16, .84);
+    backdrop-filter: blur(7px);
+}
+
+.consultant-file-preview-dialog {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(1100px, 96vw);
+    height: min(820px, 90vh);
+    overflow: hidden;
+    border: 1px solid rgba(126, 190, 209, .24);
+    border-radius: 17px;
+    background: #0d1b27;
+    box-shadow: 0 24px 90px rgba(0, 0, 0, .5);
+}
+
+.consultant-file-preview-toolbar {
+    min-height: 60px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border-bottom: 1px solid rgba(126, 190, 209, .16);
+    color: #eef8fb;
+}
+
+.consultant-file-preview-toolbar strong {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.consultant-file-preview-toolbar > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.consultant-file-preview-toolbar a,
+.consultant-file-preview-fallback a {
+    color: #6ee0c8;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.consultant-file-preview-toolbar button {
+    width: 35px;
+    height: 35px;
+    border: 1px solid rgba(255, 255, 255, .13);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.consultant-file-preview-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    background: #08121b;
+}
+
+.consultant-file-preview-body > img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.consultant-file-preview-body > iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+}
+
+.consultant-file-preview-fallback {
+    padding: 30px;
+    text-align: center;
+    color: #d9e8ee;
+    line-height: 2;
+}
+
+.consultant-file-preview-fallback > div {
+    font-size: 48px;
+}
+
+@media (max-width: 600px) {
+    .consultant-file-center .consultant-files-groups {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .consultant-file-center .consultant-file-preview {
+        height: 115px;
+    }
+
+    .consultant-file-center .consultant-file-details {
+        padding: 10px;
+    }
+
+    .consultant-file-center .consultant-file-delete {
+        margin: 4px 10px 10px;
+    }
+
+    .consultant-file-preview-modal {
+        padding: 8px;
+    }
+
+    .consultant-file-preview-dialog {
+        width: 100%;
+        height: 92vh;
+        border-radius: 12px;
+    }
+
+    .consultant-file-preview-toolbar {
+        padding: 8px 10px;
+    }
+}
+
+/* CONSULTANT FILE CENTER — ROLE GROUPS */
+.consultant-file-center .consultant-files-header {
+    direction: rtl;
+    justify-content: flex-start;
+}
+
+.consultant-file-center .consultant-files-header > div {
+    order: 1;
+}
+
+.consultant-file-center .consultant-files-upload {
+    order: 0;
+    margin-inline-start: auto;
+}
+
+.consultant-file-center .consultant-files-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
+}
+
+.consultant-file-center .consultant-file-role-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(133, 185, 204, .2);
+    border-radius: 16px;
+    background: linear-gradient(150deg, rgba(22, 43, 56, .72), rgba(12, 27, 39, .82));
+}
+
+.consultant-file-center .consultant-file-role-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(133, 185, 204, .16);
+    background: rgba(72, 211, 190, .045);
+}
+
+.consultant-file-center .consultant-file-role-title {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.consultant-file-center .consultant-file-role-title strong {
+    color: #eaf8fc;
+    font-size: 14px;
+}
+
+.consultant-file-center .consultant-file-role-title small {
+    color: #9fb6c4;
+    font-size: 12px;
+}
+
+.consultant-file-center .consultant-file-role-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border: 1px solid rgba(133, 185, 204, .2);
+    border-radius: 10px;
+    color: #b8cbd5;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.consultant-file-center .consultant-file-role-count.has-files {
+    border-color: rgba(72, 211, 190, .4);
+    background: rgba(72, 211, 190, .12);
+    color: #7ce8d4;
+}
+
+.consultant-file-center .consultant-file-role-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    padding: 14px;
+    min-width: 0;
+}
+
+.consultant-file-center .consultant-file-role-empty {
+    grid-column: 1 / -1;
+    padding: 20px 12px;
+    border: 1px dashed rgba(133, 185, 204, .2);
+    border-radius: 12px;
+    color: #91a8b6;
+    text-align: center;
+    font-size: 12px;
+}
+
+@media (max-width: 760px) {
+    .consultant-file-center .consultant-files-groups {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .consultant-file-center .consultant-files-header {
+        align-items: stretch;
+    }
+}
+
+/* CONSULTANT FILE CENTER — COMPACT CUSTOMER-LIKE FILE ROWS */
+.consultant-file-center .consultant-file-role-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.consultant-file-center .consultant-file-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    min-height: 76px;
+    padding: 8px;
+    border-radius: 11px;
+    box-shadow: none;
+    background: rgba(7, 22, 32, .42);
+}
+
+.consultant-file-center .consultant-file-card:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+
+.consultant-file-center .consultant-file-preview {
+    flex: 0 0 58px;
+    width: 58px;
+    height: 58px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(4, 15, 24, .5);
+}
+
+.consultant-file-center .consultant-file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.consultant-file-center .consultant-file-type-icon {
+    font-size: 23px;
+}
+
+.consultant-file-center .consultant-file-details {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 3px;
+    text-align: right;
+}
+
+.consultant-file-center .consultant-file-details strong {
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.consultant-file-center .consultant-file-details span,
+.consultant-file-center .consultant-file-details small {
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.consultant-file-center .consultant-file-delete {
+    flex: 0 0 27px;
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    overflow: hidden;
+    font-size: 0;
+    border-radius: 7px;
+    opacity: .65;
+}
+
+.consultant-file-center .consultant-file-delete::after {
+    content: "×";
+    display: block;
+    font-size: 19px;
+    line-height: 22px;
+}
+
+.consultant-file-center .consultant-file-delete:hover {
+    opacity: 1;
+}
+
+.consultant-file-center .consultant-file-role-empty {
+    padding: 12px 8px;
+    font-size: 11px;
+}
+
+@media (max-width: 480px) {
+    .consultant-file-center .consultant-file-preview {
+        flex-basis: 48px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .consultant-file-center .consultant-file-card {
+        gap: 8px;
+        padding: 6px;
+    }
+}
+
+/* =========================================================
+   CONSULTANT FILE CENTER — CUSTOMER-ALIGNED HEADER
+   Scope: header only; preserve existing file cards and logic
+========================================================= */
+
+#project-detail-view .consultant-file-center {
+    direction: rtl;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(85, 230, 208, .14);
+    border-radius: 18px;
+    background:
+        radial-gradient(
+            circle at 8% 0%,
+            rgba(48, 190, 163, .13),
+            transparent 42%
+        ),
+        radial-gradient(
+            circle at 100% 100%,
+            rgba(44, 151, 184, .10),
+            transparent 45%
+        ),
+        linear-gradient(
+            120deg,
+            rgba(17, 37, 51, .94),
+            rgba(10, 24, 36, .92)
+        );
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .12);
+}
+
+#project-detail-view .consultant-file-center .consultant-files-heading {
+    min-width: 0;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #55e6d0;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+    line-height: 1.5;
+    direction: ltr;
+    text-align: right;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-heading h3 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    color: #f0f7fb;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.7;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-total {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 27px;
+    padding: 0 7px;
+    border: 1px solid rgba(85, 230, 208, .22);
+    border-radius: 9px;
+    background: rgba(85, 230, 208, .10);
+    color: #55e6d0;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-heading p {
+    margin: 6px 0 0;
+    color: #91a5b6;
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-upload {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid rgba(85, 230, 208, .30);
+    border-radius: 11px;
+    background: linear-gradient(
+        135deg,
+        rgba(85, 230, 208, .15),
+        rgba(48, 190, 163, .08)
+    );
+    color: #8af4e3;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-upload span {
+    font-size: 19px;
+    line-height: 1;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-upload:hover {
+    border-color: rgba(85, 230, 208, .60);
+    background: rgba(85, 230, 208, .18);
+    box-shadow: 0 5px 18px rgba(48, 190, 163, .10);
+    transform: translateY(-1px);
+}
+
+#project-detail-view .consultant-file-center .consultant-files-upload:focus-visible {
+    outline: 2px solid #55e6d0;
+    outline-offset: 3px;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-status {
+    margin: 0 2px 14px;
+    color: #91a5b6;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+@media (max-width: 640px) {
+    #project-detail-view .consultant-file-center .consultant-files-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    #project-detail-view .consultant-file-center .consultant-files-heading h3 {
+        gap: 8px;
+        font-size: 17px;
+    }
+
+    #project-detail-view .consultant-file-center .consultant-files-upload {
+        width: 100%;
+        min-height: 42px;
+    }
+}
+
+
+/* =========================================================
+   FINAL RTL FIX — CONSULTANT FILE CENTER HEADER
+========================================================= */
+
+#project-detail-view .consultant-file-center .consultant-files-header {
+    direction: rtl;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 18px;
+    text-align: right;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-heading {
+    order: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    text-align: right;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-eyebrow {
+    display: block;
+    direction: ltr;
+    text-align: right;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-heading h3 {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    direction: rtl;
+    gap: 9px;
+    text-align: right;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-total {
+    flex: 0 0 auto;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-heading p {
+    text-align: right;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-upload {
+    order: 1;
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+#project-detail-view .consultant-file-center .consultant-files-status {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    direction: rtl;
+    text-align: right;
+    margin: 0 0 14px;
+    padding: 0 2px;
+}
+
+@media (max-width: 640px) {
+    #project-detail-view .consultant-file-center .consultant-files-header {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+    }
+
+    #project-detail-view .consultant-file-center .consultant-file-center .consultant-files-upload {
+        width: 100%;
+    }
+
+    #project-detail-view .consultant-file-center .consultant-files-upload {
+        order: 1;
+        width: 100%;
+    }
+}
+

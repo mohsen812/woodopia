@@ -10,6 +10,7 @@ from .views import (
     ProjectAttachmentListCreateView,
     ProjectFileCenterView,
     ProjectAttachmentDeleteView,
+    WorkshopProjectAttachmentDeleteView,
     ProjectActivityListView,
     SendProjectToConsultantView,
     ConsultantDashboardView,
@@ -164,6 +165,12 @@ urlpatterns = [
         "<int:project_id>/attachments/<int:pk>/delete/",
         ProjectAttachmentDeleteView.as_view(),
         name="project-attachment-delete",
+    ),
+
+	path(
+        "<int:project_id>/attachments/<int:pk>/workshop-delete/",
+        WorkshopProjectAttachmentDeleteView.as_view(),
+        name="workshop-project-attachment-delete",
     ),
 
     path(

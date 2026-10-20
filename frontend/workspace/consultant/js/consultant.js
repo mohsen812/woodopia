@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
 
 "use strict";
 function getCSRFToken(){
@@ -826,6 +826,329 @@ function renderConsultantProject(
 
 
 /* ==================================================
+   CONSULTANT FILE CENTER
+================================================== */
+
+function loadConsultantFileCenter(projectId, content) {
+    const status = content.querySelector(".consultant-files-status");
+    const groupsContainer = content.querySelector(".consultant-files-groups");
+    const totalElement = content.querySelector(".consultant-files-total");
+
+    if (!status || !groupsContainer) return;
+
+    const escapeText = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+
+    const getExtension = url => {
+        try {
+            return new URL(url, window.location.origin).pathname
+                .split(".").pop().toLowerCase();
+        } catch (_) {
+            return "";
+        }
+    };
+
+    const getKind = (file) => {
+        const ext = getExtension(file.file || "");
+        if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext)) return "image";
+        if (ext === "pdf") return "pdf";
+        if (["doc", "docx", "odt"].includes(ext)) return "document";
+        if (["xls", "xlsx", "csv"].includes(ext)) return "spreadsheet";
+        if (["dwg", "dxf", "skp", "3ds", "obj", "stl"].includes(ext)) return "design";
+        return "other";
+    };
+
+    const roleLabels = {
+        customer: "فایل‌های مشتری",
+        consultant: "فایل‌های مشاور",
+        workshop: "فایل‌های کارگاه",
+        designer: "فایل‌های طراح",
+        company: "فایل‌های شرکت"
+    };
+
+    const showStatus = message => {
+        status.textContent = message;
+    };
+
+    async function refreshFiles() {
+        showStatus("در حال دریافت فایل‌ها...");
+
+        try {
+            const response = await fetch(`/api/projects/${projectId}/files/`, {
+                credentials: "include",
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
+
+            if (!response.ok) {
+                throw new Error(response.status === 403
+                    ? "اجازه دسترسی به فایل‌های این پروژه را ندارید."
+                    : "دریافت فایل‌ها ناموفق بود.");
+            }
+
+            const data = await response.json();
+            const roles = Object.entries(roleLabels);
+
+            const totalFiles = roles.reduce((total, [role]) => {
+                const items = Array.isArray(data[role]) ? data[role] : [];
+                return total + items.length;
+            }, 0);
+
+			if (totalElement) {
+                totalElement.textContent = totalFiles;
+            }
+
+            showStatus(totalFiles
+                ? "فایل‌های هر نقش در بخش مربوط به خود نمایش داده می‌شوند."
+                : "هنوز فایلی ثبت نشده است.");
+
+            groupsContainer.innerHTML = roles.map(([role, label]) => {
+                const roleFiles = Array.isArray(data[role]) ? data[role] : [];
+
+                return `
+                    <section class="consultant-file-role-card"
+                        data-role-section="${escapeText(role)}">
+                        <header class="consultant-file-role-header">
+                            <div class="consultant-file-role-title">
+                                <strong>${escapeText(label)}</strong>
+                                <small>${roleFiles.length
+                                    ? `${roleFiles.length} فایل`
+                                    : "فایلی ثبت نشده"}</small>
+                            </div>
+                            <span class="consultant-file-role-count ${
+                                roleFiles.length ? "has-files" : ""
+                            }">${roleFiles.length}</span>
+                        </header>
+                        <div class="consultant-file-role-items">
+                            ${roleFiles.map(file => {
+                                const url = file.file || "";
+                                const title = file.title || "فایل پروژه";
+                                const kind = getKind(file);
+                                const ext = getExtension(url);
+                                const source = file.source || "project";
+                                const preview = kind === "image" && url
+                                    ? `<img src="${escapeText(url)}" alt="" loading="lazy">`
+                                    : `<span class="consultant-file-type-icon">${
+                                        kind === "pdf" ? "📕" :
+                                        kind === "document" ? "📄" :
+                                        kind === "spreadsheet" ? "📊" :
+                                        kind === "design" ? "📐" : "📎"
+                                    }</span>`;
+
+                                return `
+                                    <article class="consultant-file-card"
+                                        data-file-id="${escapeText(file.id)}"
+                                        data-file-url="${escapeText(url)}"
+                                        data-file-title="${escapeText(title)}"
+                                        data-file-kind="${kind}"
+                                        data-file-extension="${escapeText(ext)}"
+                                        data-file-source="${escapeText(source)}">
+                                        <button type="button"
+                                            class="consultant-file-preview"
+                                            aria-label="پیش‌نمایش ${escapeText(title)}"
+                                            ${url ? "" : "disabled"}>
+                                            ${preview}
+                                        </button>
+                                        <div class="consultant-file-details">
+                                            <strong>${escapeText(title)}</strong>
+                                            <span>${escapeText(file.file_type || ext.toUpperCase() || "FILE")}</span>
+                                            <small>${escapeText(label)}${
+                                                source === "standardization" ? " · استانداردسازی" : ""
+                                            }</small>
+                                        </div>
+                                        ${source === "project" ? `
+                                            <button type="button" class="consultant-file-delete"
+                                                aria-label="حذف ${escapeText(title)}"
+                                                title="حذف فایل">حذف</button>` : ""}
+                                    </article>`;
+                            }).join("")}
+                            ${roleFiles.length ? "" : `
+                                <div class="consultant-file-role-empty">
+                                    فایلی برای این نقش ثبت نشده است.
+                                </div>`}
+                        </div>
+                    </section>`;
+            }).join("");
+
+        } catch (error) {
+            showStatus(error.message || "خطا در دریافت فایل‌ها.");
+            groupsContainer.innerHTML = "";
+        }
+    }
+
+    function openPreview(card) {
+        const url = card.dataset.fileUrl;
+        if (!url) return;
+
+        const title = card.dataset.fileTitle || "پیش‌نمایش فایل";
+        const kind = card.dataset.fileKind;
+        const ext = card.dataset.fileExtension;
+
+        document.getElementById("consultant-file-preview-modal")?.remove();
+
+        const modal = document.createElement("div");
+        modal.id = "consultant-file-preview-modal";
+        modal.className = "consultant-file-preview-modal";
+        modal.innerHTML = `
+            <div class="consultant-file-preview-backdrop" data-close-preview></div>
+            <section class="consultant-file-preview-dialog"
+                role="dialog" aria-modal="true" aria-label="${escapeText(title)}">
+                <header class="consultant-file-preview-toolbar">
+                    <strong>${escapeText(title)}</strong>
+                    <div>
+                        <a href="${escapeText(url)}" download>دریافت فایل</a>
+                        <button type="button" data-close-preview aria-label="بستن">×</button>
+                    </div>
+                </header>
+                <div class="consultant-file-preview-body">
+                    ${
+                        kind === "image"
+                            ? `<img src="${escapeText(url)}" alt="${escapeText(title)}">`
+                        : ext === "pdf"
+                            ? `<iframe src="${escapeText(url)}" title="${escapeText(title)}"></iframe>`
+                        : `<div class="consultant-file-preview-fallback">
+                                <div>📎</div>
+                                <p>پیش‌نمایش این نوع فایل در مرورگر پشتیبانی نمی‌شود.</p>
+                                <a href="${escapeText(url)}" download>دریافت فایل</a>
+                           </div>`
+                    }
+                </div>
+            </section>`;
+
+        document.body.appendChild(modal);
+        document.body.classList.add("consultant-file-preview-open");
+
+        const close = () => {
+            modal.remove();
+            document.body.classList.remove("consultant-file-preview-open");
+            document.removeEventListener("keydown", onKeyDown);
+        };
+        const onKeyDown = event => {
+            if (event.key === "Escape") close();
+        };
+
+        modal.addEventListener("click", event => {
+            if (event.target.closest("[data-close-preview]")) close();
+        });
+        document.addEventListener("keydown", onKeyDown);
+        modal.querySelector("[data-close-preview]")?.focus();
+    }
+
+    groupsContainer.addEventListener("click", async event => {
+        const previewButton = event.target.closest(".consultant-file-preview");
+        if (previewButton) {
+            openPreview(previewButton.closest(".consultant-file-card"));
+            return;
+        }
+
+        const deleteButton = event.target.closest(".consultant-file-delete");
+        if (!deleteButton) return;
+
+        const card = deleteButton.closest(".consultant-file-card");
+        const fileId = card?.dataset.fileId;
+        if (!fileId || !confirm("آیا از حذف این فایل مطمئن هستی؟")) return;
+
+        deleteButton.disabled = true;
+        showStatus("در حال حذف فایل...");
+
+        try {
+            const response = await fetch(
+                `/api/projects/${projectId}/attachments/${encodeURIComponent(fileId)}/delete/`,
+                {
+                    method: "DELETE",
+                    credentials: "include",
+                    headers: {
+                        "X-CSRFToken": getCSRFToken(),
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(response.status === 403 || response.status === 404
+                    ? "حذف ممکن نیست؛ فقط فایل‌های مجاز خودت را می‌توانی حذف کنی."
+                    : "حذف فایل ناموفق بود.");
+            }
+
+            await refreshFiles();
+        } catch (error) {
+            showStatus(error.message || "خطا هنگام حذف فایل.");
+            deleteButton.disabled = false;
+        }
+    });
+
+    const uploadButton = content.querySelector(".consultant-files-upload");
+    const fileInput = content.querySelector(".consultant-files-input");
+
+    uploadButton?.addEventListener("click", () => fileInput?.click());
+
+    fileInput?.addEventListener("change", async () => {
+        const selectedFiles = Array.from(fileInput.files || []);
+        if (!selectedFiles.length) return;
+
+        uploadButton.disabled = true;
+
+        try {
+            for (let index = 0; index < selectedFiles.length; index++) {
+                const file = selectedFiles[index];
+                showStatus(`در حال بارگذاری فایل ${index + 1} از ${selectedFiles.length}: ${file.name}`);
+
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("title", file.name);
+
+                const response = await fetch(`/api/projects/${projectId}/attachments/`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "X-CSRFToken": getCSRFToken() },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const responseBody = await response.text();
+                    console.error("Consultant project file upload failed:", {
+                        status: response.status,
+                        body: responseBody
+                    });
+
+                    let detail = responseBody;
+                    try {
+                        const parsed = JSON.parse(responseBody);
+                        detail = parsed.detail || parsed.file ||
+                            parsed.title || JSON.stringify(parsed);
+                        if (typeof detail !== "string") {
+                            detail = JSON.stringify(detail);
+                        }
+                    } catch (_) {}
+
+                    throw new Error(
+                        `Upload failed (HTTP ${response.status}): ${detail || "No server details"}`
+                    );
+                }
+            }
+
+            fileInput.value = "";
+            await refreshFiles();
+        } catch (error) {
+            showStatus(error.message || "خطا هنگام بارگذاری فایل.");
+        } finally {
+            uploadButton.disabled = false;
+        }
+    });
+
+    refreshFiles();
+}
+
+/* ==================================================
+   END CONSULTANT FILE CENTER
+================================================== */
+
+
+/* ==================================================
    PROJECT TABS
 ================================================== */
 
@@ -904,108 +1227,54 @@ function renderConsultantProjectTab(
             break;
 
 
+
         /* ------------------------------------------
            FILES
         ------------------------------------------ */
 
         case "files": {
-
-            const files = [
-                ...(project.attachments || []),
-                ...(project.specification_attachments || [])
-            ];
-
-
             content.innerHTML = `
+                <div class="project-section consultant-file-center">
+                    <div class="consultant-files-header">
+                        <div class="consultant-files-heading">
+                            <span class="consultant-files-eyebrow">
+                                PROJECT FILE CENTER
+                            </span>
 
-                <div class="project-section">
+                            <h3>
+                                فایل‌های پروژه
+                                <span class="consultant-files-total">0</span>
+                            </h3>
 
-                    <h3>
-                        📁 فایل‌های پروژه
-                    </h3>
+                            <p>
+                                فایل‌های پروژه در فضای اختصاصی هر نقش نگهداری می‌شوند.
+                            </p>
+                        </div>
 
+                        <button type="button" class="consultant-files-upload">
+                            <span aria-hidden="true">+</span>
+                            افزودن فایل
+                        </button>
+                    </div>
 
-                    ${
-                        files.length
-                        ?
+                    <input
+                        type="file"
+                        class="consultant-files-input"
+                        multiple
+                        hidden
+                    >
 
-                        files.map(
-                            file => `
+                    <div class="consultant-files-status" aria-live="polite">
+                        در حال دریافت فایل‌ها...
+                    </div>
 
-                                <div
-                                    class="file-card"
-                                >
-
-                                    <div
-                                        class="file-icon"
-                                    >
-                                        📄
-                                    </div>
-
-
-                                    <div
-                                        class="file-info"
-                                    >
-
-                                        <strong>
-                                            ${escapeHTML(
-                                                file.title ||
-                                                "فایل پروژه"
-                                            )}
-                                        </strong>
-
-
-                                        <span>
-                                            ${escapeHTML(
-                                                file.file_type ||
-                                                (
-                                                    file.file
-                                                    ?
-                                                    file.file.split(".").pop().toUpperCase()
-                                                    :
-                                                    ""
-                                                )
-                                            )}
-                                        </span>
-
-                                    </div>
-
-
-                                    <a
-                                        href="${escapeAttribute(
-                                            file.file
-                                        )}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="file-open"
-                                    >
-                                        مشاهده
-                                    </a>
-
-                                </div>
-
-                            `
-                        ).join("")
-
-                        :
-
-                        `
-
-                            <div class="empty-state">
-                                هنوز فایلی ثبت نشده است.
-                            </div>
-
-                        `
-                    }
-
+                    <div class="consultant-files-groups"></div>
                 </div>
-
             `;
 
+            loadConsultantFileCenter(project.id, content);
             break;
-
         }
-
 
         /* ------------------------------------------
            STANDARDIZATION

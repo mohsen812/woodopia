@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db import models
+from projects.services import get_project_progress
 from .models import (
     Tender,
     TenderRound,
@@ -516,7 +517,20 @@ class WorkshopTenderInvitationSerializer(
         read_only=True
     )
 
+    project_id = serializers.IntegerField(
+        source="tender.project_id",
+        read_only=True,
+    )
+
     bid_id = serializers.SerializerMethodField()
+
+    project_progress = serializers.SerializerMethodField()
+
+    def get_project_progress(self, obj):
+        return get_project_progress(
+            project=obj.tender.project,
+            user=self.context["request"].user,
+        )
 
     class Meta:
 
@@ -527,10 +541,12 @@ class WorkshopTenderInvitationSerializer(
             "tender",
             "tender_title",
             "project_title",
+            "project_id",
             "response_status",
             "invited_at",
             "responded_at",
             "bid_id",
+            "project_progress",
         ]
 
 

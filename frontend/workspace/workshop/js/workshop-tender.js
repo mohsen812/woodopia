@@ -97,6 +97,24 @@
                 statusText = "عدم شرکت";
             }
 
+            const progress = item.project_progress || {};
+
+            const stages = Array.isArray(progress.stages)
+                ? progress.stages
+                : [];
+
+            const activeStage = stages.find(stage =>
+                stage.key === progress.current_stage
+            ) || stages.find(stage =>
+                ["current", "attention", "blocked"].includes(
+                    stage.state
+                )
+            );
+
+            const stageLabel = activeStage
+                ? activeStage.label
+                : null;
+
             return `
 
                 <div
@@ -123,7 +141,16 @@
                             <span class="meta-chip">
                                 وضعیت: ${statusText}
                             </span>
-
+                            ${
+                                stageLabel
+                                ? `
+                                <span class="meta-chip project-stage-chip" title="مرحله فعلی پروژه">
+                                    <span class="stage-chip-icon" aria-hidden="true">✧</span>
+                                    <span>${this.escape(stageLabel)}</span>
+                                </span>
+                                `
+                                : ""
+                            }
                             ${
                                 item.invited_at
                                 ? `
@@ -215,6 +242,9 @@
             }
 
             const project = {
+
+                project_id:
+                    tender.project_id || null,
 
                 title:
                     tender.project_title ||
