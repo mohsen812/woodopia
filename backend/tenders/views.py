@@ -2667,6 +2667,8 @@ class AnonymousTenderBidListView(
     generics.ListAPIView
 ):
 
+    permission_classes = [IsAuthenticated]
+
     serializer_class = AnonymousBidSerializer
 
     def get_queryset(self):
@@ -2675,9 +2677,16 @@ class AnonymousTenderBidListView(
             "tender_id"
         )
 
-        tender = Tender.objects.get(
-            id=tender_id
+        tender = get_object_or_404(
+            Tender,
+            id=tender_id,
         )
+
+        if not (
+            has_customer_tender_access(self.request.user, tender)
+            or has_consultant_tender_access(self.request.user, tender)
+        ):
+            raise NotFound("Tender not found.")
 
         if tender.status != "revealed":
             return Bid.objects.none()
