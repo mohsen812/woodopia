@@ -3239,6 +3239,7 @@ class AnonymousTenderBidAPITests(TestCase):
         )
 
         self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
 
     def test_anonymous_bids_hidden_before_reveal(self):
