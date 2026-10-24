@@ -25,6 +25,8 @@ MEDIA_ROOT = os.environ.get("FEEMAAS_MEDIA_ROOT", "/app/media")
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
+WHITENOISE_USE_FINDERS = True
+
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [x.strip() for x in os.environ.get("FEEMAAS_CORS_ALLOWED_ORIGINS", "").split(",") if x.strip()]
 
