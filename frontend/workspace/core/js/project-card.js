@@ -4536,7 +4536,7 @@ function renderProjectFileCenter(
             );
 
         const fileUrl =
-            file.file || "";
+            resolveProjectFileUrl(file.file || "");
 
         const isImage =
             kind === "image";
@@ -5589,11 +5589,37 @@ catch(error){
 ============================================================
 */
 
+function resolveProjectFileUrl(rawUrl){
+    if(!rawUrl){
+        return "";
+    }
+
+    try {
+        const parsed = new URL(rawUrl, window.location.href);
+
+        if(
+            parsed.hostname === window.location.hostname &&
+            window.location.port &&
+            !parsed.port
+        ){
+            parsed.port = window.location.port;
+        }
+
+        return parsed.href;
+    }
+    catch(error){
+        return rawUrl;
+    }
+}
+
+
 function openProjectFileCenterPreview(file){
 
     if(!file || !file.url){
         return;
     }
+
+    file.url = resolveProjectFileUrl(file.url);
 
     closeProjectFileCenterPreview();
 
