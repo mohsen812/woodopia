@@ -1,30 +1,29 @@
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "/api";
 
 
-async function handleApiError(response){
-
+async function handleApiError(response) {
     let detail = "";
 
     try {
+        const responseText = await response.text();
 
-        const errorData = await response.json();
+        if (responseText) {
+            try {
+                const errorData = JSON.parse(responseText);
 
-        detail =
-            errorData.error ||
-            JSON.stringify(errorData);
-
-    }
-    catch(e){
-
-        try {
-            detail = await response.text();
+                detail =
+                    errorData.error ||
+                    errorData.detail ||
+                    JSON.stringify(errorData);
+            } catch (parseError) {
+                detail = responseText;
+            }
+        } else {
+            detail = "Empty error response";
         }
-        catch(err){
-            detail = "";
-        }
-
+    } catch (readError) {
+        detail = "Unable to read error response";
     }
-
 
     console.error(
         "FEEMAAS API ERROR:",
@@ -32,22 +31,21 @@ async function handleApiError(response){
         detail
     );
 
-
     throw new Error(
         "API Error: " +
         response.status +
         " - " +
         detail
     );
-
 }
-
-
 
 async function apiGet(endpoint){
 
     const response = await fetch(
         `${API_BASE}${endpoint}`,
+        {
+            credentials:"include",
+        }
     );
 
 
@@ -61,6 +59,7 @@ async function apiGet(endpoint){
     return await response.json();
 
 }
+
 
 
 
@@ -69,14 +68,24 @@ async function apiPost(endpoint,data){
     const response = await fetch(
         `${API_BASE}${endpoint}`,
         {
+
             method:"POST",
 
+            credentials:"include",
+
             headers:{
-                "Content-Type":"application/json",
-                "X-CSRFToken": getCookie("csrftoken")
+
+                "Content-Type":
+                "application/json",
+
+                "X-CSRFToken":
+                getCookie("csrftoken")
+
             },
 
-            body:JSON.stringify(data)
+            body:
+            JSON.stringify(data)
+
         }
     );
 
@@ -91,30 +100,50 @@ async function apiPost(endpoint,data){
     return await response.json();
 
 }
-function getCookie(name) {
+
+
+
+
+function getCookie(name){
 
     let cookieValue = null;
 
-    if (document.cookie && document.cookie !== "") {
 
-        const cookies = document.cookie.split(";");
+    if(document.cookie){
 
-        for (let cookie of cookies) {
+        const cookies =
+        document.cookie.split(";");
 
-            cookie = cookie.trim();
 
-            if (cookie.startsWith(name + "=")) {
+        for(let cookie of cookies){
 
-                cookieValue = decodeURIComponent(
+            cookie =
+            cookie.trim();
+
+
+            if(
+                cookie.startsWith(
+                    name+"="
+                )
+            ){
+
+                cookieValue =
+                decodeURIComponent(
                     cookie.substring(
-                        name.length + 1
+                        name.length+1
                     )
                 );
 
+
                 break;
+
             }
+
         }
+
     }
 
+
     return cookieValue;
+
 }

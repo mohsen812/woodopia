@@ -5,7 +5,289 @@
 ============================================================
 */
 
+/*
+============================================================
+ PROJECT PROGRESS HELPERS
+============================================================
+*/
 
+function getProjectProgressStage(progress) {
+
+    if (!progress || !Array.isArray(progress.stages)) {
+        return null;
+    }
+
+    return progress.stages.find(
+        stage => stage.key === progress.current_stage
+    ) || null;
+}
+
+
+function getProjectCurrentStageLabel(project) {
+
+    const stage =
+        getProjectProgressStage(
+            project.progress
+        );
+
+    return stage?.label || "نامشخص";
+}
+
+
+function getProjectHealthMeta(project) {
+
+    const health =
+        project?.progress?.health || "on_track";
+
+    switch (health) {
+
+        case "delayed":
+            return {
+                key: "delayed",
+                label: "دارای تأخیر",
+                icon: "!",
+            };
+
+        case "blocked":
+            return {
+                key: "blocked",
+                label: "نیازمند پیگیری",
+                icon: "×",
+            };
+
+        case "on_track":
+        default:
+            return {
+                key: "on_track",
+                label: "در وضعیت عادی",
+                icon: "●",
+            };
+    }
+}
+
+
+function getProjectProgressStateClass(state) {
+
+    switch (state) {
+
+        case "current":
+            return "current";
+
+        case "completed":
+            return "completed";
+
+        case "attention":
+            return "attention";
+
+        case "blocked":
+            return "blocked";
+
+        case "upcoming":
+        default:
+            return "pending";
+    }
+}
+
+
+function getProjectProgressStateIcon(state) {
+
+    switch (state) {
+
+        case "completed":
+            return "✓";
+
+        case "current":
+            return "●";
+
+        case "attention":
+            return "!";
+
+        case "blocked":
+            return "×";
+
+        case "upcoming":
+        default:
+            return "";
+    }
+}
+
+
+function renderProjectProgress(progress) {
+
+    if (!progress || !Array.isArray(progress.stages)) {
+
+        return `
+            <div class="project-progress-empty">
+                اطلاعات روند پروژه در دسترس نیست.
+            </div>
+        `;
+    }
+
+
+    const currentStage =
+        getProjectProgressStage(progress);
+
+
+    const currentStageLabel =
+        currentStage
+            ? currentStage.label
+            : "وضعیت نامشخص";
+
+    const stagesHtml =
+        progress.stages.map(stage => {
+
+            const isCurrentStage =
+                stage.key === progress.current_stage;
+
+
+            const stateClass =
+                [
+                    getProjectProgressStateClass(
+                        stage.state
+                    ),
+                    ...(isCurrentStage ? ["current"] : [])
+                ].join(" ");
+
+
+            const stateIcon =
+                getProjectProgressStateIcon(
+                    stage.state
+                );
+
+
+            return `
+                <div
+                    class="project-progress-step ${stateClass}"
+                    data-progress-stage="${escapeHtml(stage.key)}"
+                >
+
+                    <div class="project-progress-node">
+
+                        <span>
+                            ${stateIcon}
+                        </span>
+
+                    </div>
+
+                    <div class="project-progress-label">
+
+                        ${escapeHtml(
+                            stage.label || ""
+                        )}
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+
+    const nextAction =
+        progress.next_action &&
+        progress.next_action.required
+            ? progress.next_action
+            : null;
+
+
+    const nextActionHtml =
+        nextAction
+            ? `
+                <div class="project-progress-next-action">
+
+                    <span class="eyebrow">
+                        NEXT ACTION
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            nextAction.title ||
+                            "اقدام بعدی"
+                        )}
+                    </strong>
+
+                </div>
+            `
+            : "";
+
+
+    const timing =
+        progress.timing || null;
+
+
+    const timingHtml =
+        timing && timing.value
+            ? `
+                <div class="project-progress-timing">
+
+                    <span>
+                        ${escapeHtml(
+                            timing.label ||
+                            "زمان"
+                        )}
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            timing.value
+                        )}
+                    </strong>
+
+                </div>
+            `
+            : "";
+
+
+    return `
+        <div
+            class="project-progress"
+            data-current-stage="${escapeHtml(
+                progress.current_stage || ""
+            )}"
+        >
+
+            <div class="project-progress-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        PROJECT PROGRESS
+                    </span>
+
+                    <h3>
+                        ${escapeHtml(
+                            currentStageLabel
+                        )}
+                    </h3>
+
+                </div>
+
+                <div class="project-progress-health">
+                    ${escapeHtml(
+                        progress.health || "on_track"
+                    )}
+                </div>
+
+            </div>
+
+
+            <div class="project-progress-track">
+
+                ${stagesHtml}
+
+            </div>
+
+
+            <div class="project-progress-context">
+
+                ${nextActionHtml}
+
+                ${timingHtml}
+
+            </div>
+
+        </div>
+    `;
+}
 /*
 ============================================================
  CREATE PROJECT CARD
@@ -14,60 +296,243 @@
 
 function createProjectCard(project) {
 
-    const div =
-        document.createElement("div");
+    const div = document.createElement("div");
 
+    div.className = "project-card";
+    div.dataset.projectId = project.id;
 
-    div.className =
-        "project-card";
+    const itemsCount = Array.isArray(project.items)
+        ? project.items.length
+        : 0;
 
+    const filesCount =
+        (Array.isArray(project.attachments)
+            ? project.attachments.length
+            : 0)
+        +
+        (Array.isArray(project.specification_attachments)
+            ? project.specification_attachments.length
+            : 0);
 
-    div.dataset.projectId =
-        project.id;
+    const currentProgressStage =
+        getProjectProgressStage(
+            project.progress
+        );
 
+    const statusLabel =
+        currentProgressStage
+            ? currentProgressStage.label
+            : "وضعیت نامشخص";
+
+	const projectHealth =
+        getProjectHealthMeta(project);
+
+    const projectProgress =
+        project.progress || null;
+
+    const projectProgressStages =
+        Array.isArray(projectProgress?.stages)
+            ? projectProgress.stages
+            : [];
+
+    const projectProgressCurrentIndex =
+        projectProgressStages.findIndex(
+            stage =>
+                stage.key ===
+                projectProgress?.current_stage
+        );
+
+    const projectProgressPercent =
+        projectProgressCurrentIndex >= 0 &&
+        projectProgressStages.length > 1
+            ? Math.round(
+                (
+                    projectProgressCurrentIndex /
+                    (projectProgressStages.length - 1)
+                ) * 100
+            )
+            : 0;
+    const budget = Number(project.estimated_budget || 0);
+
+    const formattedBudget = budget > 0
+        ? new Intl.NumberFormat("fa-IR").format(budget)
+        : "تعیین نشده";
+
+    let lastActivity = "اطلاعات موجود نیست";
+
+    if (project.updated_at) {
+        const updated = new Date(project.updated_at);
+
+        if (!Number.isNaN(updated.getTime())) {
+            lastActivity = updated.toLocaleDateString(
+                "fa-IR",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            );
+        }
+    }
 
     div.innerHTML = `
 
-        <div class="project-card-header">
+        <div class="project-card-glow"></div>
 
-            <span class="eyebrow">
-                PROJECT #${project.id}
+        <div class="project-card-top">
+
+        <div
+             class="project-card-identity project-signal project-signal-${projectHealth.key}"
+        >
+
+            <span
+                class="project-status-light"
+                aria-hidden="true"
+            ></span>
+
+            <span class="project-status-label">
+                ${escapeHtml(statusLabel)}
             </span>
 
-            <span class="project-status">
-                ${escapeHtml(project.status || "—")}
+            <span class="project-health-label">
+                ${escapeHtml(projectHealth.label)}
+            </span>
+
+        </div>
+
+            <span class="project-number">
+                #${project.id}
             </span>
 
         </div>
 
 
-        <h3>
-            ${escapeHtml(project.title || "بدون عنوان")}
-        </h3>
+        <div class="project-card-main">
 
-
-        <div class="project-description">
-
-            ${escapeHtml(
-                project.description ||
-                "بدون توضیحات"
-            )}
+            <h3 class="project-card-title">
+                ${escapeHtml(
+                    project.title ||
+                    "بدون عنوان"
+                )}
+            </h3>
 
         </div>
 
 
-        <div class="project-card-footer">
+        <div class="project-card-divider"></div>
 
-            <button
-                type="button"
-                class="project-details-button"
-                data-project-id="${project.id}"
+
+		<div class="project-card-progress">
+
+            <div class="project-card-progress-head">
+
+                <span class="project-card-progress-label">
+                    مسیر پروژه
+                </span>
+
+                <strong class="project-card-progress-percent">
+                    ${projectProgressPercent}%
+                </strong>
+
+            </div>
+
+            <div
+                class="project-card-progress-track"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="${projectProgressPercent}"
             >
-                مشاهده جزئیات
-            </button>
 
-            <span class="project-arrow">
-                ←
+                <span
+                    class="project-card-progress-fill"
+                    style="width: ${projectProgressPercent}%"
+                ></span>
+
+            </div>
+
+            <div class="project-card-progress-stage">
+
+                <span>
+                    مرحله فعلی
+                </span>
+
+                <strong>
+                    ${escapeHtml(statusLabel)}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="project-card-info-grid">
+
+            <div class="project-info-box">
+
+                <div class="metric-value">
+                    ${itemsCount}
+                </div>
+
+
+                <span class="project-info-label">
+                    آیتم‌ها
+                </span>
+
+
+            </div>
+
+
+            <div class="project-info-box">
+
+                <span class="project-info-label">
+                    فایل‌ها
+                </span>
+
+                <div class="metric-value">
+                    ${filesCount}
+                </div>
+
+            </div>
+
+
+            <div class="project-info-box">
+
+                <span class="project-info-label">
+                    بودجه
+                </span>
+
+                <div class="metric-value project-budget">
+                    ${escapeHtml(formattedBudget)}
+                </div>
+
+            </div>
+
+
+            <div class="project-info-box">
+
+                <span class="project-info-label">
+                    تحویل
+                </span>
+
+                <div class="metric-value">
+                    ${
+                        project.required_delivery_days
+                        ? `${project.required_delivery_days}`
+                        : "—"
+                    }
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="project-card-bottom">
+
+            <span class="project-last-update">
+                آخرین تغییر: ${escapeHtml(lastActivity)}
             </span>
 
         </div>
@@ -77,68 +542,24 @@ function createProjectCard(project) {
 
     /*
     --------------------------------------------------------
-    CARD CLICK
+    CARD INTERACTION
     --------------------------------------------------------
     */
 
-    div.addEventListener(
-        "click",
-        function(event) {
+    div.addEventListener("click", function() {
 
-            if (
-                event.target.closest(
-                    ".project-details-button"
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            showProject(project);
-
-        }
-    );
-
-
-    /*
-    --------------------------------------------------------
-    DETAILS BUTTON
-    --------------------------------------------------------
-    */
-
-    const detailsButton =
-        div.querySelector(
-            ".project-details-button"
+        console.log(
+            "CARD CLICKED",
+            project.id
         );
 
+        showProject(project);
 
-    if (detailsButton) {
-
-        detailsButton.addEventListener(
-            "click",
-            function(event) {
-
-                event.preventDefault();
-
-                event.stopPropagation();
-
-
-                openProjectDetail(
-                    project
-                );
-
-            }
-        );
-
-    }
+    });
 
 
     return div;
-
 }
-
 
 /*
 ============================================================
@@ -153,12 +574,10 @@ function showProject(project) {
             "project-modal"
         );
 
-
     const detail =
         document.getElementById(
             "project-detail"
         );
-
 
     if (!modal || !detail) {
 
@@ -167,47 +586,324 @@ function showProject(project) {
         );
 
         return;
-
     }
 
+
+    /*
+    ========================================================
+     SUMMARY DATA
+    ========================================================
+    */
+
+    const progress =
+        project?.progress || {};
+
+    const stages =
+        Array.isArray(progress.stages)
+            ? progress.stages
+            : [];
+
+    const currentStage =
+        getProjectProgressStage(
+            progress
+        );
+
+    const statusLabel =
+        currentStage?.label ||
+        "وضعیت نامشخص";
+
+    const health =
+        getProjectHealthMeta(
+            project
+        );
+
+    const nextAction =
+        progress.next_action || null;
+
+    const nextActionRequired =
+        nextAction?.required === true;
+
+    const nextActionTitle =
+        nextAction?.title ||
+        "";
+
+    const nextActionValue =
+        nextAction?.action ||
+        "";
+
+    const timing =
+        progress.timing || {};
+
+    const hasTiming =
+        timing?.type === "deadline" &&
+        Boolean(timing?.value);
+
+
+    const itemCount =
+        Array.isArray(project?.items)
+            ? project.items.length
+            : 0;
+
+
+    const budget =
+        project?.estimated_budget ??
+        project?.budget ??
+        "—";
+
+
+    /*
+    ========================================================
+     JOURNEY
+    ========================================================
+    */
+
+    const journeyHtml =
+        stages.length
+            ? `
+                <div class="project-summary-journey">
+
+                    <div class="project-summary-journey-track">
+
+                        ${stages.map(
+                            function(stage, index) {
+
+                                const state =
+                                    getProjectProgressStateClass(
+                                        stage.state
+                                    );
+
+                                const icon =
+                                    getProjectProgressStateIcon(
+                                        stage.state
+                                    );
+
+                                const isCurrent =
+                                    stage.key ===
+                                    progress.current_stage;
+
+                                return `
+                                    <div
+                                        class="
+                                            project-summary-stage
+                                            project-summary-stage-${state}
+                                            ${isCurrent ? "is-current" : ""}
+                                        "
+                                        title="${escapeHtml(
+                                            stage.label || ""
+                                        )}"
+                                    >
+
+                                        <span
+                                            class="project-summary-stage-dot"
+                                            aria-hidden="true"
+                                        >
+                                            ${icon}
+                                        </span>
+
+                                        <span
+                                            class="project-summary-stage-label"
+                                        >
+                                            ${escapeHtml(
+                                                stage.label || ""
+                                            )}
+                                        </span>
+
+                                    </div>
+
+                                    ${
+                                        index <
+                                        stages.length - 1
+                                            ? `
+                                                <span
+                                                    class="
+                                                        project-summary-stage-connector
+                                                        ${state === "completed"
+                                                            ? "is-completed"
+                                                            : ""}
+                                                    "
+                                                    aria-hidden="true"
+                                                ></span>
+                                            `
+                                            : ""
+                                    }
+                                `;
+                            }
+                        ).join("")}
+
+                    </div>
+
+                </div>
+            `
+            : "";
+
+
+    /*
+    ========================================================
+     TIMING
+    ========================================================
+    */
+
+    const timingHtml =
+        hasTiming
+            ? `
+                <div
+                    class="project-summary-timing"
+                    data-deadline="${escapeHtml(
+                        timing.value
+                    )}"
+                >
+
+                    <span
+                        class="project-summary-timing-icon"
+                        aria-hidden="true"
+                    >
+                        ◷
+                    </span>
+
+                    <span
+                        class="project-summary-timing-value"
+                        data-timer-value
+                    >
+                        —
+                    </span>
+
+                    <span
+                        class="project-summary-timing-label"
+                    >
+                        ${escapeHtml(
+                            timing.label ||
+                            "زمان باقی‌مانده"
+                        )}
+                    </span>
+
+                </div>
+            `
+            : "";
+
+
+    /*
+    ========================================================
+     ACTION BEACON
+    ========================================================
+    */
+
+    const actionHtml =
+        nextActionRequired &&
+        nextActionValue
+            ? `
+                <button
+                    type="button"
+                    class="
+                        project-summary-action-beacon
+                        is-required
+                    "
+                    data-action="${escapeHtml(
+                        nextActionValue
+                    )}"
+                >
+
+                    <span
+                        class="project-summary-action-light"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span
+                        class="project-summary-action-title"
+                    >
+                        ${escapeHtml(
+                            nextActionTitle
+                        )}
+                    </span>
+
+                    <span
+                        class="project-summary-action-arrow"
+                        aria-hidden="true"
+                    >
+                        →
+                    </span>
+
+                </button>
+            `
+            : "";
+
+
+    /*
+    ========================================================
+     SUMMARY
+    ========================================================
+    */
 
     detail.innerHTML = `
 
         <div class="project-summary">
 
-            <div class="eyebrow">
-                PROJECT #${project.id}
+            <!-- HEADER -->
+
+            <div class="project-summary-header">
+
+                <div class="project-summary-project-id">
+
+                    <span
+                        class="project-summary-live-dot"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span>
+                        PROJECT #${project.id}
+                    </span>
+
+                </div>
+
             </div>
 
 
-            <h2>
-                ${escapeHtml(
-                    project.title ||
-                    "بدون عنوان"
-                )}
-            </h2>
+            <!-- TITLE -->
 
+            <div class="project-summary-title-area">
 
-            <div class="project-summary-status">
-
-                <span>
-                    وضعیت پروژه
-                </span>
-
-                <strong>
+                <h2>
                     ${escapeHtml(
-                        project.status ||
-                        "نامشخص"
+                        project.title ||
+                        "بدون عنوان"
                     )}
-                </strong>
+                </h2>
+
+                <div
+                    class="
+                        project-summary-status
+                        project-summary-signal
+                        project-signal-${health.key}
+                    "
+                >
+
+                    <span
+                        class="project-status-light"
+                        aria-hidden="true"
+                    ></span>
+
+                    <span>
+                        ${escapeHtml(
+                            statusLabel
+                        )}
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            health.label
+                        )}
+                    </strong>
+
+                </div>
 
             </div>
 
+
+            <!-- DESCRIPTION -->
 
             <div class="project-summary-description">
 
                 <span class="eyebrow">
-                    DESCRIPTION
+                    توضیحات
                 </span>
 
                 <p>
@@ -220,109 +916,128 @@ function showProject(project) {
             </div>
 
 
-            <div class="project-meta">
+            <!-- JOURNEY -->
 
-                <div class="project-meta-item">
+            ${journeyHtml}
 
-                    <span>
-                        شناسه پروژه
+
+            <!-- META -->
+
+            <div class="project-summary-meta">
+
+                <div class="project-summary-meta-card project-summary-meta-items">
+
+                    <span class="project-summary-meta-label">
+                        اقلام
                     </span>
 
                     <strong>
-                        #${project.id}
+                        ${itemCount}
                     </strong>
 
                 </div>
 
 
-                <div class="project-meta-item">
+                <div class="project-summary-meta-card project-summary-meta-budget">
 
-                    <span>
-                        وضعیت
+                    <span class="project-summary-meta-label">
+                        بودجه
                     </span>
 
                     <strong>
                         ${escapeHtml(
-                            project.status ||
-                            "—"
+                            String(budget)
                         )}
                     </strong>
 
                 </div>
 
+            </div>
+            <!-- LIVE ACTION AREA -->
 
-                <div class="project-meta-item">
+            <div class="project-summary-live-area">
 
-                    <span>
-                        تعداد
-                    </span>
+                ${timingHtml}
 
-                    <strong>
-                        ${project.quantity ?? "—"}
-                    </strong>
-
-                </div>
-
-
-                <div class="project-meta-item">
-
-                    <span>
-                        بودجه
-                    </span>
-
-                    <strong>
-                        ${project.budget ?? "—"}
-                    </strong>
-
-                </div>
+                ${actionHtml}
 
             </div>
 
 
-            <div class="project-actions">
+            <!-- TABS -->
+
+            <nav
+                class="project-summary-tabs"
+                aria-label="Project navigation"
+            >
 
                 <button
                     type="button"
-                    class="project-action primary"
+                    class="
+                        project-summary-tab
+                        project-summary-tab-project
+                        is-active
+                    "
                     data-action="open-project"
                 >
-                    مشاهده پروژه
+                    <span
+                        class="project-summary-tab-icon"
+                        aria-hidden="true"
+                    >
+                        ◈
+                    </span>
+
+                    <span>
+                        مشاهده پروژه
+                    </span>
+
                 </button>
 
 
                 <button
                     type="button"
-                    class="project-action"
+                    class="
+                        project-summary-tab
+                        project-summary-tab-messages
+                    "
                     data-action="messages"
                 >
-                    پیام‌ها
+                    <span
+                        class="project-summary-tab-icon"
+                        aria-hidden="true"
+                    >
+                        ◌
+                    </span>
+
+                    <span>
+                        پیام‌ها
+                    </span>
+
                 </button>
 
 
                 <button
                     type="button"
-                    class="project-action"
+                    class="
+                        project-summary-tab
+                        project-summary-tab-contracts
+                    "
                     data-action="contracts"
                 >
-                    قراردادها
+                    <span
+                        class="project-summary-tab-icon"
+                        aria-hidden="true"
+                    >
+                        ◇
+                    </span>
+
+                    <span>
+                        قراردادها
+                    </span>
+
                 </button>
 
-
-                ${
-                    project.status === "draft"
-                    ? `
-                        <button
-                            type="button"
-                            class="project-action"
-                            data-action="consultant"
-                        >
-                            ارسال برای مشاور
-                        </button>
-                    `
-                    : ""
-                }
-
-            </div>
+            </nav>
 
         </div>
 
@@ -330,20 +1045,130 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    OPEN MODAL
-    --------------------------------------------------------
+    ========================================================
+     OPEN MODAL
+    ========================================================
     */
 
     modal.classList.remove(
         "hidden"
     );
 
+    modal.classList.add(
+        "active"
+    );
+
 
     /*
-    --------------------------------------------------------
-    OPEN PROJECT
-    --------------------------------------------------------
+    ========================================================
+     TIMER
+    ========================================================
+    */
+
+    let summaryTimerInterval = null;
+
+
+    function updateSummaryTimer() {
+
+        const timer =
+            detail.querySelector(
+                "[data-timer-value]"
+            );
+
+        const timingElement =
+            detail.querySelector(
+                "[data-deadline]"
+            );
+
+        if (!timer || !timingElement) {
+            return;
+        }
+
+        const deadline =
+            new Date(
+                timingElement.dataset.deadline
+            ).getTime();
+
+        if (!Number.isFinite(deadline)) {
+
+            timer.textContent =
+                "—";
+
+            return;
+        }
+
+        const remaining =
+            deadline - Date.now();
+
+
+        if (remaining <= 0) {
+
+            timer.textContent =
+                "پایان مهلت";
+
+            if (summaryTimerInterval) {
+
+                clearInterval(
+                    summaryTimerInterval
+                );
+
+                summaryTimerInterval = null;
+
+            }
+
+            return;
+        }
+
+
+        const totalSeconds =
+            Math.floor(
+                remaining / 1000
+            );
+
+        const days =
+            Math.floor(
+                totalSeconds / 86400
+            );
+
+        const hours =
+            Math.floor(
+                (totalSeconds % 86400) / 3600
+            );
+
+        const minutes =
+            Math.floor(
+                (totalSeconds % 3600) / 60
+            );
+
+        const seconds =
+            totalSeconds % 60;
+
+
+        timer.textContent =
+            days > 0
+                ? `${days} روز  ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
+                : `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+
+    updateSummaryTimer();
+
+
+    if (hasTiming) {
+
+        summaryTimerInterval =
+            window.setInterval(
+                updateSummaryTimer,
+                1000
+            );
+
+    }
+
+
+    /*
+    ========================================================
+     OPEN PROJECT
+    ========================================================
     */
 
     const openButton =
@@ -360,9 +1185,7 @@ function showProject(project) {
 
                 event.preventDefault();
 
-
                 closeProjectModal();
-
 
                 openProjectDetail(
                     project
@@ -375,9 +1198,9 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    MESSAGES
-    --------------------------------------------------------
+    ========================================================
+     MESSAGES
+    ========================================================
     */
 
     const messagesButton =
@@ -394,15 +1217,7 @@ function showProject(project) {
 
                 event.preventDefault();
 
-
-                /*
-                فعلاً فقط View اصلی پیام‌ها.
-                بعداً آن را به Project Detail Tab
-                تبدیل می‌کنیم.
-                */
-
                 closeProjectModal();
-
 
                 if (
                     typeof showView ===
@@ -422,9 +1237,9 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    CONTRACTS
-    --------------------------------------------------------
+    ========================================================
+     CONTRACTS
+    ========================================================
     */
 
     const contractsButton =
@@ -441,9 +1256,7 @@ function showProject(project) {
 
                 event.preventDefault();
 
-
                 closeProjectModal();
-
 
                 if (
                     typeof showView ===
@@ -463,14 +1276,14 @@ function showProject(project) {
 
 
     /*
-    --------------------------------------------------------
-    CONSULTANT
-    --------------------------------------------------------
+    ========================================================
+     CONSULTANT ACTION
+    ========================================================
     */
 
     const consultantButton =
         detail.querySelector(
-            '[data-action="consultant"]'
+            '[data-action="send_to_consultant"]'
         );
 
 
@@ -478,15 +1291,169 @@ function showProject(project) {
 
         consultantButton.addEventListener(
             "click",
-            function(event) {
+            async function(event) {
 
                 event.preventDefault();
 
+                if (
+                    !project ||
+                    project.status !== "draft"
+                ) {
+                    return;
+                }
 
-                console.log(
-                    "FEEMAAS: Send project to consultant",
-                    project
-                );
+
+                const confirmed =
+                    window.confirm(
+                        "آیا می‌خواهید این پروژه برای مشاور ارسال شود؟"
+                    );
+
+
+                if (!confirmed) {
+                    return;
+                }
+
+
+                consultantButton.disabled =
+                    true;
+
+
+                const originalTitle =
+                    consultantButton.querySelector(
+                        ".project-summary-action-title"
+                    );
+
+
+                if (originalTitle) {
+
+                    originalTitle.textContent =
+                        "در حال ارسال...";
+
+                }
+
+
+                try {
+
+                    const csrfToken =
+                        typeof getCookie === "function"
+                            ? getCookie("csrftoken")
+                            : null;
+
+
+                    const response =
+                        await fetch(
+                            `/api/projects/${project.id}/send-to-consultant/`,
+                            {
+                                method: "POST",
+
+                                credentials:
+                                    "same-origin",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    ...(csrfToken
+                                        ? {
+                                            "X-CSRFToken":
+                                                csrfToken
+                                        }
+                                        : {})
+                                },
+
+                                body:
+                                    JSON.stringify({})
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.error ||
+                            data.detail ||
+                            "ارسال پروژه برای مشاور انجام نشد."
+                        );
+
+                    }
+
+
+                    project.status =
+                        data.status ||
+                        "consulting";
+
+
+                    if (
+                        typeof loadCustomerProjects ===
+                        "function"
+                    ) {
+
+                        await loadCustomerProjects();
+
+                    }
+
+
+                    /*
+                    ------------------------------------------------
+                     Refresh summary from the updated project state.
+                    ------------------------------------------------
+                    */
+
+                    const refreshedProject =
+                        {
+                            ...project,
+                            status:
+                                project.status
+                        };
+
+
+                    closeProjectModal();
+
+
+                    alert(
+                        "پروژه با موفقیت برای مشاور ارسال شد."
+                    );
+
+
+                    /*
+                    بعداً می‌توانیم اینجا پروژه را
+                    از لیست تازه بارگذاری‌شده پیدا کنیم.
+                    فعلاً Summary بسته می‌شود تا
+                    state قدیمی دوباره نمایش داده نشود.
+                    */
+
+                    void refreshedProject;
+
+                } catch(error) {
+
+                    console.error(
+                        "FEEMAAS: Summary send project failed",
+                        error
+                    );
+
+
+                    consultantButton.disabled =
+                        false;
+
+
+                    if (originalTitle) {
+
+                        originalTitle.textContent =
+                            nextActionTitle;
+
+                    }
+
+
+                    alert(
+                        error.message ||
+                        "خطا در ارسال پروژه برای مشاور."
+                    );
+
+                }
 
             }
         );
@@ -495,7 +1462,6 @@ function showProject(project) {
 
 }
 
-
 /*
 ============================================================
  FULL PROJECT DETAIL
@@ -503,6 +1469,11 @@ function showProject(project) {
 */
 
 function openProjectDetail(project) {
+
+    console.log(
+        "DETAIL PROJECT PROGRESS:",
+        project.progress
+    );
 
     let projectView =
         document.getElementById(
@@ -540,8 +1511,22 @@ function openProjectDetail(project) {
     PROJECT DETAIL CONTENT
     --------------------------------------------------------
     */
+const projectProgressHtml =
+    renderProjectProgress(
+        project.progress
+    );
 
     projectView.innerHTML = `
+
+        <button
+            type="button"
+            class="project-view-close"
+            id="project-view-close"
+            aria-label="بستن پروژه"
+            title="بستن"
+        >
+            ×
+        </button>
 
         <div class="page-heading">
 
@@ -572,33 +1557,52 @@ function openProjectDetail(project) {
 
                 <div>
 
-                    <span class="eyebrow">
-                        PROJECT STATUS
-                    </span>
+                    <div class="project-progress-section">
 
-                    <h3>
-                        وضعیت پروژه
-                    </h3>
+                        ${projectProgressHtml}
 
-                </div>
+                    </div>
 
 
-                <span class="project-status">
+                ${
+                    project.status === "draft"
+                ? `
+                    <div class="project-consultant-action">
 
-                    ${escapeHtml(
-                        project.status ||
-                        "نامشخص"
-                    )}
+                        <div class="project-consultant-action-content">
 
-                </span>
+                            <span class="eyebrow">
+                                NEXT STEP
+                            </span>
 
-            </div>
+                            <strong>
+                                پروژه آماده ارسال برای مشاور است
+                            </strong>
+
+                            <span>
+                                پس از ارسال، پروژه وارد مرحله مشاوره خواهد شد.
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="project-consultant-action-button"
+                            id="project-send-to-consultant"
+                        >
+                            ✦ ارسال پروژه به مشاور
+                        </button>
+
+                    </div>
+                `
+                : ""
+        }
 
 
-            <div class="project-detail-description">
+        <div class="project-detail-description">
 
                 <span class="eyebrow">
-                    DESCRIPTION
+                    توضیحات
                 </span>
 
                 <p>
@@ -624,22 +1628,6 @@ function openProjectDetail(project) {
 
                     <strong>
                         #${project.id}
-                    </strong>
-
-                </div>
-
-
-                <div class="project-meta-item">
-
-                    <span>
-                        وضعیت
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            project.status ||
-                            "—"
-                        )}
                     </strong>
 
                 </div>
@@ -861,26 +1849,20 @@ function openProjectDetail(project) {
 
             </div>
             <div
-                class="project-detail-tab-content hidden"
+	            class="project-detail-tab-content hidden"
                 data-project-tab-content="files"
-            >
+			>
 
-                <div class="project-tab-panel">
+			    <div
+			        class="project-tab-panel"
+                    id="project-files-panel"
+                >
 
-                    <span class="eyebrow">
-                        FILES & DESIGN
-                    </span>
-
-                    <h3>
-                        فایل‌ها و طراحی
-                    </h3>
-
-                    <p>
-                        نقشه‌ها، فایل‌های طراحی، تصاویر،
-                        مدارک فنی و سایر فایل‌های پروژه در این بخش قرار می‌گیرند.
-                    </p>
+                    در حال دریافت فایل‌ها...
 
                 </div>
+
+            </div>
 
             </div>
 
@@ -1067,13 +2049,216 @@ if (
     );
 
 }
+if (
+    target === "files"
+) {
+
+    loadProjectFiles(
+        project.id
+    );
+
+}
                     }
                 );
 
             }
         );
 
+/*
+--------------------------------------------------------
+SEND PROJECT TO CONSULTANT
+--------------------------------------------------------
+*/
 
+const sendToConsultantButton =
+    document.getElementById(
+        "project-send-to-consultant"
+    );
+
+if (sendToConsultantButton) {
+
+    sendToConsultantButton.addEventListener(
+        "click",
+        async function(event) {
+
+            event.preventDefault();
+
+            if (
+                !project ||
+                project.status !== "draft"
+            ) {
+                return;
+            }
+
+
+            /*
+            ------------------------------------------------
+            CONFIRM ACTION
+            ------------------------------------------------
+            */
+
+            const confirmed =
+                window.confirm(
+                    "آیا می‌خواهید این پروژه برای مشاور ارسال شود؟"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            /*
+            ------------------------------------------------
+            LOADING STATE
+            ------------------------------------------------
+            */
+
+            sendToConsultantButton.disabled =
+                true;
+
+            sendToConsultantButton.dataset.originalText =
+                sendToConsultantButton.textContent;
+
+            sendToConsultantButton.textContent =
+                "در حال ارسال...";
+
+
+            try {
+
+                /*
+                ------------------------------------------------
+                SEND TO BACKEND
+                ------------------------------------------------
+                */
+
+                const response =
+                    await fetch(
+                        `/api/projects/${project.id}/send-to-consultant/`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                ...(typeof getCookie === "function" && getCookie("csrftoken")
+                                    ? {
+                                        "X-CSRFToken": getCookie("csrftoken")
+                                    }
+                                    : {})
+                            },
+                            credentials: "same-origin",
+                            body: JSON.stringify({})
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "ارسال پروژه برای مشاور انجام نشد."
+                    );
+
+                }
+
+
+                /*
+                ------------------------------------------------
+                UPDATE LOCAL PROJECT STATE
+                ------------------------------------------------
+                */
+
+                project.status =
+                    data.status ||
+                    "consulting";
+
+
+                /*
+                ------------------------------------------------
+                RE-RENDER PROJECT VIEW
+                ------------------------------------------------
+                */
+
+                openProjectDetail(
+                    project
+                );
+
+
+                /*
+                ------------------------------------------------
+                USER FEEDBACK
+                ------------------------------------------------
+                */
+
+                setTimeout(
+                    function() {
+
+                        alert(
+                            "پروژه با موفقیت برای مشاور ارسال شد."
+                        );
+
+                    },
+                    100
+                );
+
+
+            } catch(error) {
+
+                console.error(
+                    "FEEMAAS: Send project to consultant failed",
+                    error
+                );
+
+
+                sendToConsultantButton.disabled =
+                    false;
+
+                sendToConsultantButton.textContent =
+                    sendToConsultantButton.dataset.originalText ||
+                    "✦ ارسال پروژه به مشاور";
+
+
+                alert(
+                    error.message ||
+                    "خطا در ارسال پروژه برای مشاور."
+                );
+
+            }
+
+        }
+    );
+
+}
+	/*
+    --------------------------------------------------------
+    PROJECT VIEW CLOSE
+    --------------------------------------------------------
+    */
+
+    const closeProjectViewButton =
+        document.getElementById("project-view-close");
+
+    if (closeProjectViewButton) {
+
+        closeProjectViewButton.addEventListener(
+	        "click",
+            function () {
+
+                projectView.classList.add("hidden");
+
+                const projectsView =
+                    document.getElementById("projects-view");
+
+                if (projectsView) {
+                    projectsView.classList.remove("hidden");
+                }
+
+            }
+        );
+
+    }
     /*
     --------------------------------------------------------
     SCROLL TOP
@@ -1198,6 +2383,10 @@ function renderTenderDashboard(
         data.evaluation;
 
 
+    const visibility =
+        data.visibility || {};
+
+
     if (!tender) {
 
         container.innerHTML = `
@@ -1233,10 +2422,34 @@ function renderTenderDashboard(
         evaluation?.recommendation || {};
 
 
-    const results =
-        evaluation?.results || [];
+const roundBids = (tender.rounds || []).reduce(
+    (allBids, round) => {
+        return allBids.concat(round.bids || []);
+    },
+    []
+);
 
+const bidById = new Map(
+    roundBids.map(bid => [
+        Number(bid.bid_id ?? bid.id),
+        bid,
+    ])
+);
 
+const results = evaluation?.results?.length
+    ? evaluation.results.map(result => {
+        const bid = bidById.get(
+            Number(result.bid_id ?? result.id)
+        );
+
+        return bid
+            ? { ...bid, ...result }
+            : result;
+    })
+    : roundBids;
+    console.log("FEEMAAS EVALUATION:", evaluation);
+    console.log("FEEMAAS ROUND BIDS:", roundBids);
+    console.log("FEEMAAS RESULTS:", results);
     container.innerHTML = `
 
         <div class="tender-dashboard">
@@ -1408,22 +2621,47 @@ function renderTenderDashboard(
                 </div>
 
 
-                ${
-                    results.length
-                        ? results.map(
-                            bid => renderTenderBid(
-                                bid,
-                                tender
-                            )
-                        ).join("")
-                        : `
-                            <div class="tender-empty">
+                <div class="tender-bids-slider">
 
-                                هنوز پیشنهادی ثبت نشده است.
 
-                            </div>
-                        `
-                }
+                    <button
+                        class="tender-slider-arrow tender-slider-prev"
+                        type="button"
+                    >
+                        ‹
+                    </button>
+
+
+                    <div class="tender-bids-track">
+
+                        ${
+                            results.length
+                                ? results.map(
+                                    bid => renderTenderBid(
+                                        bid,
+                                        tender,
+                                        visibility
+                                    )
+                                ).join("")
+                                : `
+                                    <div class="tender-empty">
+                                        هنوز پیشنهادی ثبت نشده است.
+                                    </div>
+                                `
+                        }
+
+                    </div>
+
+
+    <button
+        class="tender-slider-arrow tender-slider-next"
+        type="button"
+    >
+        ›
+    </button>
+
+
+</div>
 
             </div>
 
@@ -1431,6 +2669,57 @@ function renderTenderDashboard(
         </div>
 
     `;
+	    const bidsTrack =
+        container.querySelector(
+            ".tender-bids-track"
+        );
+
+    const nextButton =
+        container.querySelector(
+            ".tender-slider-next"
+        );
+
+    const prevButton =
+        container.querySelector(
+            ".tender-slider-prev"
+        );
+
+
+    if (
+        bidsTrack &&
+        nextButton &&
+        prevButton
+    ) {
+
+        const scrollAmount = 360;
+
+
+        nextButton.addEventListener(
+            "click",
+            () => {
+
+                bidsTrack.scrollBy({
+                    left: scrollAmount,
+                    behavior: "smooth",
+                });
+
+            }
+        );
+
+
+        prevButton.addEventListener(
+            "click",
+            () => {
+
+                bidsTrack.scrollBy({
+                    left: -scrollAmount,
+                    behavior: "smooth",
+                });
+
+            }
+        );
+
+    }
     container
         .querySelectorAll(
             ".tender-award-button"
@@ -1504,10 +2793,65 @@ await apiPost(
         error
     );
 
-    alert(
-        error.message ||
-        "خطا در انتخاب برنده."
-    );
+    const errorMessage = String(error?.message || "");
+
+    if (
+        /Customer selection is locked by the consultant/i.test(
+            errorMessage
+        )
+    ) {
+        const existingToast = document.querySelector(
+            ".customer-selection-error-toast"
+        );
+
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement("div");
+        toast.className = "customer-selection-error-toast";
+        toast.setAttribute("role", "alert");
+        toast.setAttribute("aria-live", "assertive");
+
+        const icon = document.createElement("span");
+        icon.className = "customer-selection-error-toast__icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "🔒";
+
+        const content = document.createElement("div");
+        content.className = "customer-selection-error-toast__content";
+
+        const title = document.createElement("strong");
+        title.textContent = "امکان تغییر انتخاب وجود ندارد";
+
+        const message = document.createElement("p");
+        message.textContent =
+            "انتخاب کارگاه توسط مشاور قفل شده است. " +
+            "برای انتخاب کارگاه دیگر، ابتدا باید مشاور قفل را باز کند.";
+
+        const closeButton = document.createElement("button");
+        closeButton.className = "customer-selection-error-toast__close";
+        closeButton.type = "button";
+        closeButton.setAttribute("aria-label", "بستن پیام");
+        closeButton.textContent = "×";
+        closeButton.addEventListener("click", () => toast.remove());
+
+        content.append(title, message);
+        toast.append(icon, content, closeButton);
+        document.body.appendChild(toast);
+
+        window.setTimeout(() => {
+            if (toast.isConnected) {
+                toast.remove();
+            }
+        }, 7000);
+
+    } else {
+        alert(
+            error.message ||
+            "خطا در انتخاب برنده."
+        );
+    }
 
 }
 
@@ -1518,7 +2862,6 @@ await apiPost(
         );
 }
 
-
 /*
 ============================================================
  RENDER SINGLE TENDER BID
@@ -1527,182 +2870,222 @@ await apiPost(
 
 function renderTenderBid(
     bid,
-    tender
+    tender,
+    visibility
 ) {
-
-    console.log(
-        "RENDER BID:",
-        bid
+    const selectedBidId = Number(
+        tender?.customer_selection?.bid_id
     );
 
-    return `
-<div
-            class="tender-bid
-                ${
-                    bid.rank === 1
-                        ? "tender-bid-winner"
-                        : ""
-                }"
-        >
+    const customerSelection = tender?.customer_selection || null;
+    const currentBidId = Number(
+        bid.bid_id ?? bid.id
+    );
 
+    const isCustomerSelectedBid =
+        Number.isFinite(selectedBidId) &&
+        selectedBidId > 0 &&
+        currentBidId === selectedBidId;
 
-            <div class="tender-bid-rank">
+    const isCustomerSelectionLocked =
+       isCustomerSelectedBid &&
+       customerSelection?.is_locked === true;
 
-                <span>
-                    رتبه
-                </span>
+    const isSelectedForThisWorkshop =
+        customerSelection?.is_selected_for_this_workshop === true;
+    const isSelectionLocked =
+        isSelectedForThisWorkshop &&
+        customerSelection?.is_locked === true;
 
-                <strong>
-                    #${bid.rank}
-                </strong>
+    const rankClass =
+        bid.rank === 1
+            ? "rank-gold"
+            : bid.rank === 2
+                ? "rank-blue"
+                : bid.rank === 3
+                    ? "rank-green"
+                    : "";
 
-            </div>
+    const workshopIdentity = visibility.show_workshop_identity
+        ? `
+            <div class="bid-identity-row">
+                <div class="bid-identity-names">
+                    <span class="bid-workshop-name">
+                        ${escapeHtml(
+                            bid.workshop_name || "کارگاه نامشخص"
+                        )}
+                    </span>
 
-
-            <div class="tender-bid-main">
-
-                <span class="eyebrow">
-                    WORKSHOP
-                </span>
-
-                <h4>
-                    ${escapeHtml(
-                        bid.workshop_name ||
-                        "کارگاه نامشخص"
-                    )}
-                </h4>
-
-
-                <div class="tender-bid-values">
-
-                    <div>
-
-                        <span>
-                            قیمت
-                        </span>
-
-                        <strong>
-                            ${formatTenderAmount(
-                                bid.amount
-                            )}
-                        </strong>
-
-                        <small>
-                            تومان
-                        </small>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            تولید
-                        </span>
-
-                        <strong>
-                            ${bid.production_days ?? "—"}
-                        </strong>
-
-                        <small>
-                            روز
-                        </small>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            تحویل
-                        </span>
-
-                        <strong>
-                            ${bid.delivery_days ?? "—"}
-                        </strong>
-
-                        <small>
-                            روز
-                        </small>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            گارانتی
-                        </span>
-
-                        <strong>
-                            ${bid.warranty_months ?? "—"}
-                        </strong>
-
-                        <small>
-                            ماه
-                        </small>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            امتیاز
-                        </span>
-
-                        <strong>
-                            ${bid.total_score ?? "—"}
-                        </strong>
-
-                        <small>
-                            / 100
-                        </small>
-
-                    </div>
-
+                    <span class="bid-public-alias">
+                        ${escapeHtml(
+                            bid.public_alias || "بدون نام مستعار"
+                        )}
+                    </span>
                 </div>
 
+                ${
+                    isCustomerSelectedBid
+                        ? `
+                            <span
+                                class="customer-selection-marker${isCustomerSelectionLocked ? " customer-selection-locked" : ""}"
+                                title="${isCustomerSelectionLocked ? "پیشنهاد منتخب؛ انتخاب توسط مشاور قفل شده است" : "انتخاب‌شده توسط مشتری"}"
+                                aria-label="${isCustomerSelectionLocked ? "پیشنهاد منتخب مشتری با انتخاب قفل‌شده" : "این کارگاه توسط مشتری انتخاب شده است"}"
+                            >
+                                <span aria-hidden="true">${isCustomerSelectionLocked ? "🔒" : "✓"}</span>
+                                ${isCustomerSelectionLocked ? "انتخاب نهایی" : "انتخاب مشتری"}
+                            </span>
+                        `
+                        : ""
+                }
+            </div>
+        `
+        : `
+            <div class="bid-identity-row">
+                <div class="bid-identity-names">
+                    <span class="bid-public-alias">
+                        ${escapeHtml(
+                            bid.public_alias || "پیشنهاد ناشناس"
+                        )}
+                    </span>
+                </div>
+            </div>
+        `;
+
+    return `
+        <div
+            class="
+                tender-bid
+                ${rankClass}
+                ${isCustomerSelectedBid ? "customer-selected-bid" : ""}
+                ${bid.rank === 1 ? "tender-bid-winner" : ""}
+            "
+        >
+            <div class="bid-led"></div>
+
+            <div class="tender-bid-rank">
+                <span>رتبه</span>
+
+                <strong>
+                    ${
+                        visibility.show_rank
+                            ? `#${bid.rank ?? "—"}`
+                            : "—"
+                    }
+                </strong>
+            </div>
+
+            <div class="tender-bid-main">
+                <span class="eyebrow">WORKSHOP</span>
+
+                ${workshopIdentity}
+
+                ${
+                    isSelectedForThisWorkshop
+                        ? `
+                            <div class="customer-selection-marker">
+                                <span aria-hidden="true">✓</span>
+                                پیشنهاد شما انتخاب شده است
+                            </div>
+                            ${
+                                isSelectionLocked
+                                    ? `
+                                        <div class="customer-selection-lock-notice" role="status">
+                                            🔒 انتخاب شما توسط مشاور قفل شده است.
+                                            برای تغییر انتخاب، ابتدا باید مشاور قفل را باز کند.
+                                        </div>
+                                    `
+                                    : ""
+                            }
+                        `
+                        : ""
+                }
+
+                <div class="tender-bid-values">
+                    <div>
+                        <span>مبلغ پیشنهادی</span>
+
+                        <strong>
+                            ${
+                                visibility.show_price
+                                    ? formatTenderAmount(
+                                        bid.final_amount ??
+                                        bid.total_amount ??
+                                        bid.amount
+                                    )
+                                    : "پس از اعلام نتایج"
+                            }
+                        </strong>
+
+                        ${
+                            visibility.show_price
+                                ? "<small>تومان</small>"
+                                : ""
+                        }
+                    </div>
+
+                    <div>
+                        <span>تولید</span>
+                        <strong>${bid.production_days ?? "—"}</strong>
+                        <small>روز</small>
+                    </div>
+
+                    <div>
+                        <span>تحویل</span>
+                        <strong>${bid.delivery_days ?? "—"}</strong>
+                        <small>روز</small>
+                    </div>
+
+                    <div>
+                        <span>گارانتی</span>
+                        <strong>${bid.warranty_months ?? "—"}</strong>
+                        <small>ماه</small>
+                    </div>
+
+                    <div>
+                        <span>امتیاز</span>
+
+                        <strong>
+                            ${
+                                visibility.show_score
+                                    ? (bid.total_score ?? "—")
+                                    : "—"
+                            }
+                        </strong>
+
+                        ${
+                            visibility.show_score
+                                ? "<small>/ 100</small>"
+                                : ""
+                        }
+                    </div>
+                </div>
 
                 ${
                     bid.technical_notes
                         ? `
                             <p class="tender-bid-notes">
-
-                                ${escapeHtml(
-                                    bid.technical_notes
-                                )}
-
+                                ${escapeHtml(bid.technical_notes)}
                             </p>
                         `
                         : ""
                 }
+
                 ${
-                              bid.rank <= 3 &&
-                              (
-                              tender.status === "revealed" ||
-                              tender.status === "awarded"
-                              )
+                    visibility.show_rank
                         ? `
                             <button
                                 class="tender-award-button"
-                                data-bid-id="${bid.bid_id}"
+                                data-bid-id="${bid.bid_id ?? bid.id}"
                             >
-                               انتخاب این کارگاه 
+                                انتخاب این کارگاه
                             </button>
                         `
                         : ""
                 }
-
             </div>
-
-
         </div>
-
     `;
-
 }
-
 
 /*
 ============================================================
@@ -1857,6 +3240,7 @@ async function loadProjectStandardization(projectId){
         projectId
     );
 
+
     try {
 
         const data =
@@ -1871,25 +3255,89 @@ async function loadProjectStandardization(projectId){
             );
 
 
-        if(!panel){
+        if (!panel) {
             return;
         }
 
 
         const items =
-            data.items || [];
+            Array.isArray(data.items)
+                ? data.items
+                : [];
+
+
+        const globalStatus =
+            data.standardization_status || "pending";
+
+
+        const globalStatusText =
+            globalStatus === "approved"
+                ? "تایید شده"
+                : globalStatus === "revision_requested"
+                ? "نیازمند اصلاح"
+                : "در انتظار بررسی";
+
+
+        const globalStatusClass =
+            globalStatus === "approved"
+                ? "approved"
+                : globalStatus === "revision_requested"
+                ? "revision"
+                : "pending";
 
 
         panel.innerHTML = `
 
-            <span class="eyebrow">
-                STANDARDIZATION
-            </span>
+            <div class="standardization-customer-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        STANDARDIZATION
+                    </span>
+
+                    <h3>
+                        استانداردسازی مشاور
+                    </h3>
+
+                    <p class="standardization-customer-subtitle">
+                        مشخصات فنی و آیتم‌های استانداردشده پروژه
+                    </p>
+
+                </div>
 
 
-            <h3>
-                استانداردسازی مشاور
-            </h3>
+                <div class="standardization-customer-status">
+
+                    <span
+                        class="
+                            standardization-status-dot
+                            ${globalStatusClass}
+                        "
+                    ></span>
+
+                    ${globalStatusText}
+
+                </div>
+
+            </div>
+
+
+            <div class="standardization-customer-review-timer">
+
+                <span class="timer-icon">
+                    ◷
+                </span>
+
+                <span>
+                    زمان بررسی مشتری:
+                </span>
+
+                <strong>
+                    60 دقیقه
+                </strong>
+
+            </div>
 
 
             ${
@@ -1899,88 +3347,339 @@ async function loadProjectStandardization(projectId){
 
                 `
 
-                <table class="standardization-table">
+                <div class="standardization-customer-table-wrapper">
 
-                    <thead>
+                    <div class="standardization-customer-table">
 
-                        <tr>
+                        <div class="standardization-customer-head">
 
-                            <th>
-                                ردیف
-                            </th>
+                            <div>
+                                #
+                            </div>
 
-                            <th>
-                                عنوان
-                            </th>
+                            <div>
+                                نام آیتم
+                            </div>
 
-                            <th>
-                                توضیحات
-                            </th>
+                            <div>
+                                تعداد
+                            </div>
 
-                            <th>
+                            <div>
+                                ابعاد
+                            </div>
+
+                            <div>
+                                متریال
+                            </div>
+
+                            <div>
+                                مشخصات فنی
+                            </div>
+
+                            <div>
+                                فایل
+                            </div>
+
+                            <div>
                                 وضعیت
-                            </th>
+                            </div>
 
-                        </tr>
+                            <div>
+                                بررسی
+                            </div>
 
-                    </thead>
-
-
-                    <tbody>
-
-                    ${
-                        items.map(
-                            (item,index)=>`
-
-                            <tr>
-
-                                <td>
-                                    ${index + 1}
-                                </td>
+                        </div>
 
 
-                                <td>
-                                    ${item.title || "-"}
-                                </td>
+                        <div class="standardization-customer-body">
+
+                            ${
+                                items.map(
+                                    (item, index) => {
+
+                                        const name =
+                                            item.name ||
+                                            item.title ||
+                                            "-";
 
 
-                                <td>
-                                    ${item.description || "-"}
-                                </td>
+                                        const quantity =
+                                            item.quantity ??
+                                            "-";
 
 
-                                <td>
-                                    آماده بررسی
-                                </td>
+                                        const dimensions =
+                                            item.dimensions ||
+                                            "-";
 
 
-                            </tr>
-
-                            `
-                        ).join("")
-                    }
-
-                    </tbody>
-
-                </table>
+                                        const material =
+                                            item.material ||
+                                            "-";
 
 
-                <div class="standardization-actions">
-
-                    <button class="approve-standardization">
-                        تایید استانداردسازی
-                    </button>
-
-
-                    <button class="edit-standardization">
-                        درخواست اصلاح
-                    </button>
+                                        const technicalDetails =
+                                            item.technical_details ||
+                                            item.description ||
+                                            "-";
 
 
-                    <div class="standardization-timer">
+                                        const files =
+                                            Array.isArray(
+                                                item.files
+                                            )
+                                                ? item.files
+                                                : [];
 
-                        زمان بررسی مشتری:
-                        60 دقیقه
+
+                                        const reviewStatus =
+                                            item.customer_review_status ||
+                                            "pending";
+
+
+                                        let statusText =
+                                            "در انتظار";
+
+
+                                        let statusClass =
+                                            "pending";
+
+
+                                        if (
+                                            reviewStatus ===
+                                            "approved"
+                                        ) {
+
+                                            statusText =
+                                                "تایید مشتری";
+
+                                            statusClass =
+                                                "approved";
+
+                                        }
+                                        else if (
+                                            reviewStatus ===
+                                            "revise"
+                                        ) {
+
+                                            statusText =
+                                                "نیاز به اصلاح";
+
+                                            statusClass =
+                                                "revision";
+
+                                        }
+
+
+                                        return `
+
+                                            <div
+                                                class="standardization-customer-row"
+                                                data-standardization-row="${item.id}"
+                                            >
+
+                                                <div
+                                                    class="standardization-customer-number"
+                                                >
+                                                    ${String(
+                                                        index + 1
+                                                    ).padStart(
+                                                        2,
+                                                        "0"
+                                                    )}
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-name"
+                                                >
+                                                    ${escapeHtml(
+                                                        String(name)
+                                                    )}
+                                                </div>
+
+
+                                                <div>
+                                                    ${escapeHtml(
+                                                        String(quantity)
+                                                    )}
+                                                </div>
+
+
+                                                <div>
+                                                    ${escapeHtml(
+                                                        String(dimensions)
+                                                    )}
+                                                </div>
+
+
+                                                <div>
+                                                    ${escapeHtml(
+                                                        String(material)
+                                                    )}
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-technical"
+                                                >
+                                                    ${escapeHtml(
+                                                        String(technicalDetails)
+                                                    )}
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-files"
+                                                >
+
+                                                    ${
+                                                        files.length
+
+                                                        ?
+
+                                                        `
+
+                                                        <button
+                                                            type="button"
+                                                            class="standardization-customer-file-button"
+                                                            title="مشاهده فایل‌ها"
+                                                            data-standardization-files
+                                                            data-files='${escapeHtml(
+                                                                JSON.stringify(
+                                                                    files
+                                                                )
+                                                            )}'
+                                                        >
+                                                            📎
+                                                            <span>
+                                                                ${files.length}
+                                                            </span>
+                                                        </button>
+
+                                                        `
+
+                                                        :
+
+                                                        `
+
+                                                        <span class="standardization-customer-no-file">
+                                                            —
+                                                        </span>
+
+                                                        `
+                                                    }
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    <span
+                                                        class="
+                                                            standardization-customer-status-badge
+                                                            ${statusClass}
+                                                        "
+                                                    >
+                                                        ${statusText}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div
+                                                    class="standardization-customer-review-actions"
+                                                >
+
+                                                    <button
+                                                        type="button"
+                                                        class="standardization-row-review-button approve"
+                                                        data-specification-review="approved"
+                                                        data-specification-id="${item.id}"
+                                                    >
+                                                        ✓ تایید
+                                                    </button>
+
+
+                                                    <button
+                                                        type="button"
+                                                        class="standardization-row-review-button revise"
+                                                        data-specification-review="revise"
+                                                        data-specification-id="${item.id}"
+                                                    >
+                                                        ↻ درخواست اصلاح
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                        `;
+
+                                    }
+                                ).join("")
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="standardization-customer-global-review">
+
+                    <div class="standardization-customer-global-review-header">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                GLOBAL REVIEW
+                            </span>
+
+                            <h4>
+                                بررسی کلی استانداردسازی
+                            </h4>
+
+                            <p>
+                                این بخش مربوط به تایید یا درخواست اصلاح
+                                کل استانداردسازی پروژه است.
+                            </p>
+
+                        </div>
+
+
+                        <span
+                            class="
+                                standardization-customer-global-status
+                                ${globalStatusClass}
+                            "
+                        >
+                            ${globalStatusText}
+                        </span>
+
+                    </div>
+
+
+                    <div class="standardization-customer-global-actions">
+
+                        <button
+                            type="button"
+                            class="approve-standardization"
+                            data-project-standardization-action="approve"
+                        >
+                            ✓ تایید کل استانداردسازی
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="edit-standardization"
+                            data-project-standardization-action="revise"
+                        >
+                            ↻ درخواست اصلاح کل استانداردسازی
+                        </button>
 
                     </div>
 
@@ -1988,14 +3687,26 @@ async function loadProjectStandardization(projectId){
 
                 `
 
-
                 :
 
                 `
 
-                <p>
-                    هنوز استانداردسازی ثبت نشده است.
-                </p>
+                <div class="standardization-customer-empty">
+
+                    <div class="standardization-empty-icon">
+                        ◌
+                    </div>
+
+                    <h4>
+                        هنوز استانداردسازی ثبت نشده است
+                    </h4>
+
+                    <p>
+                        پس از ارسال استانداردسازی توسط مشاور،
+                        مشخصات اینجا نمایش داده می‌شود.
+                    </p>
+
+                </div>
 
                 `
 
@@ -2003,6 +3714,232 @@ async function loadProjectStandardization(projectId){
 
         `;
 
+
+        /*
+        ----------------------------------------------------
+        CUSTOMER STANDARDIZATION ROW REVIEW
+        ----------------------------------------------------
+        */
+
+        panel
+            .querySelectorAll(
+                "[data-specification-review]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        async function(){
+
+                            const specificationId =
+                                this.dataset.specificationId;
+
+
+                            const status =
+                                this.dataset.specificationReview;
+
+
+                            if (!specificationId || !status) {
+                                return;
+                            }
+
+
+                            const buttons =
+                                panel.querySelectorAll(
+                                    `[data-specification-id="${specificationId}"]`
+                                );
+
+
+                            buttons.forEach(
+                                actionButton => {
+                                    actionButton.disabled = true;
+                                }
+                            );
+
+
+                            try {
+
+                                await apiPost(
+                                    `/projects/specifications/${specificationId}/standardization/review/`,
+                                    {
+                                        status: status
+                                    }
+                                );
+
+
+                                await loadProjectStandardization(
+                                    projectId
+                                );
+
+                            }
+                            catch(error){
+
+                                console.error(
+                                    "STANDARDIZATION ROW REVIEW ERROR",
+                                    error
+                                );
+
+                                buttons.forEach(
+                                    actionButton => {
+                                        actionButton.disabled = false;
+                                    }
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        ----------------------------------------------------
+        CUSTOMER STANDARDIZATION GLOBAL REVIEW
+        ----------------------------------------------------
+        */
+
+        panel
+            .querySelectorAll(
+                "[data-project-standardization-action]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        async function(){
+
+                            const action =
+                                this.dataset
+                                    .projectStandardizationAction;
+
+
+                            const status =
+                                action === "approve"
+                                    ? "approved"
+                                    : "revision_requested";
+
+
+                            const actionButtons =
+                                panel.querySelectorAll(
+                                    "[data-project-standardization-action]"
+                                );
+
+
+                            actionButtons.forEach(
+                                actionButton => {
+                                    actionButton.disabled = true;
+                                }
+                            );
+
+
+                            try {
+
+                                await apiPost(
+                                    `/projects/${projectId}/standardization/global-review/`,
+                                    {
+                                        status: status
+                                    }
+                                );
+
+
+                                await loadProjectStandardization(
+                                    projectId
+                                );
+
+                            }
+                            catch(error){
+
+                                console.error(
+                                    "STANDARDIZATION GLOBAL REVIEW ERROR",
+                                    error
+                                );
+
+                                actionButtons.forEach(
+                                    actionButton => {
+                                        actionButton.disabled = false;
+                                    }
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /*
+        ----------------------------------------------------
+        CUSTOMER STANDARDIZATION FILE BUTTONS
+        ----------------------------------------------------
+        */
+
+        panel
+            .querySelectorAll(
+                "[data-standardization-files]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        function(){
+
+                            let files = [];
+
+
+                            try {
+
+                                files =
+                                    JSON.parse(
+                                        this.dataset.files
+                                    );
+
+                            }
+                            catch(error){
+
+                                console.error(
+                                    "STANDARDIZATION FILE DATA ERROR",
+                                    error
+                                );
+
+                            }
+
+
+                            if (!files.length) {
+                                return;
+                            }
+
+
+                            const firstFile =
+                                files[0];
+
+
+                            const fileUrl =
+                                firstFile.file ||
+                                firstFile.url ||
+                                "";
+
+
+                            if (fileUrl) {
+
+                                window.open(
+                                    fileUrl,
+                                    "_blank"
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
 
     }
     catch(error){
@@ -2012,6 +3949,2058 @@ async function loadProjectStandardization(projectId){
             error
         );
 
+
+        const panel =
+            document.getElementById(
+                "project-standardization-panel"
+            );
+
+
+        if (panel) {
+
+            panel.innerHTML = `
+
+                <div class="standardization-customer-error">
+
+                    خطا در دریافت استانداردسازی پروژه.
+
+                </div>
+
+            `;
+
+        }
+
     }
 
 }
+/* =========================================================
+   FILE CENTER — UPLOAD
+========================================================= */
+
+function uploadProjectFileCenterFile(
+    projectId,
+    file,
+    onProgress
+){
+
+    return new Promise(
+        function(resolve, reject){
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "file",
+                file
+            );
+
+
+            formData.append(
+                "title",
+                file.name
+            );
+
+
+            const xhr =
+                new XMLHttpRequest();
+
+
+            xhr.open(
+                "POST",
+                `/api/projects/${projectId}/attachments/`,
+                true
+            );
+
+
+            xhr.withCredentials =
+                true;
+
+
+            const csrfToken =
+                getCookie(
+                    "csrftoken"
+                );
+
+
+            if(csrfToken){
+
+                xhr.setRequestHeader(
+                    "X-CSRFToken",
+                    csrfToken
+                );
+
+            }
+
+
+            xhr.upload.addEventListener(
+                "progress",
+                function(event){
+
+                    if(
+                        !event.lengthComputable
+                    ){
+                        return;
+                    }
+
+
+                    const percent =
+                        Math.round(
+                            (
+                                event.loaded /
+                                event.total
+                            ) * 100
+                        );
+
+
+                    if(
+                        typeof onProgress ===
+                        "function"
+                    ){
+
+                        onProgress(
+                            percent
+                        );
+
+                    }
+
+                }
+            );
+
+
+            xhr.addEventListener(
+                "load",
+                function(){
+
+                    if(
+                        xhr.status >= 200 &&
+                        xhr.status < 300
+                    ){
+
+                        let responseData = {};
+
+
+                        try{
+
+                            responseData =
+                                xhr.responseText
+                                    ? JSON.parse(
+                                        xhr.responseText
+                                    )
+                                    : {};
+
+                        }
+                        catch(error){
+
+                            responseData = {};
+
+                        }
+
+
+                        resolve(
+                            responseData
+                        );
+
+                        return;
+
+                    }
+
+
+                    let detail =
+                        "خطا در آپلود فایل.";
+
+
+                    try{
+
+                        const response =
+                            JSON.parse(
+                                xhr.responseText
+                            );
+
+
+                        detail =
+                            response.detail ||
+                            response.error ||
+                            detail;
+
+                    }
+                    catch(error){
+
+                        /* Ignore invalid JSON */
+
+                    }
+
+
+                    reject(
+                        new Error(
+                            detail
+                        )
+                    );
+
+                }
+            );
+
+
+            xhr.addEventListener(
+                "error",
+                function(){
+
+                    reject(
+                        new Error(
+                            "ارتباط با سرور هنگام آپلود فایل قطع شد."
+                        )
+                    );
+
+                }
+            );
+
+
+            xhr.addEventListener(
+                "abort",
+                function(){
+
+                    reject(
+                        new Error(
+                            "آپلود فایل لغو شد."
+                        )
+                    );
+
+                }
+            );
+
+
+            xhr.send(
+                formData
+            );
+
+        }
+    );
+
+}
+/*
+============================================================
+ LOAD PROJECT FILE CENTER
+============================================================
+*/
+
+async function loadProjectFiles(projectId){
+
+    console.log("FEEMAAS FILE CENTER: loadProjectFiles START", projectId);
+
+    const container =
+        document.getElementById(
+            "project-files-panel"
+        );
+
+
+    if(!container){
+
+        console.warn(
+            "FEEMAAS: Project files panel not found."
+        );
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+
+        <div class="tender-loading">
+
+            در حال دریافت فایل‌ها...
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const data =
+            await apiGet(
+                `/projects/${projectId}/files/`
+            );
+
+
+        console.log("FEEMAAS FILE CENTER: API DATA", data);
+
+        renderProjectFileCenter(
+            container,
+            data,
+            projectId
+        );
+
+        console.log("FEEMAAS FILE CENTER: RENDER COMPLETE");
+
+
+    } catch(error){
+
+        console.error(
+            "FEEMAAS FILE CENTER ERROR",
+            error
+        );
+
+
+        container.innerHTML = `
+
+            <div class="project-tab-panel">
+
+                خطا در دریافت فایل‌ها
+
+            </div>
+
+        `;
+
+    }
+
+}
+function renderProjectFileCenter(
+    container,
+    files,
+    projectId
+){
+
+    const roles = [
+
+        {
+            key: "customer",
+            title: "مشتری",
+            icon: "👤",
+            accent: "customer"
+        },
+
+        {
+            key: "consultant",
+            title: "مشاور",
+            icon: "✦",
+            accent: "consultant"
+        },
+
+        {
+            key: "workshop",
+            title: "کارگاه",
+            icon: "🏭",
+            accent: "workshop"
+        },
+
+        {
+            key: "designer",
+            title: "طراح",
+            icon: "◆",
+            accent: "designer"
+        },
+
+        {
+            key: "company",
+            title: "FEEMAAS",
+            icon: "⚙",
+            accent: "company"
+        }
+
+    ];
+
+
+    const allFiles = roles.flatMap(
+        role => files[role.key] || []
+    );
+
+
+    function getExtension(file){
+
+        const source =
+            file.file ||
+            file.title ||
+            "";
+
+        const clean =
+            source
+                .split("?")[0]
+                .split("#")[0];
+
+        const parts =
+            clean
+                .split(".")
+                .filter(Boolean);
+
+        return parts.length
+            ? parts.pop().toLowerCase()
+            : "";
+
+    }
+
+
+    function getFileKind(file){
+
+        const extension =
+            getExtension(file);
+
+
+        if(
+            file.file_type === "image" ||
+            [
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "webp",
+                "bmp",
+                "svg"
+            ].includes(extension)
+        ){
+
+            return "image";
+
+        }
+
+
+        if(
+            extension === "pdf" ||
+            file.file_type === "document"
+        ){
+
+            return "document";
+
+        }
+
+
+        if(
+            [
+                "dwg",
+                "dxf",
+                "step",
+                "stp",
+                "iges",
+                "igs",
+                "skp",
+                "obj",
+                "fbx"
+            ].includes(extension) ||
+            file.file_type === "design"
+        ){
+
+            return "design";
+
+        }
+
+
+        if(
+            [
+                "doc",
+                "docx",
+                "xls",
+                "xlsx",
+                "ppt",
+                "pptx",
+                "txt",
+                "csv"
+            ].includes(extension)
+        ){
+
+            return "document";
+
+        }
+
+
+        return "other";
+
+    }
+
+
+    function getKindLabel(kind, extension){
+
+        if(kind === "image"){
+            return extension
+                ? extension.toUpperCase()
+                : "IMAGE";
+        }
+
+
+        if(kind === "document"){
+
+            return extension === "pdf"
+                ? "PDF"
+                : extension
+                    ? extension.toUpperCase()
+                    : "DOC";
+
+        }
+
+
+        if(kind === "design"){
+
+            return extension
+                ? extension.toUpperCase()
+                : "CAD";
+
+        }
+
+
+        return extension
+            ? extension.toUpperCase()
+            : "FILE";
+
+    }
+
+
+    function getKindIcon(kind){
+
+        if(kind === "image"){
+            return "▧";
+        }
+
+
+        if(kind === "document"){
+            return "▤";
+        }
+
+
+        if(kind === "design"){
+            return "◇";
+        }
+
+
+        return "◆";
+
+    }
+
+
+    function escapeHtml(value){
+
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    function getFileTitle(file){
+
+        return (
+            file.title ||
+            file.specification_title ||
+            "بدون عنوان"
+        );
+
+    }
+
+
+    function getFileMeta(file){
+
+        const extension =
+            getExtension(file);
+
+        const kind =
+            getFileKind(file);
+
+        const label =
+            getKindLabel(
+                kind,
+                extension
+            );
+
+
+        const source =
+            file.source === "standardization"
+                ? "استانداردسازی مشاور"
+                : `نسخه ${file.version || 1}`;
+
+
+        return `${label} · ${source}`;
+
+    }
+
+
+    function renderFileCard(
+        file,
+        role,
+        index
+    ){
+
+        const kind =
+            getFileKind(file);
+
+        const extension =
+            getExtension(file);
+
+        const title =
+            getFileTitle(file);
+
+        const label =
+            getKindLabel(
+                kind,
+                extension
+            );
+
+        const fileUrl =
+            file.file || "";
+
+        const isImage =
+            kind === "image";
+
+        const source =
+            file.source === "standardization"
+                ? "مشاور"
+                : `نسخه ${file.version || 1}`;
+
+
+        const previewMarkup =
+            isImage && fileUrl
+
+                ? `
+
+                    <img
+                        class="project-file-card-preview-image"
+                        src="${escapeHtml(fileUrl)}"
+                        alt="${escapeHtml(title)}"
+                        loading="lazy"
+                    >
+
+                    <span
+                        class="project-file-card-preview-overlay"
+                        aria-hidden="true"
+                    >
+                        <span
+                            class="project-file-card-preview-eye"
+                        >
+                            <span
+                                class="project-file-card-preview-pupil"
+                            ></span>
+                        </span>
+                    </span>
+
+                `
+
+                : `
+
+                    <span
+                        class="
+                            project-file-card-type
+                            project-file-card-type-${kind}
+                        "
+                    >
+
+                        <span
+                            class="project-file-card-type-icon"
+                        >
+                            ${escapeHtml(label)}
+                        </span>
+
+                    </span>
+
+                `;
+
+
+        return `
+
+            <article
+                class="
+                    project-file-card
+                    project-file-card-${kind}
+                "
+                data-file-id="${escapeHtml(file.id)}"
+                data-project-id="${escapeHtml(projectId)}"
+                data-role="${escapeHtml(role.key)}"
+                data-file-url="${escapeHtml(fileUrl)}"
+                data-file-title="${escapeHtml(title)}"
+                data-file-kind="${escapeHtml(kind)}"
+                data-file-extension="${escapeHtml(extension)}"
+            >
+
+                <button
+                    type="button"
+                    class="project-file-card-delete"
+                    title="حذف فایل"
+                    aria-label="حذف فایل"
+                >
+                    ×
+                </button>
+
+
+                <button
+                    type="button"
+                    class="project-file-card-preview"
+                    title="مشاهده فایل"
+                    aria-label="مشاهده فایل"
+                >
+
+                    <span
+                        class="project-file-card-visual"
+                    >
+
+                        ${previewMarkup}
+
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="project-file-card-body"
+                >
+
+                    <div
+                        class="project-file-card-title"
+                        title="${escapeHtml(title)}"
+                    >
+                        ${escapeHtml(title)}
+                    </div>
+
+
+                    <div
+                        class="project-file-card-meta"
+                    >
+
+                        <span>
+                            ${escapeHtml(label)}
+                        </span>
+
+                        <span
+                            class="project-file-card-dot"
+                        >
+                            ·
+                        </span>
+
+                        <span>
+                            ${escapeHtml(source)}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        `;
+
+    }
+
+
+    container.innerHTML = `
+
+        <div
+            class="project-files-center"
+            data-project-id="${escapeHtml(projectId)}"
+        >
+
+            <header
+                class="project-files-center-head"
+            >
+
+                <div
+                    class="project-files-center-heading"
+                >
+
+                    <span
+                        class="project-files-eyebrow"
+                    >
+                        PROJECT FILE CENTER
+                    </span>
+
+
+                    <h3>
+                        فایل‌های پروژه
+                        <span
+                            class="project-files-total"
+                        >
+                            ${allFiles.length}
+                        </span>
+                    </h3>
+
+
+                    <p>
+                        فایل‌های پروژه در فضای اختصاصی هر نقش نگهداری می‌شوند.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="project-files-add-button"
+                    title="افزودن فایل"
+                >
+
+                    <span>
+                        +
+                    </span>
+
+                    افزودن فایل
+
+                </button>
+
+            </header>
+
+
+            <div
+                class="project-files-toolbar"
+            >
+
+                <div
+                    class="project-files-search"
+                >
+
+                    <span
+                        class="project-files-search-icon"
+                    >
+                        ⌕
+                    </span>
+
+                    <input
+                        type="search"
+                        class="project-files-search-input"
+                        placeholder="جستجو در فایل‌ها..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <div
+                    class="project-files-filters"
+                    role="tablist"
+                >
+
+                    <button
+                        type="button"
+                        class="
+                            project-files-filter
+                            is-active
+                        "
+                        data-file-filter="all"
+                    >
+                        همه
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="project-files-filter"
+                        data-file-filter="image"
+                    >
+                        تصاویر
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="project-files-filter"
+                        data-file-filter="document"
+                    >
+                        اسناد
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="project-files-filter"
+                        data-file-filter="design"
+                    >
+                        طراحی
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="project-files-empty-search hidden"
+            >
+
+                <span>
+                    ⌕
+                </span>
+
+                <strong>
+                    فایلی پیدا نشد
+                </strong>
+
+                <small>
+                    عبارت جستجو یا فیلتر انتخابی را تغییر دهید.
+                </small>
+
+            </div>
+
+
+            <div
+                class="project-files-role-grid"
+            >
+
+                ${roles.map(role => {
+
+                    const items =
+                        files[role.key] || [];
+
+
+                    return `
+
+                        <section
+                            class="
+                                project-file-role-card
+                                project-file-role-${role.accent}
+                            "
+                            data-role-section="${escapeHtml(role.key)}"
+                        >
+
+                            <header
+                                class="project-file-role-header"
+                            >
+
+                                <div
+                                    class="project-file-role-title"
+                                >
+
+                                    <span
+                                        class="project-file-role-icon"
+                                    >
+                                        ${role.icon}
+                                    </span>
+
+
+                                    <div>
+
+                                        <strong>
+                                            ${role.title}
+                                        </strong>
+
+                                        <small>
+                                            ${items.length
+                                                ? `${items.length} فایل`
+                                                : "فایلی ثبت نشده"}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <span
+                                    class="
+                                        project-file-role-count
+                                        ${items.length
+                                            ? "has-files"
+                                            : ""}
+                                    "
+                                >
+                                    ${String(items.length).padStart(2, "0")}
+                                </span>
+
+                            </header>
+
+
+                            <div
+                                class="project-file-grid"
+                            >
+
+                                ${
+                                    items.length
+
+                                    ?
+
+                                    items.map(
+                                        (file, index) =>
+                                            renderFileCard(
+                                                file,
+                                                role,
+                                                index
+                                            )
+                                    ).join("")
+
+                                    :
+
+                                    `
+
+                                        <div
+                                            class="project-file-empty"
+                                        >
+
+                                            <span>
+                                                +
+                                            </span>
+
+                                            <small>
+                                                هنوز فایلی برای این بخش ثبت نشده
+                                            </small>
+
+                                        </div>
+
+                                    `
+                                }
+
+                            </div>
+
+                        </section>
+
+                    `;
+
+                }).join("")}
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    /*
+    ---------------------------------------------------------
+    FILE CENTER — SEARCH
+    ---------------------------------------------------------
+    */
+
+    const searchInput =
+        container.querySelector(
+            ".project-files-search-input"
+        );
+
+
+    const filterButtons =
+        container.querySelectorAll(
+            ".project-files-filter"
+        );
+
+
+    const emptySearch =
+        container.querySelector(
+            ".project-files-empty-search"
+        );
+
+
+    const fileCards =
+        Array.from(
+            container.querySelectorAll(
+                ".project-file-card"
+            )
+        );
+
+
+    function applyFileFilters(){
+
+        const query =
+            (
+                searchInput
+                    ? searchInput.value
+                    : ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const activeFilterButton =
+            container.querySelector(
+                ".project-files-filter.is-active"
+            );
+
+
+        const activeFilter =
+            activeFilterButton
+                ? activeFilterButton.dataset.fileFilter
+                : "all";
+
+
+        let visibleCount = 0;
+
+
+        fileCards.forEach(card => {
+
+            const title =
+                (
+                    card.dataset.fileTitle || ""
+                ).toLowerCase();
+
+
+            const extension =
+                (
+                    card.dataset.fileExtension || ""
+                ).toLowerCase();
+
+
+            const kind =
+                card.dataset.fileKind || "other";
+
+
+            const matchesSearch =
+                !query ||
+                title.includes(query) ||
+                extension.includes(query);
+
+
+            const matchesFilter =
+                activeFilter === "all" ||
+                kind === activeFilter;
+
+
+            const visible =
+                matchesSearch &&
+                matchesFilter;
+
+
+            card.classList.toggle(
+                "is-filtered-out",
+                !visible
+            );
+
+
+            if(visible){
+                visibleCount++;
+            }
+
+        });
+
+
+        container
+            .querySelectorAll(
+                ".project-file-role-card"
+            )
+            .forEach(section => {
+
+                const visibleCards =
+                    section.querySelectorAll(
+                        ".project-file-card:not(.is-filtered-out)"
+                    );
+
+
+                const emptyState =
+                    section.querySelector(
+                        ".project-file-empty"
+                    );
+
+
+                if(
+                    emptyState &&
+                    fileCards.length
+                ){
+                    emptyState.classList.add(
+                        "is-filter-context"
+                    );
+                }
+
+
+                section.classList.toggle(
+                    "is-filter-empty",
+                    visibleCards.length === 0
+                );
+
+            });
+
+
+        if(emptySearch){
+
+            emptySearch.classList.toggle(
+                "hidden",
+                visibleCount !== 0
+            );
+
+        }
+
+    }
+
+
+    if(searchInput){
+
+        searchInput.addEventListener(
+            "input",
+            applyFileFilters
+        );
+
+    }
+
+
+    filterButtons.forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                function(){
+
+                    filterButtons.forEach(
+                        item =>
+                            item.classList.remove(
+                                "is-active"
+                            )
+                    );
+
+
+                    this.classList.add(
+                        "is-active"
+                    );
+
+
+                    applyFileFilters();
+
+                }
+            );
+
+        }
+    );
+
+
+    /*
+    ---------------------------------------------------------
+    FILE CENTER — PREVIEW + DELETE HOOK
+    ---------------------------------------------------------
+    */
+
+    container
+        .querySelectorAll(
+            ".project-file-card-preview"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    function(event){
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const card =
+                            this.closest(
+                                ".project-file-card"
+                            );
+
+                        if(!card){
+                            return;
+                        }
+
+                        openProjectFileCenterPreview({
+                            url: card.dataset.fileUrl || "",
+                            title: card.dataset.fileTitle || "فایل",
+                            kind: card.dataset.fileKind || "other",
+                            extension: card.dataset.fileExtension || "",
+                            projectId: card.dataset.projectId || "",
+                            fileId: card.dataset.fileId || ""
+                        });
+
+                    }
+                );
+
+            }
+        );
+
+
+    container
+        .querySelectorAll(
+            ".project-file-card-delete"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    async function(event){
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const card =
+                            this.closest(
+                                ".project-file-card"
+                            );
+
+                        if(!card){
+                            return;
+                        }
+
+                        const fileId =
+                            card.dataset.fileId || "";
+
+                        const projectId =
+                            card.dataset.projectId || "";
+
+                        const title =
+                            card.dataset.fileTitle || "این فایل";
+
+                        if(!fileId || !projectId){
+                            return;
+                        }
+
+                        const confirmed =
+                            window.confirm(
+                                `آیا از حذف «${title}» مطمئن هستید؟`
+                            );
+
+                        if(!confirmed){
+                            return;
+                        }
+
+                        button.disabled = true;
+                        button.classList.add("is-deleting");
+
+                        try {
+
+                            const csrfToken =
+                                typeof getCookie === "function"
+                                    ? getCookie("csrftoken")
+                                    : null;
+
+                            const response =
+							    await fetch(
+						            `/api/projects/${projectId}/attachments/${fileId}/delete/`,
+					                {
+						                method: "DELETE",
+					                    credentials: "include",
+
+						                headers: csrfToken
+						                    ? {
+						                        "X-CSRFToken":
+						                            csrfToken
+					                        }
+				                            : {}
+					               	}
+			                    );
+
+                            if(!response.ok){
+
+                                let detail = "";
+
+                                try {
+                                    const data =
+                                        await response.json();
+
+                                    detail =
+                                        data.detail ||
+                                        data.error ||
+                                        "";
+                                } catch(e) {}
+
+                                if(response.status === 403){
+                                    throw new Error(
+                                        "شما اجازه حذف این فایل را ندارید."
+                                    );
+                                }
+
+                                if(response.status === 404){
+                                    throw new Error(
+                                        "فایل پیدا نشد یا قبلاً حذف شده است."
+                                    );
+                                }
+
+                                throw new Error(
+                                    detail ||
+                                    `حذف فایل ناموفق بود. (${response.status})`
+                                );
+
+                            }
+
+                            const projectFilesContainer =
+                                container;
+
+                            await loadProjectFiles(
+                                projectId
+                            );
+
+                            console.info(
+                                "FEEMAAS: File deleted successfully.",
+                                fileId
+                            );
+
+                        } catch(error){
+
+                            console.error(
+                                "FEEMAAS FILE DELETE ERROR",
+                                error
+                            );
+
+                            alert(
+                                error.message ||
+                                "حذف فایل انجام نشد."
+                            );
+
+                            button.disabled = false;
+                            button.classList.remove(
+                                "is-deleting"
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+/*
+---------------------------------------------------------
+FILE CENTER — ADD FILE HOOK
+---------------------------------------------------------
+*/
+
+const addButton =
+    container.querySelector(
+        ".project-files-add-button"
+    );
+
+
+if(addButton){
+
+    addButton.addEventListener(
+        "click",
+        function(){
+
+            let fileInput =
+                document.getElementById(
+                    "project-file-center-input"
+                );
+
+
+            if(!fileInput){
+
+                fileInput =
+                    document.createElement(
+                        "input"
+                    );
+
+                fileInput.type =
+                    "file";
+
+                fileInput.id =
+                    "project-file-center-input";
+
+                fileInput.multiple =
+                    true;
+
+                fileInput.hidden =
+                    true;
+
+                document.body.appendChild(
+                    fileInput
+                );
+
+            }
+
+
+            if(
+                !fileInput.dataset.bound
+            ){
+
+                fileInput.dataset.bound =
+                    "true";
+
+
+                fileInput.addEventListener(
+                    "change",
+                    async function(event){
+
+                        const files =
+                            Array.from(
+                                event.target.files || []
+                            );
+
+
+                        if(!files.length){
+
+                            return;
+
+                        }
+
+
+                        event.target.value =
+                            "";
+
+
+                        for(
+                            const file of files
+                        ){
+                          const uploadId =
+    "upload-" + Date.now();
+
+
+const uploadBox =
+    document.createElement("div");
+
+
+uploadBox.id =
+    uploadId;
+
+
+uploadBox.className =
+    "project-file-upload-progress";
+
+
+uploadBox.innerHTML = `
+
+    <div class="project-file-upload-name">
+        ${file.name}
+    </div>
+
+    <div class="project-file-upload-bar">
+        <span></span>
+    </div>
+
+    <div class="project-file-upload-percent">
+        0%
+    </div>
+
+`;
+
+container.prepend(
+    uploadBox
+);
+
+
+try {
+
+    await uploadProjectFileCenterFile(
+        projectId,
+        file,
+        function(percent){
+
+            const box =
+                document.getElementById(
+                    uploadId
+                );
+
+
+            if(!box){
+                return;
+            }
+
+
+            const bar =
+                box.querySelector(
+                    ".project-file-upload-bar span"
+                );
+
+
+            const text =
+                box.querySelector(
+                    ".project-file-upload-percent"
+                );
+
+
+            if(bar){
+
+                bar.style.width =
+                    percent + "%";
+
+            }
+
+
+            if(text){
+
+                text.textContent =
+                    percent + "%";
+
+            }
+
+        }
+    );
+
+
+    const box =
+        document.getElementById(
+            uploadId
+        );
+
+
+    if(box){
+
+        box.classList.add(
+            "upload-complete"
+        );
+
+
+        const percent =
+            box.querySelector(
+                ".project-file-upload-percent"
+            );
+
+
+        if(percent){
+
+            percent.textContent =
+                "✓";
+
+        }
+
+
+        setTimeout(
+            function(){
+
+                box.remove();
+
+            },
+            800
+        );
+
+    }
+
+
+}
+catch(error){
+
+    console.error(
+        "FEEMAAS FILE CENTER UPLOAD ERROR",
+        error
+    );
+
+
+    const box =
+        document.getElementById(
+            uploadId
+        );
+
+
+    if(box){
+
+        box.classList.add(
+            "upload-error"
+        );
+
+    }
+
+
+    alert(
+        `خطا در آپلود «${file.name}»:\n${error.message}`
+    );
+
+}
+
+                        }
+
+
+                        await loadProjectFiles(
+                            projectId
+                        );
+
+                    }
+                );
+
+            }
+
+
+            fileInput.click();
+
+        }
+    );
+
+}
+
+}
+/*
+============================================================
+ PROJECT FILE CENTER PREVIEW MODAL
+============================================================
+*/
+
+function openProjectFileCenterPreview(file){
+
+    if(!file || !file.url){
+        return;
+    }
+
+    closeProjectFileCenterPreview();
+
+    const extension =
+        (file.extension || "")
+            .toLowerCase();
+
+    const isImage =
+        file.kind === "image" ||
+        [
+            "jpg",
+            "jpeg",
+            "png",
+            "gif",
+            "webp",
+            "bmp",
+            "svg"
+        ].includes(extension);
+
+    const isPdf =
+        extension === "pdf";
+
+    const isText =
+        [
+            "txt",
+            "csv",
+            "rtf"
+        ].includes(extension);
+
+    let content = "";
+
+    if(isImage){
+
+        content = `
+            <div class="project-file-center-preview-image-wrap">
+                <img
+                    src="${escapeHtml(file.url)}"
+                    alt="${escapeHtml(file.title)}"
+                    class="project-file-center-preview-image"
+                >
+            </div>
+        `;
+
+    } else if(isPdf){
+
+        content = `
+            <iframe
+                class="project-file-center-preview-frame"
+                src="${escapeHtml(file.url)}"
+                title="${escapeHtml(file.title)}"
+            ></iframe>
+        `;
+
+    } else if(isText){
+
+        content = `
+            <div
+                class="project-file-center-preview-text"
+                data-preview-text-url="${escapeHtml(file.url)}"
+            >
+                در حال دریافت محتوای فایل...
+            </div>
+        `;
+
+    } else {
+
+        content = `
+            <div class="project-file-center-preview-generic">
+
+                <div class="project-file-center-preview-generic-icon">
+                    ${getFileCenterPreviewIcon(extension)}
+                </div>
+
+                <strong>
+                    ${escapeHtml(file.title)}
+                </strong>
+
+                <span>
+                    ${escapeHtml(
+                        extension
+                            ? extension.toUpperCase()
+                            : "FILE"
+                    )}
+                </span>
+
+                <a
+                    class="project-file-center-preview-download"
+                    href="${escapeHtml(file.url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                >
+                    دانلود فایل
+                </a>
+
+            </div>
+        `;
+
+    }
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "project-file-center-preview-modal";
+
+    modal.className =
+        "project-file-center-preview-modal";
+
+    modal.innerHTML = `
+
+        <div
+            class="project-file-center-preview-backdrop"
+            data-preview-close="true"
+        ></div>
+
+        <section
+            class="project-file-center-preview-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="پیش‌نمایش فایل"
+        >
+
+            <header
+                class="project-file-center-preview-header"
+            >
+
+                <div
+                    class="project-file-center-preview-heading"
+                >
+
+                    <span>
+                        FILE PREVIEW
+                    </span>
+
+                    <strong
+                        title="${escapeHtml(file.title)}"
+                    >
+                        ${escapeHtml(file.title)}
+                    </strong>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="project-file-center-preview-close"
+                    aria-label="بستن"
+                    title="بستن"
+                >
+                    ×
+                </button>
+
+            </header>
+
+            <div
+                class="project-file-center-preview-content"
+            >
+                ${content}
+            </div>
+
+        </section>
+
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeButton =
+        modal.querySelector(
+            ".project-file-center-preview-close"
+        );
+
+    if(closeButton){
+
+        closeButton.addEventListener(
+            "click",
+            closeProjectFileCenterPreview
+        );
+
+    }
+
+    modal.addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target.dataset.previewClose === "true"
+            ){
+                closeProjectFileCenterPreview();
+            }
+
+        }
+    );
+
+    document.addEventListener(
+        "keydown",
+        projectFileCenterPreviewEscapeHandler
+    );
+
+    document.body.classList.add(
+        "project-file-center-preview-open"
+    );
+
+    requestAnimationFrame(
+        function(){
+            modal.classList.add("is-open");
+        }
+    );
+
+
+    if(isText){
+
+        const textContainer =
+            modal.querySelector(
+                ".project-file-center-preview-text"
+            );
+
+        if(textContainer){
+
+            fetch(
+                file.url,
+                {
+                    credentials: "include"
+                }
+            )
+                .then(
+                    response => {
+
+                        if(!response.ok){
+                            throw new Error(
+                                "Unable to read file."
+                            );
+                        }
+
+                        return response.text();
+
+                    }
+                )
+                .then(
+                    text => {
+
+                        textContainer.textContent =
+                            text;
+
+                    }
+                )
+                .catch(
+                    function(){
+
+                        textContainer.textContent =
+                            "امکان نمایش محتوای این فایل وجود ندارد.";
+
+                    }
+                );
+
+        }
+
+    }
+
+}
+
+
+function closeProjectFileCenterPreview(){
+
+    const modal =
+        document.getElementById(
+            "project-file-center-preview-modal"
+        );
+
+    if(!modal){
+        return;
+    }
+
+    modal.classList.remove("is-open");
+
+    setTimeout(
+        function(){
+
+            if(modal.parentNode){
+                modal.parentNode.removeChild(modal);
+            }
+
+        },
+        160
+    );
+
+    document.body.classList.remove(
+        "project-file-center-preview-open"
+    );
+
+    document.removeEventListener(
+        "keydown",
+        projectFileCenterPreviewEscapeHandler
+    );
+
+}
+
+
+function projectFileCenterPreviewEscapeHandler(event){
+
+    if(event.key === "Escape"){
+
+        closeProjectFileCenterPreview();
+
+    }
+
+}
+
+
+function getFileCenterPreviewIcon(extension){
+
+    const icons = {
+        pdf: "PDF",
+        doc: "DOC",
+        docx: "DOC",
+        xls: "XLS",
+        xlsx: "XLS",
+        csv: "CSV",
+        dwg: "CAD",
+        dxf: "CAD",
+        step: "3D",
+        stp: "3D",
+        skp: "3D",
+        zip: "ZIP",
+        rar: "RAR"
+    };
+
+    return icons[extension] || "FILE";
+
+}
+
+
+/*
+============================================================
+ PROJECT SUMMARY MODAL CLOSE
+============================================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const modal =
+            document.getElementById(
+                "project-modal"
+            );
+
+        const closeButton =
+            document.getElementById(
+                "close-project-modal"
+            );
+
+
+        if (!modal || !closeButton) {
+            return;
+        }
+
+
+        function closeProjectSummary() {
+
+            modal.classList.remove(
+                "active"
+            );
+
+            modal.classList.add(
+                "hidden"
+            );
+
+        }
+
+
+        closeButton.addEventListener(
+            "click",
+            closeProjectSummary
+        );
+
+
+        const backdrop =
+            modal.querySelector(
+                ".modal-backdrop"
+            );
+
+
+        if (backdrop) {
+
+            backdrop.addEventListener(
+                "click",
+                closeProjectSummary
+            );
+
+        }
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    !modal.classList.contains("hidden")
+                ) {
+
+                    closeProjectSummary();
+
+                }
+
+            }
+        );
+
+    }
+);

@@ -7,9 +7,17 @@
 
         currentTender: null,
 
+        draftSaveTimer: null,
+
+        draftSaving: false,
+
+        draftSavePromise: null,
+
         currentBidId: null,
 
         currentBid: null,
+
+        loadSequence: 0,
 
         specifications: [],
 
@@ -89,6 +97,24 @@
                 statusText = "عدم شرکت";
             }
 
+            const progress = item.project_progress || {};
+
+            const stages = Array.isArray(progress.stages)
+                ? progress.stages
+                : [];
+
+            const activeStage = stages.find(stage =>
+                stage.key === progress.current_stage
+            ) || stages.find(stage =>
+                ["current", "attention", "blocked"].includes(
+                    stage.state
+                )
+            );
+
+            const stageLabel = activeStage
+                ? activeStage.label
+                : null;
+
             return `
 
                 <div
@@ -115,7 +141,16 @@
                             <span class="meta-chip">
                                 وضعیت: ${statusText}
                             </span>
-
+                            ${
+                                stageLabel
+                                ? `
+                                <span class="meta-chip project-stage-chip" title="مرحله فعلی پروژه">
+                                    <span class="stage-chip-icon" aria-hidden="true">✧</span>
+                                    <span>${this.escape(stageLabel)}</span>
+                                </span>
+                                `
+                                : ""
+                            }
                             ${
                                 item.invited_at
                                 ? `
@@ -208,6 +243,9 @@
 
             const project = {
 
+                project_id:
+                    tender.project_id || null,
+
                 title:
                     tender.project_title ||
                     "پروژه",
@@ -245,7 +283,7 @@
 
             const tenderTab =
                 document.querySelector(
-                    '[data-project-tab="tender"]'
+                    '[data-project-tab="proposal"]'
                 );
 
             if (tenderTab) {
@@ -256,6 +294,16 @@
 
 
         loadForProject: async function (project) {
+
+            clearTimeout(this.draftSaveTimer);
+            this.draftSaveTimer = null;
+
+            this.currentTender = null;
+            this.currentBidId = null;
+            this.currentBid = null;
+            this.draftSaving = false;
+            this.specifications = [];
+            this.loadSequence += 1;
 
             const tenderId =
                 project &&
@@ -274,9 +322,7 @@
             }
 
             this.currentBidId =
-                project.bid_id ||
-                this.currentBidId ||
-                null;
+                project.bid_id || null;
 
             await this.loadTender(
                 tenderId,
@@ -290,6 +336,16 @@
             tenderId,
             bidId
         ) {
+
+            clearTimeout(this.draftSaveTimer);
+            this.draftSaveTimer = null;
+
+            const loadSequence = ++this.loadSequence;
+            this.currentTender = tenderId;
+            this.currentBidId = bidId || null;
+            this.currentBid = null;
+            this.draftSaving = false;
+            this.specifications = [];
 
             const container =
                 document.getElementById(
@@ -310,7 +366,7 @@
 
                 const response =
                     await fetch(
-                        `/api/tenders/${tenderId}/specifications/`,
+                        `/api/tenders/${tenderId}/workshop-specifications/`,
                         {
                             credentials: "same-origin",
                             headers: {
@@ -328,18 +384,16 @@
                 const data =
                     await response.json();
 
+                if (loadSequence !== this.loadSequence) {
+                    return;
+                }
+
                 this.specifications =
                     Array.isArray(data)
                         ? data
                         : (
                             data.results || []
                         );
-
-                this.currentTender =
-                    tenderId;
-
-                this.currentBidId =
-                    bidId || this.currentBidId;
 
                 console.log(
                     "Workshop Tender Loaded:",
@@ -361,11 +415,16 @@
                 }
 
                 await this.loadBid(
-                    this.currentBidId
+                    this.currentBidId,
+                    loadSequence
                 );
 
             }
             catch (error) {
+
+                if (loadSequence !== this.loadSequence) {
+                    return;
+                }
 
                 console.error(
                     "Tender specification error:",
@@ -381,7 +440,7 @@
         },
 
 
-        loadBid: async function (bidId) {
+        loadBid: async function (bidId, loadSequence) {
 
             try {
 
@@ -402,8 +461,17 @@
                     );
                 }
 
-                this.currentBid =
+                const bidData =
                     await response.json();
+
+                if (
+                    loadSequence !== undefined &&
+                    loadSequence !== this.loadSequence
+                ) {
+                    return;
+                }
+
+                this.currentBid = bidData;
 
                 console.log(
                     "Workshop Bid Loaded:",
@@ -416,6 +484,13 @@
 
             }
             catch (error) {
+
+                if (
+                    loadSequence !== undefined &&
+                    loadSequence !== this.loadSequence
+                ) {
+                    return;
+                }
 
                 console.error(
                     "Bid loading error:",
@@ -518,17 +593,21 @@
 
                                 <th>عنوان</th>
 
-                                <th>توضیحات</th>
-
                                 <th>تعداد</th>
+
+                                <th>ابعاد</th>
+
+                                <th>متریال</th>
+
+                                <th>مشخصات فنی</th>
 
                                 <th>فایل</th>
 
                                 <th>قیمت واحد</th>
 
-                                <th>مبلغ ردیف</th>
+                                <th>مبلغ کل</th>
 
-                                <th>آمادگی</th>
+                                <th>قابلیت ساخت</th>
 
                                 <th>توضیحات کارگاه</th>
 
@@ -791,7 +870,7 @@
             const id =
                 item.id;
 
-            const quantity =
+		    const quantity =
                 Number(
                     item.quantity || 0
                 );
@@ -829,166 +908,173 @@
                         projectItemId
                     )}">
 
-                    <td class="spec-row-number">
+                <td class="spec-row-number">
 
-                        ${this.escape(
-                            item.row_number || "-"
-                        )}
+                    ${this.escape(
+                        item.row_number || "-"
+                    )}
 
-                    </td>
-
-
-                    <td>
-
-                        ${this.escape(
-                            item.title || "-"
-                        )}
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <div>
-                            ${this.escape(
-                                item.description || "-"
-                            )}
-                        </div>
+                    ${this.escape(
+                        item.title || "-"
+                    )}
 
-                        ${
-                            item.material
-                            ? `
-                            <small>
-                                متریال:
-                                ${this.escape(
-                                    item.material
-                                )}
-                            </small>
-                            `
-                            : ""
-                        }
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        ${this.escape(
-                            quantity
-                        )}
+                    ${this.escape(
+                        quantity
+                    )}
 
-                    </td>
-
-
-                    <td>
-
-                        <button
-                            type="button"
-                            class="file-count-button"
-                            data-specification-files
-                            data-specification-id="${id}"
-                            data-specification-title="${this.escapeAttribute(
-                                item.title || "ردیف"
-                            )}">
-
-                            📎 فایل‌ها
-
-                        </button>
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            class="spec-input"
-                            data-unit-price
-                            placeholder="قیمت"
-                            value="${this.escapeAttribute(
-                                unitPrice
-                            )}"
-                            ${this.isBidSubmitted() ? "disabled" : ""}
-                        >
+                    ${this.escape(
+                        item.dimensions || "-"
+                    )}
 
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <div
-                            class="line-total-field"
-                            data-line-total>
+                    ${this.escape(
+                        item.material || "-"
+                    )}
 
-                            0
-
-                        </div>
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <select
-                            class="spec-input"
-                            data-availability
-                            ${this.isBidSubmitted() ? "disabled" : ""}>
+                    ${this.escape(
+                        item.technical_details ||
+                        item.description ||
+                        "-"
+                    )}
 
-                            <option value="">
-                                انتخاب
-                            </option>
-
-                            <option
-                                value="available"
-                                ${availability === "available" ? "selected" : ""}>
-                                آماده
-                            </option>
-
-                            <option
-                                value="conditional"
-                                ${availability === "conditional" ? "selected" : ""}>
-                                مشروط
-                            </option>
-
-                            <option
-                                value="unavailable"
-                                ${availability === "unavailable" ? "selected" : ""}>
-                                غیرقابل انجام
-                            </option>
-
-                        </select>
-
-                    </td>
+                </td>
 
 
-                    <td>
+                <td>
 
-                        <input
-                            type="text"
-                            class="spec-input"
-                            data-technical-notes
-                            placeholder="توضیح"
-                            value="${this.escapeAttribute(
-                                technicalNotes
-                            )}"
-                            ${this.isBidSubmitted() ? "disabled" : ""}
-                        >
+                    <button
+                        type="button"
+                        class="file-count-button"
+                        data-specification-files
+                        data-specification-id="${id}"
+                        data-specification-title="${this.escapeAttribute(
+                            item.title || "ردیف"
+                        )}">
 
-                    </td>
+                        📎 فایل‌ها
 
-                </tr>
+                    </button>
 
-            `;
+                </td>
 
-        },
+
+                <td>
+
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="spec-input"
+                        data-unit-price
+                        placeholder="قیمت"
+                        value="${this.escapeAttribute(
+                            unitPrice
+                        )}"
+                        ${this.isBidSubmitted() ? "disabled" : ""}
+                    >
+
+                </td>
+
+
+                <td>
+
+                    <div
+                        class="line-total-field"
+                        data-line-total>
+
+                        0
+
+                    </div>
+
+                </td>
+
+
+                <td>
+
+                    <select
+                        class="spec-input"
+                        data-availability
+                        ${this.isBidSubmitted() ? "disabled" : ""}>
+
+                        <option value="">
+                            انتخاب
+                        </option>
+
+                        <option
+                            value="available"
+                            ${availability === "available" ? "selected" : ""}>
+                            قابل ساخت
+                        </option>
+
+                        <option
+                            value="conditional"
+                            ${availability === "conditional" ? "selected" : ""}>
+                            قابل ساخت مشروط
+                        </option>
+
+                        <option
+                            value="unavailable"
+                            ${availability === "unavailable" ? "selected" : ""}>
+                            غیرقابل ساخت
+                        </option>
+
+                    </select>
+
+                </td>
+
+
+                <td>
+
+                    <input
+                        type="text"
+                        class="spec-input"
+                        data-technical-notes
+                        placeholder="توضیح کارگاه"
+                        value="${this.escapeAttribute(
+                            technicalNotes
+                        )}"
+                        ${this.isBidSubmitted() ? "disabled" : ""}
+                    >
+
+                </td>
+
+            </tr>
+
+        `;
+
+    },
 
 
         bindSpecificationEvents: function () {
 
             document
-                .querySelectorAll("[data-unit-price]")
+                .querySelectorAll(
+                    "[data-unit-price]"
+                )
                 .forEach((input) => {
 
                     input.addEventListener(
@@ -998,6 +1084,43 @@
                             this.updateTotals();
                             this.updateFinalAmount();
                             this.updatePaymentAmounts();
+                            this.scheduleDraftSave();
+
+                        }
+                    );
+
+                });
+
+
+            document
+                .querySelectorAll(
+                    "[data-availability]"
+                )
+                .forEach((input) => {
+
+                    input.addEventListener(
+                        "change",
+                        () => {
+
+                            this.scheduleDraftSave();
+
+                        }
+                    );
+
+                });
+
+
+            document
+                .querySelectorAll(
+                    "[data-technical-notes]"
+                )
+                .forEach((input) => {
+
+                    input.addEventListener(
+                        "input",
+                        () => {
+
+                            this.scheduleDraftSave();
 
                         }
                     );
@@ -1018,6 +1141,83 @@
 
                         this.updateFinalAmount();
                         this.updatePaymentAmounts();
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const productionDays =
+                document.querySelector(
+                    "[data-production-days]"
+                );
+
+            if (productionDays) {
+
+                productionDays.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const deliveryDays =
+                document.querySelector(
+                    "[data-delivery-days]"
+                );
+
+            if (deliveryDays) {
+
+                deliveryDays.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const warrantyMonths =
+                document.querySelector(
+                    "[data-warranty-months]"
+                );
+
+            if (warrantyMonths) {
+
+                warrantyMonths.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
+
+                    }
+                );
+
+            }
+
+
+            const bidTechnicalNotes =
+                document.querySelector(
+                    "[data-bid-technical-notes]"
+                );
+
+            if (bidTechnicalNotes) {
+
+                bidTechnicalNotes.addEventListener(
+                    "input",
+                    () => {
+
+                        this.scheduleDraftSave();
 
                     }
                 );
@@ -1061,6 +1261,8 @@
                             Number(stageCount.value) || 1
                         );
 
+                        this.scheduleDraftSave();
+
                     }
                 );
 
@@ -1087,7 +1289,6 @@
 
         },
 
-
         updateTotals: function () {
 
             let grandTotal = 0;
@@ -1098,11 +1299,13 @@
                 )
                 .forEach((row) => {
 
+                    const quantityCell =
+                        row.children[2];
+
                     const quantity =
                         Number(
-                            row
-                                .children[3]
-                                .textContent
+                            quantityCell &&
+                            quantityCell.textContent
                                 .trim()
                                 .replace(/,/g, "")
                         ) || 0;
@@ -1124,7 +1327,8 @@
                         ) || 0;
 
                     const total =
-                        quantity * unitPrice;
+                        quantity *
+                        unitPrice;
 
                     grandTotal += total;
 
@@ -1169,11 +1373,13 @@
                 )
                 .forEach((row) => {
 
+                    const quantityCell =
+                        row.children[2];
+
                     const quantity =
                         Number(
-                            row
-                                .children[3]
-                                .textContent
+                            quantityCell &&
+                            quantityCell.textContent
                                 .trim()
                                 .replace(/,/g, "")
                         ) || 0;
@@ -1198,7 +1404,6 @@
             return total;
 
         },
-
 
         updateFinalAmount: function () {
 
@@ -1414,6 +1619,25 @@
                     )
                     .join("");
 
+
+            container
+                .querySelectorAll(
+                    "[data-payment-title]"
+                )
+                .forEach((input) => {
+
+                    input.addEventListener(
+                        "input",
+                        () => {
+
+                            this.scheduleDraftSave();
+
+                        }
+                    );
+
+                });
+
+
             container
                 .querySelectorAll(
                     "[data-payment-percentage]"
@@ -1425,16 +1649,17 @@
                         () => {
 
                             this.updatePaymentAmounts();
+                            this.scheduleDraftSave();
 
                         }
                     );
 
                 });
 
+
             this.updatePaymentAmounts();
 
         },
-
 
         updatePaymentAmounts: function () {
 
@@ -1607,7 +1832,7 @@
                     const quantity =
                         Number(
                             row
-                                .children[3]
+                                .children[2]
                                 .textContent
                                 .trim()
                                 .replace(/,/g, "")
@@ -1668,8 +1893,192 @@
 
         },
 
+        scheduleDraftSave: function () {
+
+            clearTimeout(
+                this.draftSaveTimer
+            );
+
+            this.draftSaveTimer =
+                setTimeout(
+                    () => {
+                        this.saveDraft();
+                    },
+                    1500
+                );
+
+        },
+
+
+
+        saveDraft: function (throwOnError = false) {
+
+            const bidId = this.currentBidId;
+            const loadSequence = this.loadSequence;
+
+            if (
+                !bidId ||
+                (
+                    this.currentBid &&
+                    this.currentBid.status !== "draft"
+                )
+            ) {
+                return Promise.resolve(false);
+            }
+
+            const discountInput =
+                document.querySelector("[data-discount]");
+
+            const technicalNotesElement =
+                document.querySelector("[data-bid-technical-notes]");
+
+            const payload = {
+                production_days:
+                    this.getNumberValue("[data-production-days]"),
+
+                delivery_days:
+                    this.getNumberValue("[data-delivery-days]"),
+
+                warranty_months:
+                    this.getNumberValue("[data-warranty-months]"),
+
+                technical_notes:
+                    technicalNotesElement
+                        ? technicalNotesElement.value.trim()
+                        : "",
+
+                discount_percentage:
+                    Number(
+                        discountInput && discountInput.value
+                    ) || 0,
+
+                items: this.collectBidItems(),
+
+                payment_schedules:
+                    this.collectPaymentStages()
+            };
+
+            const previousSave =
+                this.draftSavePromise || Promise.resolve();
+
+            const savePromise = previousSave
+                .catch(() => false)
+                .then(() =>
+                    this.performDraftSave(
+                        bidId,
+                        loadSequence,
+                        payload,
+                        throwOnError
+                    )
+                );
+
+            this.draftSavePromise = savePromise;
+
+            return savePromise.finally(() => {
+                if (this.draftSavePromise === savePromise) {
+                    this.draftSavePromise = null;
+                }
+            });
+
+        },
+
+
+        performDraftSave: async function (
+            bidId,
+            loadSequence,
+            payload,
+            throwOnError = false
+        ) {
+
+            if (
+                this.currentBidId !== bidId ||
+                this.loadSequence !== loadSequence
+            ) {
+                return false;
+            }
+
+            try {
+
+                this.draftSaving = true;
+
+                const response = await fetch(
+                    `/api/tenders/bids/${bidId}/draft/`,
+                    {
+                        method: "PATCH",
+                        credentials: "same-origin",
+
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "X-CSRFToken": this.getCSRFToken()
+                        },
+
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                const data = await this.readJSON(response);
+
+                if (!response.ok) {
+                    throw new Error(
+                        this.extractError(
+                            data,
+                            "ذخیره پیش‌نویس انجام نشد."
+                        )
+                    );
+                }
+
+                if (
+                    this.currentBidId !== bidId ||
+                    this.loadSequence !== loadSequence
+                ) {
+                    return false;
+                }
+
+                this.currentBid = {
+                    ...this.currentBid,
+                    ...data,
+                    status: data.bid_status || this.currentBid.status
+                };
+
+                console.log(
+                    "Workshop Tender Draft Saved:",
+                    data
+                );
+
+                return true;
+
+            } catch (error) {
+
+                console.error(
+                    "Workshop Tender Draft Save Error:",
+                    error
+                );
+
+                if (throwOnError) {
+                    throw error;
+                }
+
+                return false;
+
+            } finally {
+
+                if (
+                    this.currentBidId === bidId &&
+                    this.loadSequence === loadSequence
+                ) {
+                    this.draftSaving = false;
+                }
+
+            }
+
+        },
+
 
         submitBid: async function () {
+
+            const submitBidId = this.currentBidId;
+            const submitLoadSequence = this.loadSequence;
 
             if (!this.currentBidId) {
 
@@ -1792,42 +2201,6 @@
 
             }
 
-            const discountInput =
-                document.querySelector(
-                    "[data-discount]"
-                );
-
-            const discountPercentage =
-                Number(
-                    discountInput &&
-                    discountInput.value
-                ) || 0;
-
-            const productionDays =
-                this.getNumberValue(
-                    "[data-production-days]"
-                );
-
-            const deliveryDays =
-                this.getNumberValue(
-                    "[data-delivery-days]"
-                );
-
-            const warrantyMonths =
-                this.getNumberValue(
-                    "[data-warranty-months]"
-                );
-
-            const technicalNotesElement =
-                document.querySelector(
-                    "[data-bid-technical-notes]"
-                );
-
-            const technicalNotes =
-                technicalNotesElement
-                    ? technicalNotesElement.value.trim()
-                    : "";
-
             const confirmed =
                 await this.showSubmitConfirmation();
 
@@ -1852,113 +2225,45 @@
 
             try {
 
-                /*
-                 * ------------------------------------------
-                 * STEP 1
-                 * UPDATE BID BASIC INFORMATION
-                 * ------------------------------------------
-                 */
-
-                await this.updateBid({
-
-                    production_days:
-                        productionDays,
-
-                    delivery_days:
-                        deliveryDays,
-
-                    warranty_months:
-                        warrantyMonths,
-
-                    technical_notes:
-                        technicalNotes
-
-                });
-
 
                 /*
-                 * ------------------------------------------
-                 * STEP 2
-                 * UPDATE DISCOUNT
-                 * ------------------------------------------
+                 * SAVE THE LATEST FORM STATE
                  */
 
-                await this.updateDiscount(
-                    discountPercentage
-                );
+                clearTimeout(this.draftSaveTimer);
+                this.draftSaveTimer = null;
 
-
-                /*
-                 * ------------------------------------------
-                 * STEP 3
-                 * CREATE BID ITEMS
-                 * ------------------------------------------
-                 */
-
-                const existingItems =
-                    (
-                        this.currentBid &&
-                        Array.isArray(
-                            this.currentBid.items
-                        )
-                    )
-                    ? this.currentBid.items
-                    : [];
-
-                if (existingItems.length) {
-
-                    throw new Error(
-                        "این پیشنهاد قبلاً دارای ردیف‌های ثبت‌شده است. برای جلوگیری از ثبت تکراری، ارسال متوقف شد."
-                    );
-
-                }
-
-                for (
-                    const item of items
+                if (
+                    this.currentBidId !== submitBidId ||
+                    this.loadSequence !== submitLoadSequence
                 ) {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = "ارسال پیشنهاد";
+                    }
 
-                    await this.createBidItem(
-                        item
-                    );
-
+                    return;
                 }
 
+                const saved = await this.saveDraft(true);
 
-                /*
-                 * ------------------------------------------
-                 * STEP 4
-                 * CREATE PAYMENT SCHEDULES
-                 * ------------------------------------------
-                 */
-
-                const existingSchedules =
-                    (
-                        this.currentBid &&
-                        Array.isArray(
-                            this.currentBid.payment_schedules
-                        )
-                    )
-                    ? this.currentBid.payment_schedules
-                    : [];
-
-                if (existingSchedules.length) {
-
-                    throw new Error(
-                        "این پیشنهاد قبلاً دارای مراحل پرداخت ثبت‌شده است. برای جلوگیری از ثبت تکراری، ارسال متوقف شد."
-                    );
-
-                }
-
-                for (
-                    const stage of paymentStages
+                if (
+                    this.currentBidId !== submitBidId ||
+                    this.loadSequence !== submitLoadSequence
                 ) {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = "ارسال پیشنهاد";
+                    }
 
-                    await this.createPaymentSchedule(
-                        stage
-                    );
-
+                    return;
                 }
 
+                if (!saved) {
+                    throw new Error(
+                        "ذخیره آخرین تغییرات پیشنهاد انجام نشد؛ ارسال متوقف شد."
+                    );
+                }
 
                 /*
                  * ------------------------------------------
@@ -1969,7 +2274,7 @@
 
                 const submitResponse =
                     await fetch(
-                        `/api/tenders/bids/${this.currentBidId}/submit/`,
+                        `/api/tenders/bids/${submitBidId}/submit/`,
                         {
                             method: "POST",
 
@@ -1989,6 +2294,13 @@
                     await this.readJSON(
                         submitResponse
                     );
+
+                if (
+                    this.currentBidId !== submitBidId ||
+                    this.loadSequence !== submitLoadSequence
+                ) {
+                    return;
+                }
 
                 if (!submitResponse.ok) {
 
