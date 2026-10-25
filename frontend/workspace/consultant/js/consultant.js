@@ -5479,7 +5479,7 @@ function renderStandardizationFileButton(
 
 
     const fileUrl =
-        firstFile.file || "";
+        resolveStandardizationFileUrl(firstFile.file || "");
 
 
     const isImage =
@@ -5536,6 +5536,29 @@ function renderStandardizationFileButton(
 
 let standardizationFileManagerSpecificationId = null;
 let standardizationFileManagerItemElement = null;
+
+
+function resolveStandardizationFileUrl(rawUrl) {
+    if (!rawUrl) {
+        return "";
+    }
+
+    try {
+        const parsed = new URL(rawUrl, window.location.href);
+
+        if (
+            parsed.hostname === window.location.hostname &&
+            window.location.port &&
+            !parsed.port
+        ) {
+            parsed.port = window.location.port;
+        }
+
+        return parsed.href;
+    } catch (error) {
+        return rawUrl;
+    }
+}
 
 
 function getStandardizationFileName(file) {
@@ -5868,7 +5891,7 @@ function renderStandardizationFileManagerList(
                                 image
                                     ? `
                                         <img
-                                            src="${escapeAttribute(file.file)}"
+                                            src="${escapeAttribute(resolveStandardizationFileUrl(file.file))}"
                                             alt=""
                                         >
                                     `
@@ -5910,7 +5933,7 @@ function renderStandardizationFileManagerList(
 
                         <a
                             class="standardization-file-manager-open"
-                            href="${escapeAttribute(file.file)}"
+                            href="${escapeAttribute(resolveStandardizationFileUrl(file.file))}"
                             target="_blank"
                             rel="noopener"
                         >
