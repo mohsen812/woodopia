@@ -830,6 +830,26 @@ function renderConsultantProject(
 ================================================== */
 
 function loadConsultantFileCenter(projectId, content) {
+    const resolveConsultantFileUrl = rawUrl => {
+        if (!rawUrl) return "";
+
+        try {
+            const parsed = new URL(rawUrl, window.location.href);
+
+            if (
+                parsed.hostname === window.location.hostname &&
+                window.location.port &&
+                !parsed.port
+            ) {
+                parsed.port = window.location.port;
+            }
+
+            return parsed.href;
+        } catch (_) {
+            return rawUrl;
+        }
+    };
+
     const status = content.querySelector(".consultant-files-status");
     const groupsContainer = content.querySelector(".consultant-files-groups");
     const totalElement = content.querySelector(".consultant-files-total");
@@ -925,7 +945,7 @@ function loadConsultantFileCenter(projectId, content) {
                         </header>
                         <div class="consultant-file-role-items">
                             ${roleFiles.map(file => {
-                                const url = file.file || "";
+                                const url = resolveConsultantFileUrl(file.file || "");
                                 const title = file.title || "فایل پروژه";
                                 const kind = getKind(file);
                                 const ext = getExtension(url);
