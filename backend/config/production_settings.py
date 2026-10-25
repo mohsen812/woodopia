@@ -18,7 +18,7 @@ DATABASES = {"default": {
 }}
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.environ.get("FEEMAAS_STATIC_ROOT", str(BASE_DIR.parent / "staticfiles"))
+STATIC_ROOT = os.environ.get("FEEMAAS_STATIC_ROOT", str(BASE_DIR.parent / "static"))
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.environ.get("FEEMAAS_MEDIA_ROOT", "/app/media")
 
