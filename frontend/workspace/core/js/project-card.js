@@ -3920,10 +3920,13 @@ async function loadProjectStandardization(projectId){
                                 files[0];
 
 
-                            const fileUrl =
+                            const rawFileUrl =
                                 firstFile.file ||
                                 firstFile.url ||
                                 "";
+
+                            const fileUrl =
+                                resolveProjectFileUrl(rawFileUrl);
 
 
                             if (fileUrl) {

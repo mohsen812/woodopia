@@ -428,6 +428,26 @@ renderFiles: function (data) {
 
     const escapeHtml = value => this.escape(String(value ?? ""));
 
+    const resolveWorkshopFileUrl = rawUrl => {
+        if (!rawUrl) return "";
+
+        try {
+            const parsed = new URL(rawUrl, window.location.href);
+
+            if (
+                parsed.hostname === window.location.hostname &&
+                window.location.port &&
+                !parsed.port
+            ) {
+                parsed.port = window.location.port;
+            }
+
+            return parsed.href;
+        } catch (_) {
+            return rawUrl;
+        }
+    };
+
     const getKind = file => {
         const path = String(
             file.file || file.file_url || file.url || file.title || ""
@@ -472,7 +492,8 @@ renderFiles: function (data) {
             file.original_name ||
             "بدون عنوان";
 
-        const url = file.file_url || file.file || file.url || "";
+        const rawUrl = file.file_url || file.file || file.url || "";
+        const url = resolveWorkshopFileUrl(rawUrl);
         const { kind, extension } = getKind(file);
         const label = extension ? extension.toUpperCase() : (
             kind === "image" ? "IMAGE" :
