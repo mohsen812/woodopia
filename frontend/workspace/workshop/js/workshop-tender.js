@@ -2664,6 +2664,40 @@
         },
 
 
+        resolveSpecificationFileUrl: function (
+            rawUrl
+        ) {
+
+            if (!rawUrl) {
+                return "";
+            }
+
+            try {
+
+                const parsed = new URL(
+                    rawUrl,
+                    window.location.href
+                );
+
+                if (
+                    parsed.hostname === window.location.hostname &&
+                    window.location.port &&
+                    !parsed.port
+                ) {
+                    parsed.port = window.location.port;
+                }
+
+                return parsed.href;
+
+            } catch (_) {
+
+                return rawUrl;
+
+            }
+
+        },
+
+
         openFiles: async function (
             specificationId,
             title
@@ -2780,7 +2814,7 @@
 
                                     <a
                                         href="${this.escapeAttribute(
-                                            file.file
+                                            this.resolveSpecificationFileUrl(file.file)
                                         )}"
                                         target="_blank"
                                         rel="noopener"
