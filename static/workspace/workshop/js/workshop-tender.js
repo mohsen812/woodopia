@@ -2664,6 +2664,136 @@
         },
 
 
+        resolveSpecificationFileUrl: function (
+            rawUrl
+        ) {
+
+            if (!rawUrl) {
+                return "";
+            }
+
+            try {
+                const parsed = new URL(
+                    rawUrl,
+                    window.location.href
+                );
+
+                if (
+                    parsed.hostname === window.location.hostname &&
+                    parsed.pathname.startsWith("/media/")
+                ) {
+                    parsed.protocol = window.location.protocol;
+                    parsed.host = window.location.host;
+                }
+
+                return parsed.href;
+
+            } catch (_) {
+                return rawUrl;
+            }
+
+        },
+
+
+        openSpecificationAttachmentPreview: function (
+            rawUrl,
+            title
+        ) {
+            const url = this.resolveSpecificationFileUrl(rawUrl);
+            if (!url) return;
+
+            let modal = document.getElementById(
+                "workshop-specification-preview-modal"
+            );
+
+            if (!modal) {
+                modal = document.createElement("div");
+                modal.id = "workshop-specification-preview-modal";
+                modal.className = "workshop-file-preview-modal";
+                modal.hidden = true;
+                modal.setAttribute("aria-hidden", "true");
+                modal.innerHTML = `
+                    <div class="workshop-file-preview-backdrop"
+                         data-spec-preview-close></div>
+                    <div class="workshop-file-preview-dialog"
+                         role="dialog" aria-modal="true"
+                         aria-labelledby="workshop-spec-preview-title">
+                        <div class="workshop-file-preview-header">
+                            <div id="workshop-spec-preview-title"></div>
+                            <button type="button"
+                                class="workshop-file-preview-close"
+                                data-spec-preview-close
+                                aria-label="بستن">×</button>
+                        </div>
+                        <div class="workshop-file-preview-content"></div>
+                    </div>`;
+
+                document.body.appendChild(modal);
+
+                modal.addEventListener("click", event => {
+                    if (event.target.closest("[data-spec-preview-close]")) {
+                        modal.hidden = true;
+                        modal.classList.remove("open");
+                        modal.setAttribute("aria-hidden", "true");
+                        document.body.classList.remove(
+                            "workshop-file-preview-open"
+                        );
+                        modal.querySelector(
+                            ".workshop-file-preview-content"
+                        ).replaceChildren();
+                    }
+                });
+            }
+
+            modal.querySelector(
+                "#workshop-spec-preview-title"
+            ).textContent = title || "پیش‌نمایش فایل";
+
+            const content = modal.querySelector(
+                ".workshop-file-preview-content"
+            );
+            content.replaceChildren();
+
+            let pathname = url;
+            try {
+                pathname = new URL(url, window.location.href).pathname;
+            } catch (_) {}
+
+            const extension = pathname.split(".").pop().toLowerCase();
+
+            if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(extension)) {
+                const image = document.createElement("img");
+                image.src = url;
+                image.alt = title || "پیش‌نمایش تصویر";
+                content.appendChild(image);
+            } else if (extension === "pdf") {
+                const frame = document.createElement("iframe");
+                frame.src = url;
+                frame.title = title || "پیش‌نمایش PDF";
+                frame.setAttribute("loading", "lazy");
+                content.appendChild(frame);
+            } else {
+                const message = document.createElement("div");
+                message.className = "empty-state";
+                message.textContent =
+                    `${title || "فایل"} — پیش‌نمایش این نوع فایل در مرورگر پشتیبانی نمی‌شود.`;
+
+                const download = document.createElement("a");
+                download.href = url;
+                download.className = "secondary-button";
+                download.textContent = "دانلود فایل";
+                download.setAttribute("download", "");
+                download.style.marginTop = "12px";
+                content.append(message, download);
+            }
+
+            modal.hidden = false;
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("workshop-file-preview-open");
+        },
+
+
         openFiles: async function (
             specificationId,
             title
@@ -2778,22 +2908,35 @@
 
                                     </div>
 
-                                    <a
-                                        href="${this.escapeAttribute(
-                                            file.file
+                                    <button
+                                        type="button"
+                                        class="secondary-button"
+                                        data-specification-preview
+                                        data-file-url="${this.escapeAttribute(
+                                            this.resolveSpecificationFileUrl(file.file_url || file.file || file.url)
                                         )}"
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="secondary-button">
+                                        data-file-title="${this.escapeAttribute(
+                                            file.title || this.fileName(file.file_url || file.file || file.url)
+                                        )}">
 
                                         مشاهده
 
-                                    </a>
+                                    </button>
 
                                 </div>
                                 `
                         )
                         .join("");
+
+                list.querySelectorAll("[data-specification-preview]").forEach(button => {
+                    button.addEventListener("click", () => {
+                        this.openSpecificationAttachmentPreview(
+                            button.dataset.fileUrl,
+                            button.dataset.fileTitle
+                        );
+                    });
+                });
+
 
             }
             catch (error) {
