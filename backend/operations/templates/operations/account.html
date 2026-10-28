@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حساب من | FEEMAAS Operations</title>
+<style>
+:root {
+    color-scheme: dark;
+    --bg:#080d18;
+    --panel:rgba(17,27,46,.88);
+    --line:rgba(143,173,211,.18);
+    --muted:#8fa2bd;
+    --text:#edf4ff;
+    --cyan:#42e8e0;
+    --green:#46e5a4;
+    --red:#ff7188;
+}
+* {box-sizing:border-box}
+body {
+    margin:0;
+    min-height:100vh;
+    padding:28px 16px;
+    background:
+      radial-gradient(ellipse at 75% 0%,rgba(40,105,180,.18),transparent 42%),
+      #080d18;
+    color:var(--text);
+    font-family:Tahoma,Arial,sans-serif;
+    font-size:13px;
+}
+a {color:var(--cyan);text-decoration:none}
+.container {max-width:780px;margin:0 auto}
+.header {display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:25px}
+.eyebrow {color:var(--cyan);font-size:10px;letter-spacing:1px;margin-bottom:8px}
+h1 {font-size:24px;margin:0}
+.subtitle {color:var(--muted);line-height:1.9;margin-top:9px}
+.panel {
+    padding:24px;
+    margin-bottom:17px;
+    border:1px solid var(--line);
+    border-radius:17px;
+    background:linear-gradient(145deg,rgba(19,31,51,.95),rgba(12,21,37,.92));
+    box-shadow:0 18px 45px #00000020;
+}
+h2 {font-size:15px;margin:0 0 18px}
+.profile {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.item {padding:15px;border:1px solid var(--line);border-radius:11px;background:#0b1424}
+.label {color:var(--muted);font-size:11px;margin-bottom:9px}
+.value {font-size:14px;overflow-wrap:anywhere}
+form {display:grid;gap:14px}
+label {display:block;color:#cbd8eb;margin-bottom:7px}
+input {
+    display:block;width:100%;padding:12px;
+    color:var(--text);background:#080f1d;
+    border:1px solid var(--line);border-radius:9px;
+}
+.help {color:var(--muted);font-size:11px;line-height:1.9}
+.errorlist {color:var(--red);padding-right:18px;line-height:1.8}
+.actions {display:flex;gap:10px;flex-wrap:wrap;margin-top:5px}
+.btn {
+    display:inline-flex;justify-content:center;align-items:center;
+    padding:11px 15px;border-radius:10px;border:1px solid var(--line);
+    background:#111c2d;color:var(--text);font:inherit;cursor:pointer;
+}
+.btn-primary {background:#123638;border-color:#42e8e05c;color:var(--cyan)}
+.btn-danger {border-color:#ff71884d;color:#ff9aaa}
+.messages {padding:0;list-style:none}
+.messages li {padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:9px;line-height:1.8}
+.messages .success {color:var(--green)}
+.messages .error {color:var(--red)}
+@media(max-width:560px) {
+    .header {align-items:flex-start;flex-direction:column}
+    .profile {grid-template-columns:1fr}
+    .panel {padding:17px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div>
+            <div class="eyebrow">FEEMAAS / OPERATIONS CENTER</div>
+            <h1>حساب من</h1>
+            <div class="subtitle">مدیریت مشخصات حساب، تغییر رمز عبور و خروج امن از مرکز عملیات</div>
+        </div>
+        <a class="btn" href="{% url 'operations:dashboard' %}">بازگشت به داشبورد</a>
+    </header>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <section class="panel">
+        <h2>اطلاعات حساب</h2>
+        <div class="profile">
+            <div class="item">
+                <div class="label">نام کاربری</div>
+                <div class="value">{{ request.user.get_username }}</div>
+            </div>
+            <div class="item">
+                <div class="label">ایمیل</div>
+                <div class="value">{{ request.user.email|default:"ثبت نشده" }}</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>تغییر رمز عبور</h2>
+        <p class="help">برای حفظ امنیت، رمز فعلی و رمز جدید را وارد کنید. پس از تغییر رمز، در همین حساب وارد باقی می‌مانید.</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="change_password">
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+                {% for error in field.errors %}<div class="errorlist">{{ error }}</div>{% endfor %}
+            </div>
+            {% endfor %}
+            {% if form.non_field_errors %}
+            <div class="errorlist">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="actions">
+                <button class="btn btn-primary" type="submit">ذخیره رمز جدید</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>خروج از حساب</h2>
+        <p class="help">با خروج، نشست ورود فعلی شما بسته می‌شود.</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="logout">
+            <div class="actions">
+                <button class="btn btn-danger" type="submit">خروج امن</button>
+            </div>
+        </form>
+    </section>
+</div>
+</body>
+</html>

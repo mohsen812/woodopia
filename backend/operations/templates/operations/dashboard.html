@@ -1,83 +1,651 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل عملیات | FEEMAAS</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            padding: 32px;
-            font-family: Tahoma, Arial, sans-serif;
-            color: #e5e7eb;
-            background:
-                radial-gradient(circle at 15% 15%, rgba(124, 58, 237, .22), transparent 35%),
-                radial-gradient(circle at 85% 80%, rgba(6, 182, 212, .16), transparent 35%),
-                #0b1020;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header,
-        .panel {
-            border: 1px solid rgba(148, 163, 184, .18);
-            background: rgba(15, 23, 42, .76);
-            border-radius: 20px;
-            padding: 28px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .16);
-        }
-
-        .header {
-            margin-bottom: 24px;
-        }
-
-        h1 {
-            margin: 0 0 12px;
-            font-size: 28px;
-        }
-
-        p {
-            color: #94a3b8;
-            line-height: 1.9;
-        }
-
-        .status {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            color: #a7f3d0;
-            background: rgba(16, 185, 129, .12);
-            border: 1px solid rgba(16, 185, 129, .25);
-            font-size: 13px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مرکز عملیات | FEEMAAS</title>
+<style>
+:root {
+    color-scheme: dark;
+    --bg:#080d18;
+    --panel:rgba(17,27,46,.82);
+    --line:rgba(143,173,211,.16);
+    --muted:#8fa2bd;
+    --text:#edf4ff;
+    --cyan:#42e8e0;
+    --blue:#6995ff;
+    --green:#46e5a4;
+    --amber:#ffc76b;
+    --red:#ff7188;
+}
+* {box-sizing:border-box}
+html {scroll-behavior:smooth}
+body {
+    margin:0;
+    background:
+      radial-gradient(ellipse at 78% 0%,rgba(40,105,180,.16),transparent 38%),
+      radial-gradient(ellipse at 0% 70%,rgba(38,211,195,.07),transparent 35%),
+      var(--bg);
+    color:var(--text);
+    font-family:Tahoma,Arial,sans-serif;
+    font-size:13px;
+}
+a {color:inherit;text-decoration:none}
+button,input {font:inherit}
+button {cursor:pointer}
+.layout {display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.sidebar {
+    position:sticky;top:0;height:100vh;padding:25px 16px;
+    background:rgba(8,14,26,.86);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;gap:25px
+}
+.brand {display:flex;align-items:center;gap:12px;padding:4px 9px 22px;border-bottom:1px solid var(--line)}
+.brand-mark {
+    width:39px;height:39px;border-radius:13px;display:grid;place-items:center;
+    color:#07151d;font-size:18px;font-weight:bold;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    box-shadow:0 0 25px #42e8e02b
+}
+.brand strong {display:block;letter-spacing:2px;font-size:16px}
+.brand small {display:block;color:var(--muted);font-size:10px;margin-top:5px}
+.nav-title {font-size:10px;color:#647b99;letter-spacing:1px;padding:0 12px 8px}
+nav {display:grid;gap:6px}
+nav a {
+    display:flex;align-items:center;gap:11px;padding:12px;border-radius:11px;
+    color:#9eafc8;border:1px solid transparent;transition:.2s
+}
+nav a:hover,nav a.active {
+    color:var(--cyan);background:rgba(66,232,224,.07);
+    border-color:rgba(66,232,224,.13)
+}
+.nav-icon {width:20px;text-align:center;font-size:16px}
+.sidebar-bottom {margin-top:auto}
+.system-card {border:1px solid var(--line);background:#101b2d;border-radius:13px;padding:14px}
+.system-card strong {display:block;margin:9px 0 6px}
+.system-card small {color:var(--muted);line-height:1.8}
+main {padding:27px clamp(15px,3vw,40px) 38px;min-width:0}
+.topbar {display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:25px}
+.eyebrow {color:var(--cyan);font-size:10px;letter-spacing:1.5px;margin-bottom:8px}
+h1 {font-size:24px;margin:0;font-weight:700}
+.subtitle {color:var(--muted);margin-top:9px;line-height:1.8}
+.top-actions {display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pill,.btn {
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:1px solid var(--line);border-radius:10px;padding:10px 13px;
+    background:#111c2d;color:#dce8fa
+}
+.btn:hover {border-color:#42e8e07a;color:var(--cyan)}
+.btn-primary {background:#123638;border-color:#42e8e04d;color:var(--cyan)}
+.dot {display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px currentColor}
+.dot.warn {background:var(--amber)}
+.dot.bad {background:var(--red)}
+.blink {animation:pulse 1.8s infinite}
+@keyframes pulse {0%,100%{opacity:1;box-shadow:0 0 10px currentColor}50%{opacity:.4;box-shadow:0 0 2px currentColor}}
+.panel {
+    background:linear-gradient(145deg,rgba(19,31,51,.92),rgba(12,21,37,.9));
+    border:1px solid var(--line);border-radius:17px;padding:20px;
+    box-shadow:0 18px 45px #00000015;min-width:0
+}
+.panel-head {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:19px}
+.panel-head h2 {font-size:14px;margin:0}
+.panel-head p {color:var(--muted);font-size:11px;margin:7px 0 0}
+.tag {border:1px solid var(--line);border-radius:8px;padding:6px 9px;color:var(--muted);font-size:10px;white-space:nowrap}
+.metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:17px}
+.metric {position:relative;overflow:hidden;padding:18px}
+.metric:after {content:"";position:absolute;top:0;right:0;width:65px;height:2px;background:var(--accent,var(--cyan));box-shadow:0 0 17px var(--accent,var(--cyan))}
+.metric-top {display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.metric-icon {width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:color-mix(in srgb,var(--accent,var(--cyan)) 12%,transparent);color:var(--accent,var(--cyan));font-size:17px}
+.metric-value {font-size:29px;font-weight:700;letter-spacing:-1px;margin:18px 0 8px;font-variant-numeric:tabular-nums}
+.metric-foot {display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px}
+.metric-foot .good {color:var(--green)}
+.main-grid {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(310px,1fr);gap:16px;margin-bottom:17px}
+.gauges {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gauge {text-align:center;padding:6px 2px 12px;min-width:0}
+.gauge svg {width:100%;max-width:205px;display:block;margin:auto;overflow:visible}
+.gauge-title {font-size:12px;color:#dce8fa;margin:8px 0;font-weight:600}
+.gauge {border:1px solid #26364e;border-radius:14px;background:linear-gradient(180deg,#15243a88,#0c172688);padding:12px 8px 14px}
+.gauge svg {filter:drop-shadow(0 5px 14px #00000020)}
+.live-grid {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:17px}
+.live-card {position:relative;overflow:hidden;padding:15px;min-width:0}
+.live-card:after {content:"";position:absolute;top:0;right:0;width:55px;height:2px;background:var(--accent,#42e8e0);box-shadow:0 0 14px var(--accent,#42e8e0)}
+.live-label {color:var(--muted);font-size:11px;line-height:1.8}
+.live-value {font-size:27px;font-weight:700;font-variant-numeric:tabular-nums;margin:10px 0 4px}
+.live-caption {font-size:10px;color:var(--muted)}
+.online-layout {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:16px}
+.online-current {min-width:105px;padding:12px;border:1px solid #26364e;border-radius:12px;background:#0d192a;text-align:center}
+.online-current strong {display:block;font-size:30px;font-variant-numeric:tabular-nums;color:#42e8e0}
+.online-current span {font-size:10px;color:var(--muted)}
+.online-chart {width:100%;display:block;min-height:170px;overflow:visible}
+.online-chart text {fill:var(--muted);font-size:11px}
+.online-chart .gridline {stroke:#26364e;stroke-width:1;stroke-dasharray:4 5}
+.online-chart .online-line {fill:none;stroke:#42e8e0;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px #42e8e055)}
+.online-chart .online-area {fill:url(#onlineFill)}
+.online-status {color:var(--muted);font-size:10px;line-height:1.8}
+.online-status .dot {display:inline-block;margin-left:6px}
+@media(max-width:1000px) {.live-grid {grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px) {
+    .live-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .live-value {font-size:24px}
+    .online-layout {grid-template-columns:1fr}
+    .online-current {display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:right}
+    .online-current strong {font-size:24px}
+}
+.gauge-number {font-size:24px;font-weight:bold;fill:var(--text)}
+.gauge-caption {font-size:10px;fill:var(--muted)}
+.gauge-note {font-size:10px;color:var(--muted);line-height:1.8}
+.chart-list {display:grid;gap:17px}
+.chart-label {display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:11px}
+.chart-label span:last-child {color:#d8e6fb;font-variant-numeric:tabular-nums}
+.track {height:8px;background:#26354b;border-radius:10px;overflow:hidden}
+.bar {height:100%;width:var(--w);background:linear-gradient(90deg,var(--bar,#42e8e0),color-mix(in srgb,var(--bar,#42e8e0) 50%,white));border-radius:10px;box-shadow:0 0 12px color-mix(in srgb,var(--bar,#42e8e0) 25%,transparent)}
+.legend {display:flex;gap:13px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:20px}
+.legend span {display:flex;align-items:center;gap:6px}
+.legend i {width:7px;height:7px;border-radius:50%;display:inline-block}
+.section-grid {display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,1fr);gap:16px;margin-bottom:17px}
+.request-list {display:grid;gap:0}
+.request {padding:15px 0;border-top:1px solid var(--line)}
+.request:first-child {border-top:0;padding-top:0}
+.request-main {display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.request-name {font-weight:bold;line-height:1.8;overflow-wrap:anywhere}
+.request-meta {color:var(--muted);font-size:10px;line-height:1.9;margin-top:5px}
+.request-message {color:#aabbd2;line-height:1.9;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.type-chip {display:inline-flex;margin-top:7px;padding:5px 8px;border-radius:7px;background:#1b2a41;color:#a8c8ff;font-size:10px}
+.actions {display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.actions form {display:inline}
+.btn-sm {padding:7px 10px;font-size:11px;border-radius:8px}
+.btn-approve {color:var(--green);border-color:#46e5a44a;background:#123025}
+.btn-reject {color:var(--red);border-color:#ff71883d;background:#321d2a}
+.empty {border:1px dashed #31435d;border-radius:11px;padding:22px;text-align:center;color:var(--muted);line-height:1.9}
+.table-wrap {overflow:auto}
+table {width:100%;border-collapse:collapse;white-space:nowrap}
+th,td {text-align:right;padding:12px 10px;border-bottom:1px solid var(--line);font-size:11px}
+th {color:#7188a6;font-weight:normal}
+td {color:#dbe6f6}
+.status-text {display:inline-flex;align-items:center;gap:7px}
+.status-text .dot {width:6px;height:6px}
+.flash {padding:12px 15px;margin-bottom:13px;border-radius:11px;background:#122d2b;border:1px solid #46e5a42b;color:#b4ffe0;line-height:1.8}
+.flash.warning,.flash.error {background:#30251b;border-color:#ffc76b3d;color:#ffdb9c}
+.footer {display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#60748f;font-size:10px;padding:13px 3px}
+@media(max-width:1150px) {
+    .metrics {grid-template-columns:repeat(2,minmax(0,1fr))}
+    .main-grid,.section-grid {grid-template-columns:1fr}
+}
+@media(max-width:700px) {
+    .layout {grid-template-columns:1fr}
+    .sidebar {position:relative;height:auto;padding:12px;gap:12px;border-left:0;border-bottom:1px solid var(--line)}
+    .brand {padding:4px 5px 12px}
+    nav {grid-template-columns:repeat(2,minmax(0,1fr))}
+    nav a {padding:10px;font-size:11px}
+    .nav-title,.sidebar-bottom {display:none}
+    main {padding:20px 13px}
+    .topbar {align-items:flex-start;flex-direction:column}
+    h1 {font-size:21px}
+    .metrics {gap:9px}
+    .metric {padding:13px}
+    .metric-value {font-size:25px}
+    .panel {padding:15px}
+    .gauges {gap:0}
+    .gauge-title {font-size:10px}
+}
+</style>
 </head>
 <body>
-    <main class="container">
-        <section class="header">
-            <h1>پنل عملیات FEEMAAS</h1>
-            <p>مرکز مدیریت و پیگیری درخواست‌های عملیاتی سامانه.</p>
-            <span class="status">صفحهٔ اولیه · دسترسی محدود</span>
-        </section>
+<div class="layout">
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-mark">F</div>
+        <div><strong>FEEMAAS</strong><small>OPERATIONS CENTER · 01</small></div>
+    </div>
+    <div>
+        <div class="nav-title">مرکز کنترل</div>
+        <nav>
+            <a class="active" href="#overview"><span class="nav-icon">◈</span> نمای کلی</a>
+            <a href="#performance"><span class="nav-icon">◉</span> عملکرد سامانه</a>
+            <a href="#access-queue"><span class="nav-icon">⌁</span> درخواست‌های دسترسی <span class="tag">{{ pending_access_count }}</span></a>
+            <a href="#organization-queue"><span class="nav-icon">▦</span> درخواست‌های سازمانی <span class="tag">{{ pending_application_count }}</span></a>
+            <a href="#recent-activity"><span class="nav-icon">↻</span> آخرین بررسی‌ها</a>
+            <a href="{% url 'operations:account' %}"><span class="nav-icon">⚙</span> حساب من</a>
+        </nav>
+    </div>
+    <div class="sidebar-bottom">
+        <div class="system-card">
+            <span class="status-text"><i class="dot blink"></i> پنل عملیات فعال</span>
+            <strong>FEEMAAS CONTROL</strong>
+            <small>نمایش داده‌ها بر اساس اطلاعات فعلی پایگاه داده. وضعیت اتصال پایگاه داده جداگانه پایش نشده است.</small>
+        </div>
+    </div>
+</aside>
 
-        <section class="panel">
-            <h2>مرکز درخواست‌ها</h2>
-            <p>
-                این بخش فعلاً پوستهٔ اولیه است.
-                پس از تکمیل کنترل دسترسی و آزمون ورود،
-                درخواست‌های کارگاه، طراحی، مشاوره، کنترل کیفیت و پشتیبانی
-                به‌صورت مرحله‌ای به آن متصل می‌شوند.
-            </p>
-        </section>
-    </main>
+<main>
+    <header class="topbar" id="overview">
+        <div>
+            <div class="eyebrow">SYSTEM OVERVIEW / داشبورد مدیریتی</div>
+            <h1>مرکز عملیات سامانه</h1>
+            <div class="subtitle">پایش کاربران، سازمان‌ها، پروژه‌ها و صف درخواست‌های دسترسی</div>
+        </div>
+        <div class="top-actions">
+            <span class="pill"><i class="dot"></i> دسترسی مجاز</span>
+            <span class="pill">{{ now|date:"Y/m/d · H:i" }}</span>
+            <a class="btn btn-primary" href="{% url 'operations:dashboard' %}">↻ تازه‌سازی داده‌ها</a>
+        </div>
+    </header>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="flash {% if message.tags == 'warning' or message.tags == 'error' %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <section class="metrics" aria-label="آمار اصلی">
+        <article class="panel metric" style="--accent:#42e8e0">
+            <div class="metric-top"><span>کل کاربران</span><span class="metric-icon">♙</span></div>
+            <div class="metric-value">{{ total_users }}</div>
+            <div class="metric-foot"><span>حساب‌های ثبت‌شده</span><span class="good">{{ active_users }} فعال</span></div>
+        </article>
+        <article class="panel metric" style="--accent:#6995ff">
+            <div class="metric-top"><span>سازمان‌ها</span><span class="metric-icon">▦</span></div>
+            <div class="metric-value">{{ total_organizations }}</div>
+            <div class="metric-foot"><span>{{ active_organizations }} فعال</span><span>{{ pending_organizations }} در انتظار</span></div>
+        </article>
+        <article class="panel metric" style="--accent:#b18aff">
+            <div class="metric-top"><span>کل پروژه‌ها</span><span class="metric-icon">◇</span></div>
+            <div class="metric-value">{{ total_projects }}</div>
+            <div class="metric-foot"><span>{{ open_projects }} در جریان</span><span>{{ completed_projects }} تکمیل‌شده</span></div>
+        </article>
+        <article class="panel metric" style="--accent:{% if pending_access_count %}#ffc76b{% else %}#46e5a4{% endif %}">
+            <div class="metric-top"><span>صف دسترسی</span><span class="metric-icon">⌁</span></div>
+            <div class="metric-value">{{ pending_access_count }}</div>
+            <div class="metric-foot">
+                <span>درخواست بررسی‌نشده</span>
+                <span class="{% if pending_access_count %}status-text{% else %}good{% endif %}">
+                    {% if pending_access_count %}<i class="dot warn blink"></i> نیازمند رسیدگی{% else %}صف خالی{% endif %}
+                </span>
+            </div>
+        </article>
+    </section>
+
+    <section class="live-grid" aria-label="تعداد کاربران به تفکیک نقش">
+        <article class="panel live-card" style="--accent:#42e8e0">
+            <div class="live-label">کاربران مشتری</div>
+            <div class="live-value">{{ organization_user_counts.customer|default:0 }}</div>
+            <div class="live-caption">دارای سازمان مشتری فعال</div>
+        </article>
+        <article class="panel live-card" style="--accent:#46e5a4">
+            <div class="live-label">کاربران کارگاه</div>
+            <div class="live-value">{{ organization_user_counts.workshop|default:0 }}</div>
+            <div class="live-caption">دارای سازمان کارگاه فعال</div>
+        </article>
+        <article class="panel live-card" style="--accent:#b18aff">
+            <div class="live-label">کاربران طراح</div>
+            <div class="live-value">{{ organization_user_counts.designer|default:0 }}</div>
+            <div class="live-caption">دارای سازمان طراحی فعال</div>
+        </article>
+        <article class="panel live-card" style="--accent:#6995ff">
+            <div class="live-label">کاربران شرکت</div>
+            <div class="live-value">{{ organization_user_counts.company|default:0 }}</div>
+            <div class="live-caption">دارای سازمان شرکت فعال</div>
+        </article>
+        <article class="panel live-card" style="--accent:#ffc76b">
+            <div class="live-label">مرکز عملیات</div>
+            <div class="live-value">{{ operations_user_count|default:0 }}</div>
+            <div class="live-caption">کاربران فعال گروه عملیات</div>
+        </article>
+    </section>
+
+    <section class="main-grid" id="performance">
+        <article class="panel">
+            <div class="panel-head">
+                <div><h2>شاخص‌های عملکرد</h2><p>نسبت‌های محاسبه‌شده از داده‌های ثبت‌شده</p></div>
+                <span class="tag">LIVE DATA</span>
+            </div>
+            <div class="gauges">
+                <div class="gauge">
+                    <svg viewBox="0 0 200 145" role="img" aria-label="درصد پروژه‌های بسته‌شده">
+                        <defs><linearGradient id="arcA"><stop offset="0%" stop-color="#42e8e0"/><stop offset="100%" stop-color="#6995ff"/></linearGradient></defs>
+                        <path d="M 28 112 A 72 72 0 0 1 172 112" fill="none" stroke="#26364e" stroke-width="12" stroke-linecap="round"/>
+                        <path d="M 28 112 A 72 72 0 0 1 172 112" fill="none" stroke="url(#arcA)" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+                        <g transform="rotate({{ project_close_angle }} 100 112)">
+                            <line x1="100" y1="112" x2="100" y2="48" stroke="#42e8e0" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="100" cy="112" r="7" fill="#42e8e0"/>
+                            <circle cx="100" cy="112" r="3" fill="#0a1524"/>
+                        </g>
+                        <text x="100" y="91" text-anchor="middle" class="gauge-number">{{ project_close_rate }}%</text>
+                        <text x="100" y="132" text-anchor="middle" class="gauge-caption">۰ — ۱۰۰٪</text>
+                    </svg>
+                    <div class="gauge-title">نسبت پروژه‌های بسته‌شده</div>
+                    <div class="gauge-note">تکمیل‌شده یا لغوشده ÷ کل پروژه‌ها</div>
+                </div>
+                <div class="gauge">
+                    <svg viewBox="0 0 200 145" role="img" aria-label="درصد بررسی درخواست‌های دسترسی">
+                        <defs><linearGradient id="arcB"><stop offset="0%" stop-color="#b18aff"/><stop offset="100%" stop-color="#42e8e0"/></linearGradient></defs>
+                        <path d="M 28 112 A 72 72 0 0 1 172 112" fill="none" stroke="#26364e" stroke-width="12" stroke-linecap="round"/>
+                        <path d="M 28 112 A 72 72 0 0 1 172 112" fill="none" stroke="url(#arcB)" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+                        <g transform="rotate({{ review_angle }} 100 112)">
+                            <line x1="100" y1="112" x2="100" y2="48" stroke="#b18aff" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="100" cy="112" r="7" fill="#b18aff"/>
+                            <circle cx="100" cy="112" r="3" fill="#0a1524"/>
+                        </g>
+                        <text x="100" y="91" text-anchor="middle" class="gauge-number">{{ review_rate }}%</text>
+                        <text x="100" y="132" text-anchor="middle" class="gauge-caption">۰ — ۱۰۰٪</text>
+                    </svg>
+                    <div class="gauge-title">نرخ بررسی درخواست‌ها</div>
+                    <div class="gauge-note">تأیید یا ردشده ÷ کل درخواست‌های دسترسی</div>
+                </div>
+            </div>
+            <div class="legend">
+                <span><i style="background:#42e8e0"></i> شاخص پروژه</span>
+                <span><i style="background:#b18aff"></i> شاخص رسیدگی</span>
+                <span>در نبود داده، مقدار شاخص صفر است.</span>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-head">
+                <div><h2>توزیع وضعیت پروژه‌ها</h2><p>سهم هر وضعیت از کل پروژه‌ها</p></div>
+                <span class="tag">{{ total_projects }} پروژه</span>
+            </div>
+            <div class="chart-list">
+                {% for item in projects_by_status %}
+                <div>
+                    <div class="chart-label">
+                        <span>{{ item.label }}</span>
+                        <span>{{ item.total }} <small>· {{ item.percentage }}٪</small></span>
+                    </div>
+                    <div class="track">
+                        <div class="bar" style="--w:{{ item.percentage }}%;--bar:{% if item.status == 'completed' %}#46e5a4{% elif item.status == 'cancelled' %}#ff7188{% elif item.status == 'production' %}#6995ff{% elif item.status == 'tender' %}#ffc76b{% else %}#42e8e0{% endif %}"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty">هنوز پروژه‌ای در پایگاه داده ثبت نشده است.</div>
+                {% endfor %}
+            </div>
+            <div class="legend"><span><i style="background:#46e5a4"></i> تکمیل‌شده</span><span><i style="background:#6995ff"></i> تولید</span><span><i style="background:#ffc76b"></i> مناقصه</span><span><i style="background:#ff7188"></i> لغوشده</span></div>
+        </article>
+    </section>
+
+
+    <section class="panel" id="online-users-panel" style="margin-bottom:17px">
+        <div class="panel-head">
+            <div>
+                <h2>روند کاربران آنلاین</h2>
+                <p>تعداد کاربران دارای فعالیت ثبت‌شده در پنج دقیقهٔ اخیر</p>
+            </div>
+            <span class="tag">به‌روزرسانی خودکار</span>
+        </div>
+        <div class="online-layout">
+            <div>
+                <svg id="online-users-chart" class="online-chart"
+                     viewBox="0 0 600 190" role="img"
+                     aria-label="نمودار تعداد کاربران آنلاین در طول زمان"
+                     preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="onlineFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#42e8e0" stop-opacity=".28"/>
+                            <stop offset="100%" stop-color="#42e8e0" stop-opacity=".01"/>
+                        </linearGradient>
+                    </defs>
+                    <g id="online-chart-grid"></g>
+                    <path id="online-chart-area" class="online-area" d=""></path>
+                    <path id="online-chart-line" class="online-line" d=""></path>
+                    <g id="online-chart-labels"></g>
+                </svg>
+                <div id="online-users-status" class="online-status">
+                    <i class="dot"></i> در انتظار دریافت نخستین داده
+                </div>
+            </div>
+            <div class="online-current">
+                <div>
+                    <strong id="online-users-current">—</strong>
+                    <span>کاربر آنلاین</span>
+                </div>
+                <div class="live-caption">پنجرهٔ زمانی: ۵ دقیقه</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-grid" id="access-queue">
+        <article class="panel">
+            <div class="panel-head">
+                <div><h2>صف درخواست‌های دسترسی</h2><p>درخواست‌های جدید کارگاه، مشاوره و طراحی</p></div>
+                <span class="tag">{% if pending_access_count %}<i class="dot warn blink"></i> {{ pending_access_count }} در انتظار{% else %}صف خالی{% endif %}</span>
+            </div>
+            <div class="request-list">
+                {% for item in pending_access_requests %}
+                <div class="request">
+                    <div class="request-main">
+                        <div>
+                            <div class="request-name">{{ item.organization_name|default:item.user.username }}</div>
+                            <div class="request-meta">کاربر: {{ item.user.username }} · {{ item.created_at|date:"Y/m/d H:i" }}</div>
+                            <span class="type-chip">{{ item.get_requested_type_display }}</span>
+                        </div>
+                        <span class="status-text"><i class="dot warn blink"></i><span style="color:var(--amber)">در انتظار</span></span>
+                    </div>
+                    {% if item.message %}<div class="request-message">{{ item.message|truncatechars:500 }}</div>{% endif %}
+                    <div class="actions">
+                        <form method="post" action="{% url 'operations:review_access_request' item.pk %}" onsubmit="return confirm('درخواست این کاربر تأیید شود و سازمان و عضویت مربوطه ایجاد گردد؟')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve">
+                            <button class="btn btn-sm btn-approve" type="submit">✓ تأیید و ایجاد دسترسی</button>
+                        </form>
+                        <form method="post" action="{% url 'operations:review_access_request' item.pk %}" onsubmit="return confirm('از رد این درخواست مطمئن هستید؟')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button class="btn btn-sm btn-reject" type="submit">× رد درخواست</button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty"><i class="dot"></i><br>درخواست دسترسیِ در انتظار بررسی وجود ندارد.</div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel" id="organization-queue">
+            <div class="panel-head">
+                <div><h2>درخواست‌های سازمانی</h2><p>درخواست‌های نیازمند بررسی جداگانه</p></div>
+                <span class="tag">{{ pending_application_count }} مورد</span>
+            </div>
+            <div class="request-list">
+                {% for item in pending_applications %}
+                <div class="request">
+                    <div class="request-name">{{ item.organization_name|default:"بدون نام سازمان" }}</div>
+                    <div class="request-meta">
+                        متقاضی: {{ item.applicant.username }}<br>
+                        نوع: {{ item.get_requested_type_display }} · {{ item.created_at|date:"Y/m/d H:i" }}
+                    </div>
+                    <span class="type-chip">
+                        {% if item.status == "edit_required" %}نیازمند اصلاح{% else %}در انتظار بررسی{% endif %}
+                    </span>
+                    {% if item.description %}<div class="request-message">{{ item.description|truncatechars:220 }}</div>{% endif %}
+                </div>
+                {% empty %}
+                <div class="empty">درخواست سازمانیِ در انتظار بررسی وجود ندارد.</div>
+                {% endfor %}
+            </div>
+            <p class="request-meta">این فهرست فقط‌خواندنی است؛ گردش تأیید سازمانی هنوز به عملیات این صفحه متصل نشده است.</p>
+        </article>
+    </section>
+
+    <section class="panel" id="recent-activity">
+        <div class="panel-head">
+            <div><h2>آخرین درخواست‌های دسترسی</h2><p>وضعیت فعلی و آخرین بررسی ثبت‌شده</p></div>
+            <span class="tag">آخرین ۸ درخواست</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>متقاضی</th><th>نوع درخواست</th><th>تاریخ</th><th>وضعیت</th><th>بررسی‌کننده</th></tr></thead>
+                <tbody>
+                {% for item in recent_access_requests %}
+                <tr>
+                    <td>{{ item.user.username }}</td>
+                    <td>{{ item.get_requested_type_display }}</td>
+                    <td>{{ item.created_at|date:"Y/m/d H:i" }}</td>
+                    <td>
+                        <span class="status-text">
+                        {% if item.status == "pending" %}
+                            <i class="dot warn"></i> در انتظار
+                        {% elif item.status == "approved" %}
+                            <i class="dot"></i> تأییدشده
+                        {% else %}
+                            <i class="dot bad"></i> ردشده
+                        {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ item.reviewed_by.username|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">هنوز درخواست دسترسی ثبت نشده است.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <span>FEEMAAS · Operations Center</span>
+        <span>اعداد بر اساس داده‌های فعلی پایگاه داده؛ بدون دادهٔ نمونه</span>
+    </footer>
+</main>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    const endpoint = "{% url 'operations:api_online_users' %}";
+    const currentNode = document.getElementById("online-users-current");
+    const statusNode = document.getElementById("online-users-status");
+    const chartNode = document.getElementById("online-users-chart");
+    const gridNode = document.getElementById("online-chart-grid");
+    const labelsNode = document.getElementById("online-chart-labels");
+    const lineNode = document.getElementById("online-chart-line");
+    const areaNode = document.getElementById("online-chart-area");
+
+    if (!currentNode || !statusNode || !chartNode) return;
+
+    const NS = "http://www.w3.org/2000/svg";
+    const width = 600;
+    const height = 190;
+    const left = 42;
+    const right = 14;
+    const top = 14;
+    const bottom = 32;
+    let busy = false;
+
+    function svgElement(name, attrs, text) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs || {}).forEach(function (key) {
+            node.setAttribute(key, attrs[key]);
+        });
+        if (text !== undefined) node.textContent = text;
+        return node;
+    }
+
+    function render(points) {
+        const valid = points.filter(function (point) {
+            return Number.isFinite(Number(point.count)) && point.time;
+        });
+        const plotWidth = width - left - right;
+        const plotHeight = height - top - bottom;
+        const maxCount = Math.max(1, ...valid.map(function (p) {
+            return Number(p.count);
+        }));
+        const yMax = Math.ceil(maxCount / 4) * 4 || 4;
+
+        gridNode.replaceChildren();
+        labelsNode.replaceChildren();
+
+        for (let i = 0; i <= 4; i++) {
+            const y = top + plotHeight * i / 4;
+            const value = Math.round(yMax * (4 - i) / 4);
+            gridNode.appendChild(svgElement("line", {
+                x1: left, y1: y, x2: width - right, y2: y,
+                class: "gridline"
+            }));
+            labelsNode.appendChild(svgElement("text", {
+                x: left - 9, y: y + 4, "text-anchor": "end"
+            }, String(value)));
+        }
+
+        if (!valid.length) {
+            lineNode.setAttribute("d", "");
+            areaNode.setAttribute("d", "");
+            return;
+        }
+
+        const coords = valid.map(function (point, index) {
+            const x = valid.length === 1
+                ? left + plotWidth
+                : left + plotWidth * index / (valid.length - 1);
+            const y = top + plotHeight *
+                (1 - Number(point.count) / yMax);
+            return {x: x, y: y, point: point};
+        });
+
+        const linePath = coords.map(function (p, i) {
+            return (i ? "L" : "M") + p.x.toFixed(2) + " " + p.y.toFixed(2);
+        }).join(" ");
+
+        lineNode.setAttribute("d", linePath);
+        areaNode.setAttribute(
+            "d",
+            linePath + " L " + coords[coords.length - 1].x + " " +
+            (top + plotHeight) + " L " + coords[0].x + " " +
+            (top + plotHeight) + " Z"
+        );
+
+        [0, Math.floor((valid.length - 1) / 2), valid.length - 1]
+            .filter(function (value, index, array) {
+                return array.indexOf(value) === index;
+            })
+            .forEach(function (index) {
+                const p = coords[index];
+                const date = new Date(p.point.time);
+                const label = date.toLocaleTimeString([], {
+                    hour: "2-digit", minute: "2-digit"
+                });
+                labelsNode.appendChild(svgElement("text", {
+                    x: p.x,
+                    y: height - 8,
+                    "text-anchor": index === 0 ? "start" :
+                        (index === valid.length - 1 ? "end" : "middle")
+                }, label));
+            });
+    }
+
+    async function refresh() {
+        if (busy) return;
+        busy = true;
+        try {
+            const response = await fetch(endpoint, {
+                method: "GET",
+                credentials: "same-origin",
+                headers: {"Accept": "application/json"}
+            });
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+            const data = await response.json();
+            currentNode.textContent = String(data.online_count);
+            render(Array.isArray(data.points) ? data.points : []);
+            statusNode.textContent =
+                "آخرین دریافت: " +
+                new Date(data.recorded_at).toLocaleTimeString([], {
+                    hour: "2-digit", minute: "2-digit", second: "2-digit"
+                }) +
+                " · نمودار بر اساس داده‌های ثبت‌شده";
+        } catch (error) {
+            statusNode.textContent =
+                "دریافت اطلاعات آنلاین ناموفق بود؛ تلاش مجدد ادامه دارد.";
+        } finally {
+            busy = false;
+        }
+    }
+
+    refresh();
+    window.setInterval(refresh, 30000);
+})();
+</script>
+
 </body>
 </html>
