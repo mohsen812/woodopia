@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+import secrets
+import random
 
 
 class Organization(models.Model):
@@ -19,6 +21,27 @@ class Organization(models.Model):
     ]
 
     name = models.CharField(max_length=255)
+
+    # Stable identifier; unlike the display name, this must not change
+    # when the owner edits the account name.
+    account_code = models.CharField(
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+
+    LEGAL_TYPE_CHOICES = [
+        ("individual", "حقیقی"),
+        ("legal_entity", "حقوقی"),
+    ]
+
+    legal_type = models.CharField(
+        max_length=20,
+        choices=LEGAL_TYPE_CHOICES,
+        null=True,
+        blank=True,
+    )
 
     organization_type = models.CharField(
         max_length=50,
@@ -44,6 +67,32 @@ class Organization(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    def save(self, *args, **kwargs):
+        if not self.account_code:
+            prefixes = [
+                "Sirius", "Vega", "Rigel", "Altair",
+                "Deneb", "Polaris", "Arcturus", "Proxima",
+                "Europa", "Titan", "Io", "Luna",
+                "Mars", "Neptune", "Kepler",
+            ]
+
+            for _ in range(20):
+                candidate = "{}-{}".format(
+                    random.choice(prefixes),
+                    secrets.token_hex(2).upper(),
+                )
+                if not Organization.objects.filter(
+                    account_code=candidate
+                ).exists():
+                    self.account_code = candidate
+                    break
+            else:
+                raise RuntimeError(
+                    "Could not generate a unique organization account code."
+                )
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
