@@ -12,7 +12,9 @@ class UserLoginView(LoginView):
 
 
     def get_success_url(self):
+        if self.request.user.groups.filter(
+            name="FEEMAAS Operations"
+        ).exists():
+            return "/operations/"
 
-        return get_user_landing_page(
-            self.request.user
-        )
+        return get_user_landing_page(self.request.user)
