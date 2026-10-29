@@ -421,6 +421,12 @@ td {color:#dbe6f6}
                         <span class="status-text"><i class="dot warn blink"></i><span style="color:var(--amber)">در انتظار</span></span>
                     </div>
                     {% if item.message %}<div class="request-message">{{ item.message|truncatechars:500 }}</div>{% endif %}
+                    {% if item.social_profile %}
+                    <div class="request-meta">
+                        شبکهٔ اجتماعی: {{ item.get_social_network_display|default:"لینک" }} ·
+                        <a href="{{ item.social_profile }}" target="_blank" rel="noopener noreferrer">مشاهدهٔ پروفایل</a>
+                    </div>
+                    {% endif %}
                     <div class="actions">
                         <form method="post" action="{% url 'operations:review_access_request' item.pk %}" onsubmit="return confirm('درخواست این کاربر تأیید شود و سازمان و عضویت مربوطه ایجاد گردد؟')">
                             {% csrf_token %}

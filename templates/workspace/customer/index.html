@@ -228,6 +228,15 @@
     ●
     حساب کاربری
 </button>
+
+<button
+    type="button"
+    class="nav-item collaboration-request-trigger"
+    data-action="collaboration-request"
+>
+    ✦
+    درخواست همکاری
+</button>
 </aside>
     <!-- =========================
          MAIN WORKSPACE
@@ -411,12 +420,7 @@
 
                 </div>
 
-<button
-    class="primary-button"
-    id="create-project-button"
->
-    + ایجاد پروژه
-</button>
+
 
 
 <button
@@ -816,6 +820,77 @@
 </div>
 
 
+
+
+<!-- COLLABORATION_REQUEST_MODAL_V1 -->
+<div id="collaboration-request-modal" class="collaboration-modal hidden" dir="rtl">
+    <div class="collaboration-backdrop" data-collaboration-close></div>
+
+    <section class="collaboration-panel" role="dialog" aria-modal="true"
+             aria-labelledby="collaboration-modal-title">
+        <button type="button" class="collaboration-close"
+                data-collaboration-close aria-label="بستن">×</button>
+
+        <div class="collaboration-eyebrow">FEEMAAS · PARTNERSHIP</div>
+        <h2 id="collaboration-modal-title">درخواست همکاری</h2>
+        <p class="collaboration-intro">
+            اطلاعات مجموعه‌تان را ثبت کنید. درخواست در پنل عملیات بررسی می‌شود.
+        </p>
+
+        <form id="collaboration-request-form">
+            <label for="collaboration-type">نوع همکاری</label>
+            <select id="collaboration-type" name="requested_type" required>
+                <option value="">انتخاب کنید</option>
+                <option value="workshop">کارگاه</option>
+                <option value="designer">طراح</option>
+                <option value="consultant">مشاور</option>
+            </select>
+
+            <label for="collaboration-organization">نام مجموعه</label>
+            <input id="collaboration-organization" name="organization_name"
+                   maxlength="255" required autocomplete="organization"
+                   placeholder="نام مجموعه یا کسب‌وکار">
+
+            <label for="collaboration-message">معرفی کوتاه و توضیحات</label>
+            <textarea id="collaboration-message" name="message"
+                      maxlength="5000" rows="3"
+                      placeholder="زمینه فعالیت و نوع همکاری موردنظر"></textarea>
+
+            <div class="collaboration-social-heading">راه ارتباطی آنلاین (اختیاری)</div>
+            <label for="collaboration-network">شبکه یا وب‌سایت</label>
+            <select id="collaboration-network" name="social_network">
+                <option value="">انتخاب کنید</option>
+                <option value="instagram">اینستاگرام</option>
+                <option value="linkedin">لینکدین</option>
+                <option value="website">وب‌سایت</option>
+                <option value="other">سایر</option>
+            </select>
+
+            <label for="collaboration-profile">لینک یا شناسهٔ عمومی</label>
+            <input id="collaboration-profile" name="social_profile"
+                   maxlength="500" autocomplete="url"
+                   placeholder="https://… یا شناسهٔ عمومی">
+            <p class="collaboration-hint">
+                فقط لینک عمومی یا شناسه را وارد کنید؛ رمز عبور لازم نیست.
+            </p>
+
+            <div id="collaboration-form-message" class="collaboration-message"
+                 role="status" aria-live="polite"></div>
+
+            <button type="submit" class="collaboration-submit">
+                ثبت درخواست
+            </button>
+        </form>
+
+        <div class="collaboration-history">
+            <h3>درخواست‌های قبلی من</h3>
+            <div id="collaboration-request-history">
+                برای مشاهدهٔ درخواست‌ها، پنجره را باز کنید.
+            </div>
+        </div>
+    </section>
+</div>
+<!-- /COLLABORATION_REQUEST_MODAL_V1 -->
 
 <script src="{% static 'workspace/core/js/api.js' %}"></script>
 

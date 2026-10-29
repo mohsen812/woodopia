@@ -42,6 +42,25 @@ class AccessRequest(models.Model):
     )
 
 
+    SOCIAL_NETWORK_CHOICES = [
+        ("instagram", "Instagram"),
+        ("linkedin", "LinkedIn"),
+        ("website", "Website"),
+        ("other", "Other"),
+    ]
+
+    social_network = models.CharField(
+        max_length=20,
+        choices=SOCIAL_NETWORK_CHOICES,
+        blank=True,
+    )
+
+    social_profile = models.CharField(
+        max_length=500,
+        blank=True,
+    )
+
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
