@@ -5469,3 +5469,240 @@ body.collaboration-modal-open {
     }
 }
 /* /COLLABORATION_REQUEST_CSS_V1 */
+
+
+/* Customer account and security panels */
+.account-panel {
+    margin-bottom: 20px;
+}
+
+.account-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.account-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.account-form-field label {
+    font-weight: 600;
+}
+
+.account-form-field input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.account-form-field small {
+    opacity: 0.8;
+    line-height: 1.7;
+}
+
+.account-form-field ul,
+.account-form-errors ul {
+    margin: 0;
+    padding-right: 20px;
+    color: #b42318;
+}
+
+.account-form > button {
+    justify-self: start;
+}
+
+.account-messages {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.account-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    line-height: 1.8;
+}
+
+.account-message.success {
+    background: #e8f6ed;
+    color: #17663a;
+}
+
+.account-message.error,
+.account-message.warning {
+    background: #fff0ee;
+    color: #a1261d;
+}
+
+.account-memberships {
+    display: grid;
+    gap: 0;
+    margin-top: 12px;
+}
+
+.account-membership-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.account-membership-row:last-child {
+    border-bottom: 0;
+}
+
+@media (max-width: 700px) {
+    .account-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account-membership-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* CUSTOMER_ACCOUNT_COMPACT_UI_V1 */
+
+/* Keep account pages visually compact without changing other views. */
+#profile-view,
+#settings-view {
+    width: 100%;
+    min-width: 0;
+}
+
+#profile-view > .page-heading,
+#settings-view > .page-heading {
+    max-width: 800px;
+    margin-inline: auto;
+    margin-bottom: 22px;
+}
+
+#profile-view > .account-panel,
+#settings-view > .account-panel {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 20px;
+    padding: 26px 30px;
+    box-sizing: border-box;
+    border-radius: 16px;
+}
+
+#profile-view .project-detail-header,
+#settings-view .project-detail-header {
+    margin-bottom: 8px;
+}
+
+#profile-view .account-form,
+#settings-view .account-form {
+    width: 100%;
+    max-width: 680px;
+    margin-top: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 22px;
+    row-gap: 20px;
+    align-items: start;
+}
+
+#profile-view .account-form-field,
+#settings-view .account-form-field {
+    width: 100%;
+    min-width: 0;
+}
+
+#profile-view .account-form-field label,
+#settings-view .account-form-field label {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+#profile-view .account-form-field input,
+#settings-view .account-form-field input {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    border-radius: 9px;
+}
+
+#profile-view .account-form-field small {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+#profile-view .account-form > button,
+#settings-view .account-form > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 2px;
+    min-height: 42px;
+    padding: 10px 22px;
+    border-radius: 9px;
+}
+
+#profile-view .account-memberships {
+    max-width: 680px;
+    margin-top: 14px;
+}
+
+#profile-view .account-membership-row {
+    padding: 15px 4px;
+}
+
+#profile-view > .account-panel:last-of-type .primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 9px 20px;
+    border-radius: 9px;
+    text-decoration: none;
+}
+
+#profile-view .account-panel + .account-panel {
+    margin-top: 20px;
+}
+
+@media (max-width: 760px) {
+    #profile-view > .account-panel,
+    #settings-view > .account-panel {
+        padding: 22px 20px;
+    }
+
+    #profile-view .account-form,
+    #settings-view .account-form {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: none;
+        row-gap: 16px;
+    }
+
+    #profile-view .account-form > button,
+    #settings-view .account-form > button {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 420px) {
+    #profile-view > .account-panel,
+    #settings-view > .account-panel {
+        padding: 18px 15px;
+        border-radius: 12px;
+    }
+}
+
+/* END CUSTOMER_ACCOUNT_COMPACT_UI_V1 */

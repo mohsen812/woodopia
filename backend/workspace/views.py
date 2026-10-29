@@ -53,9 +53,32 @@ def _render_active_workspace(request, membership):
     if not template:
         return None
 
+    context = {}
+
+    if workspace.get("workspace") == "customer":
+        from django.contrib.auth.forms import PasswordChangeForm
+        from organizations.models import Membership
+        from users.account_forms import CustomerProfileForm
+
+        context["customer_profile_form"] = CustomerProfileForm(
+            instance=request.user,
+        )
+        context["customer_password_form"] = PasswordChangeForm(
+            user=request.user,
+        )
+        context["customer_memberships"] = (
+            Membership.objects.filter(
+                user=request.user,
+                status="active",
+            )
+            .select_related("organization", "role_fk")
+            .order_by("organization__name")
+        )
+
     return render(
         request,
         template,
+        context,
     )
 
 

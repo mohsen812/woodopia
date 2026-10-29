@@ -261,7 +261,6 @@ document.addEventListener(
                                 "contracts",
                                 "payments",
                                 "files",
-                                "settings"
                             ];
 
                             if(

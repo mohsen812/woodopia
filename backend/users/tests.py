@@ -93,3 +93,154 @@ class CustomerRegistrationTests(TestCase):
         response = self.client.get(reverse("register"))
 
         self.assertRedirects(response, "/")
+
+class CustomerAccountTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="account-customer",
+            email="account@example.com",
+            password="Current-Secure-Password-482!",
+            first_name="نام",
+            last_name="آزمایشی",
+            phone="09120000000",
+            is_email_verified=True,
+        )
+
+        organization = Organization.objects.create(
+            name="Test Customer",
+            organization_type="customer",
+            legal_type="individual",
+            status="active",
+            owner=self.user,
+        )
+
+        Membership.objects.create(
+            user=self.user,
+            organization=organization,
+            role="owner",
+            status="active",
+        )
+
+        self.client.force_login(self.user)
+
+    def test_profile_can_be_updated(self):
+        response = self.client.post(
+            "/users/profile/",
+            {
+                "first_name": "نام جدید",
+                "last_name": "نام خانوادگی جدید",
+                "email": "new-account@example.com",
+                "phone": "09121111111",
+            },
+        )
+
+        self.assertRedirects(response, "/workspace/")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "نام جدید")
+        self.assertEqual(self.user.last_name, "نام خانوادگی جدید")
+        self.assertEqual(self.user.email, "new-account@example.com")
+        self.assertEqual(self.user.phone, "09121111111")
+        self.assertFalse(self.user.is_email_verified)
+
+    def test_profile_rejects_duplicate_email(self):
+        User.objects.create_user(
+            username="another-customer",
+            email="other@example.com",
+            password="Other-Secure-Password-482!",
+        )
+
+        response = self.client.post(
+            "/users/profile/",
+            {
+                "first_name": "نام",
+                "last_name": "آزمایشی",
+                "email": "OTHER@example.com",
+                "phone": "09120000000",
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, "/workspace/")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "account@example.com")
+        self.assertContains(response, "این ایمیل قبلاً برای حساب دیگری ثبت شده است.")
+
+    def test_profile_keeps_email_verification_if_email_is_unchanged(self):
+        response = self.client.post(
+            "/users/profile/",
+            {
+                "first_name": self.user.first_name,
+                "last_name": self.user.last_name,
+                "email": "ACCOUNT@example.com",
+                "phone": self.user.phone,
+            },
+        )
+
+        self.assertRedirects(response, "/workspace/")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "account@example.com")
+        self.assertTrue(self.user.is_email_verified)
+
+    def test_password_can_be_changed_and_session_is_preserved(self):
+        response = self.client.post(
+            "/users/password-change/",
+            {
+                "old_password": "Current-Secure-Password-482!",
+                "new_password1": "New-Secure-Password-937!x",
+                "new_password2": "New-Secure-Password-937!x",
+            },
+        )
+
+        self.assertRedirects(response, "/workspace/")
+        self.user.refresh_from_db()
+        self.assertTrue(
+            self.user.check_password("New-Secure-Password-937!x")
+        )
+        self.assertTrue(self.client.session.get("_auth_user_id"))
+
+        session_response = self.client.get("/users/profile/")
+        self.assertEqual(session_response.status_code, 405)
+
+    def test_password_change_rejects_wrong_current_password(self):
+        response = self.client.post(
+            "/users/password-change/",
+            {
+                "old_password": "Wrong-Current-Password-482!",
+                "new_password1": "New-Secure-Password-937!x",
+                "new_password2": "New-Secure-Password-937!x",
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, "/workspace/")
+        self.user.refresh_from_db()
+        self.assertTrue(
+            self.user.check_password("Current-Secure-Password-482!")
+        )
+        self.assertContains(response, "رمز عبور فعلی")
+
+    def test_account_endpoints_require_login(self):
+        self.client.logout()
+
+        profile_response = self.client.post(
+            "/users/profile/",
+            {
+                "first_name": "تغییر",
+                "last_name": "غیرمجاز",
+                "email": "account@example.com",
+                "phone": "",
+            },
+        )
+        password_response = self.client.post(
+            "/users/password-change/",
+            {
+                "old_password": "Current-Secure-Password-482!",
+                "new_password1": "New-Secure-Password-937!x",
+                "new_password2": "New-Secure-Password-937!x",
+            },
+        )
+
+        self.assertEqual(profile_response.status_code, 302)
+        self.assertEqual(password_response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "نام")

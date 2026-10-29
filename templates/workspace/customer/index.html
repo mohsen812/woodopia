@@ -243,6 +243,16 @@
     ========================== -->
 
     <main class="content">
+        {% if messages %}
+            <div class="account-messages" aria-live="polite">
+                {% for message in messages %}
+                    <div class="account-message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
 
 
         <!-- TOP BAR -->
@@ -609,75 +619,140 @@
 
 
 <section id="settings-view" class="workspace-view hidden">
+    <div class="page-heading">
+        <span class="eyebrow">SECURITY</span>
+        <h2>تنظیمات حساب</h2>
+        <p>تغییر رمز عبور حساب کاربری</p>
+    </div>
 
-...
+    <div class="project-detail-card account-panel">
+        <div class="project-detail-header">
+            <div>
+                <span class="eyebrow">PASSWORD</span>
+                <h3>تغییر رمز عبور</h3>
+            </div>
+        </div>
 
+        <form method="post" action="/users/password-change/" class="account-form">
+            {% csrf_token %}
+
+            {% if customer_password_form.non_field_errors %}
+                <div class="account-form-errors">
+                    {{ customer_password_form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="account-form-field">
+                <label for="{{ customer_password_form.old_password.id_for_label }}">رمز عبور فعلی</label>
+                {{ customer_password_form.old_password }}
+                {{ customer_password_form.old_password.errors }}
+            </div>
+
+            <div class="account-form-field">
+                <label for="{{ customer_password_form.new_password1.id_for_label }}">رمز عبور جدید</label>
+                {{ customer_password_form.new_password1 }}
+                {{ customer_password_form.new_password1.errors }}
+            </div>
+
+            <div class="account-form-field">
+                <label for="{{ customer_password_form.new_password2.id_for_label }}">تکرار رمز عبور جدید</label>
+                {{ customer_password_form.new_password2 }}
+                {{ customer_password_form.new_password2.errors }}
+            </div>
+
+            <button type="submit" class="primary-button">ذخیره رمز جدید</button>
+        </form>
+    </div>
 </section>
 
 
 <section id="profile-view" class="workspace-view hidden">
-
     <div class="page-heading">
-
-        <span class="eyebrow">
-            ACCOUNT
-        </span>
-
-        <h2>
-            حساب من
-        </h2>
-
-        <p>
-            مدیریت حساب و نشست کاربری
-        </p>
-
+        <span class="eyebrow">ACCOUNT</span>
+        <h2>حساب من</h2>
+        <p>مدیریت اطلاعات شخصی و عضویت‌های سازمانی</p>
     </div>
 
-
-    <div class="project-detail-card">
-
+    <div class="project-detail-card account-panel">
         <div class="project-detail-header">
-
             <div>
+                <span class="eyebrow">PROFILE</span>
+                <h3>اطلاعات حساب</h3>
+            </div>
+            <span class="project-status">فعال</span>
+        </div>
 
-                <span class="eyebrow">
-                    USER
-                </span>
+        <form method="post" action="/users/profile/" class="account-form">
+            {% csrf_token %}
 
-                <h3>
-                    کاربر فعلی Workspace
-                </h3>
+            {% if customer_profile_form.non_field_errors %}
+                <div class="account-form-errors">
+                    {{ customer_profile_form.non_field_errors }}
+                </div>
+            {% endif %}
 
+            <div class="account-form-field">
+                <label for="{{ customer_profile_form.first_name.id_for_label }}">نام</label>
+                {{ customer_profile_form.first_name }}
+                {{ customer_profile_form.first_name.errors }}
             </div>
 
+            <div class="account-form-field">
+                <label for="{{ customer_profile_form.last_name.id_for_label }}">نام خانوادگی</label>
+                {{ customer_profile_form.last_name }}
+                {{ customer_profile_form.last_name.errors }}
+            </div>
 
-            <span class="project-status">
-                فعال
-            </span>
+            <div class="account-form-field">
+                <label for="{{ customer_profile_form.email.id_for_label }}">ایمیل</label>
+                {{ customer_profile_form.email }}
+                {{ customer_profile_form.email.errors }}
+                <small>در صورت تغییر ایمیل، تأیید ایمیل قبلی دیگر معتبر محسوب نمی‌شود.</small>
+            </div>
 
-        </div>
+            <div class="account-form-field">
+                <label for="{{ customer_profile_form.phone.id_for_label }}">شماره تلفن</label>
+                {{ customer_profile_form.phone }}
+                {{ customer_profile_form.phone.errors }}
+            </div>
 
-
-        <div class="project-detail-description">
-
-            <p>
-                از این بخش می‌توانید نشست خود را مدیریت کنید.
-            </p>
-
-
-            <a
-                href="/users/logout/"
-                class="primary-button"
-            >
-                خروج از حساب
-            </a>
-
-
-        </div>
-
+            <button type="submit" class="primary-button">ذخیره اطلاعات</button>
+        </form>
     </div>
 
+    <div class="project-detail-card account-panel">
+        <div class="project-detail-header">
+            <div>
+                <span class="eyebrow">ORGANIZATIONS</span>
+                <h3>عضویت‌های فعال</h3>
+            </div>
+        </div>
 
+        {% if customer_memberships %}
+            <div class="account-memberships">
+                {% for membership in customer_memberships %}
+                    <div class="account-membership-row">
+                        <strong>{{ membership.organization.name }}</strong>
+                        <span>
+                            {% if membership.role_fk %}
+                                {{ membership.role_fk.name }}
+                            {% else %}
+                                {{ membership.get_role_display }}
+                            {% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>عضویت فعال دیگری برای این حساب ثبت نشده است.</p>
+        {% endif %}
+    </div>
+
+    <div class="project-detail-card account-panel">
+        <h3>نشست کاربری</h3>
+        <p>برای پایان‌دادن به نشست فعلی از حساب خارج شوید.</p>
+        <a href="/users/logout/" class="primary-button">خروج از حساب</a>
+    </div>
 </section>
 </main>
   

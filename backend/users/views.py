@@ -1,6 +1,8 @@
 import uuid
 
-from django.contrib.auth import login
+from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import (
     LoginView,
     PasswordResetView,
@@ -8,14 +10,17 @@ from django.contrib.auth.views import (
     PasswordResetConfirmView,
     PasswordResetCompleteView,
 )
+from django.contrib import messages
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.debug import sensitive_post_parameters
+from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 
 from organizations.models import Membership, Organization, OrganizationRole
 from .forms import CustomerRegistrationForm, UserLoginForm
+from .account_forms import CustomerProfileForm
 from .models import User
 from .services import get_user_landing_page
 
@@ -183,3 +188,60 @@ class FEEMAASPasswordResetConfirmView(PasswordResetConfirmView):
 
 class FEEMAASPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = "users/password_reset_complete.html"
+
+
+
+@login_required
+@require_POST
+def customer_profile_update(request):
+    form = CustomerProfileForm(
+        request.POST,
+        instance=request.user,
+    )
+
+    if form.is_valid():
+        form.save()
+        messages.success(
+            request,
+            "اطلاعات حساب با موفقیت ذخیره شد.",
+        )
+    else:
+        for field_name, errors in form.errors.items():
+            if field_name in form.fields:
+                label = form.fields[field_name].label or field_name
+            else:
+                label = "اطلاعات حساب"
+
+            for error in errors:
+                messages.error(request, f"{label}: {error}")
+
+    return redirect("/workspace/")
+
+
+@login_required
+@require_POST
+@sensitive_post_parameters("old_password", "new_password1", "new_password2")
+def customer_password_change(request):
+    form = PasswordChangeForm(
+        user=request.user,
+        data=request.POST,
+    )
+
+    if form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        messages.success(
+            request,
+            "رمز عبور با موفقیت تغییر کرد.",
+        )
+    else:
+        for field_name, errors in form.errors.items():
+            if field_name in form.fields:
+                label = form.fields[field_name].label or field_name
+            else:
+                label = "تغییر رمز عبور"
+
+            for error in errors:
+                messages.error(request, f"{label}: {error}")
+
+    return redirect("/workspace/")

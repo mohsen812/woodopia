@@ -8,9 +8,21 @@ from .views import (
     FEEMAASPasswordResetDoneView,
     FEEMAASPasswordResetConfirmView,
     FEEMAASPasswordResetCompleteView,
+    customer_profile_update,
+    customer_password_change,
 )
 
 urlpatterns = [
+    path(
+        "profile/",
+        customer_profile_update,
+        name="customer_profile_update",
+    ),
+    path(
+        "password-change/",
+        customer_password_change,
+        name="customer_password_change",
+    ),
     path("login/", UserLoginView.as_view(), name="login"),
     path("register/", customer_register, name="register"),
     path(
