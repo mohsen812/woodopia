@@ -25,6 +25,11 @@ class UserLoginForm(AuthenticationForm):
         }),
     )
 
+    remember_me = forms.BooleanField(
+        label="مرا به خاطر بسپار",
+        required=False,
+    )
+
 
 class CustomerRegistrationForm(forms.Form):
     first_name = forms.CharField(
@@ -63,36 +68,27 @@ class CustomerRegistrationForm(forms.Form):
         }),
     )
 
-    password2 = forms.CharField(
-        label="تکرار رمز عبور",
-        widget=forms.PasswordInput(attrs={
-            "class": "form-control",
-            "autocomplete": "new-password",
-        }),
-    )
-
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
+
         if User.objects.filter(email__iexact=email).exists():
             raise ValidationError("با این ایمیل قبلاً حساب ساخته شده است.")
+
         return email
 
     def clean(self):
         cleaned_data = super().clean()
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
+        password = cleaned_data.get("password1")
 
-        if password1 and password2 and password1 != password2:
-            self.add_error("password2", "رمزهای عبور یکسان نیستند.")
-
-        if password1:
+        if password:
             candidate = User(
                 email=cleaned_data.get("email", ""),
                 first_name=cleaned_data.get("first_name", "").strip(),
                 last_name=cleaned_data.get("last_name", "").strip(),
             )
+
             try:
-                password_validation.validate_password(password1, candidate)
+                password_validation.validate_password(password, candidate)
             except ValidationError as exc:
                 self.add_error("password1", exc)
 

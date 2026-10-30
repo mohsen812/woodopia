@@ -35,3 +35,19 @@ SECURE_SSL_REDIRECT = os.environ.get("FEEMAAS_SECURE_SSL_REDIRECT", "true").lowe
 COOKIE_SECURE = os.environ.get("FEEMAAS_COOKIE_SECURE", "true").lower() == "true"
 SESSION_COOKIE_SECURE = COOKIE_SECURE
 CSRF_COOKIE_SECURE = COOKIE_SECURE
+
+# Shared database cache for authentication rate limiting.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+        "TIMEOUT": 900,
+        "OPTIONS": {
+            "MAX_ENTRIES": 10000,
+        },
+    },
+}
+
+AUTHENTICATION_BACKENDS = [
+    "users.backends.EmailOrUsernameBackend",
+]

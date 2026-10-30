@@ -1,3 +1,4 @@
+from django.conf import settings
 import uuid
 
 from django.contrib.auth import login, update_session_auth_hash
@@ -11,6 +12,8 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView,
 )
 from django.contrib import messages
+from django.core.cache import cache
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -23,6 +26,26 @@ from .forms import CustomerRegistrationForm, UserLoginForm
 from .account_forms import CustomerProfileForm
 from .models import User
 from .services import get_user_landing_page
+
+
+def _auth_rate_key(scope, value):
+    import hashlib
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return "feemaas:auth:{}:{}".format(scope, digest)
+
+
+def _rate_count(key, window):
+    if cache.add(key, 1, timeout=window):
+        return 1
+    try:
+        return cache.incr(key)
+    except ValueError:
+        cache.add(key, 1, timeout=window)
+        return 1
+
+
+def _client_ip(request):
+    return request.META.get("REMOTE_ADDR", "unknown")
 
 
 def _create_customer_account(request, form):
@@ -86,6 +109,25 @@ class UserLoginView(LoginView):
     template_name = "users/login.html"
     authentication_form = UserLoginForm
 
+    def _login_rate_key(self):
+        identifier = (self.request.POST.get("username") or "").strip().lower()
+        value = "{}|{}".format(identifier, _client_ip(self.request))
+        return _auth_rate_key("login", value)
+
+    def form_valid(self, form):
+        cache.delete(self._login_rate_key())
+        response = super().form_valid(form)
+        if form.cleaned_data.get("remember_me"):
+            self.request.session.set_expiry(60 * 60 * 24 * 30)
+        else:
+            self.request.session.set_expiry(0)
+        return response
+
+    def form_invalid(self, form):
+        if form.cleaned_data.get("username") or self.request.POST.get("username"):
+            _rate_count(self._login_rate_key(), 15 * 60)
+        return super().form_invalid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -102,9 +144,28 @@ class UserLoginView(LoginView):
 
     @method_decorator(sensitive_post_parameters("password", "password1", "password2"))
     def post(self, request, *args, **kwargs):
+        if request.POST.get("auth_action") != "register":
+            key = self._login_rate_key()
+            if cache.get(key, 0) >= 10:
+                return HttpResponse(
+                    "تعداد تلاش‌های ورود بیش از حد مجاز است. ۱۵ دقیقه بعد دوباره تلاش کنید.",
+                    status=429,
+                )
+
         if request.POST.get("auth_action") == "register":
             if request.user.is_authenticated:
                 return redirect(get_user_landing_page(request.user))
+
+            if request.POST.get("website", "").strip():
+                return HttpResponseBadRequest("درخواست نامعتبر است.")
+
+            signup_key = _auth_rate_key("signup", _client_ip(request))
+            if cache.get(signup_key, 0) >= 5:
+                return HttpResponse(
+                    "تعداد درخواست‌های ثبت‌نام بیش از حد مجاز است. یک ساعت بعد دوباره تلاش کنید.",
+                    status=429,
+                )
+            _rate_count(signup_key, 60 * 60)
 
             register_form = CustomerRegistrationForm(request.POST)
 
@@ -115,7 +176,7 @@ class UserLoginView(LoginView):
                     login(
                         request,
                         user,
-                        backend="django.contrib.auth.backends.ModelBackend",
+                        backend=settings.AUTHENTICATION_BACKENDS[0],
                     )
                     return redirect(get_user_landing_page(user))
 
@@ -144,6 +205,17 @@ def customer_register(request):
         return redirect(get_user_landing_page(request.user))
 
     if request.method == "POST":
+        if request.POST.get("website", "").strip():
+            return HttpResponseBadRequest("درخواست نامعتبر است.")
+
+        signup_key = _auth_rate_key("signup", _client_ip(request))
+        if cache.get(signup_key, 0) >= 5:
+            return HttpResponse(
+                "تعداد درخواست‌های ثبت‌نام بیش از حد مجاز است. یک ساعت بعد دوباره تلاش کنید.",
+                status=429,
+            )
+        _rate_count(signup_key, 60 * 60)
+
         form = CustomerRegistrationForm(request.POST)
 
         if form.is_valid():
@@ -153,7 +225,7 @@ def customer_register(request):
                 login(
                     request,
                     user,
-                    backend="django.contrib.auth.backends.ModelBackend",
+                    backend=settings.AUTHENTICATION_BACKENDS[0],
                 )
                 return redirect(get_user_landing_page(user))
     else:

@@ -68,6 +68,17 @@ label { display: block; margin-bottom: 7px; color: #d7ddf2; font-size: 12px; fon
 .form-control { display: block; width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid rgba(177,190,255,.2); border-radius: 12px; background: rgba(5,9,24,.58); color: var(--text); font: inherit; font-size: 13px; outline: none; transition: .2s; }
 .form-control:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(103,232,249,.1); }
 .form-control::placeholder { color: #65708f; }
+.password-wrap { position: relative; }
+.password-wrap .form-control { padding-left: 76px; }
+.password-toggle {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  border: 0; border-radius: 8px; padding: 6px 9px;
+  color: var(--cyan); background: rgba(103,232,249,.08);
+  font: inherit; font-size: 11px; cursor: pointer;
+}
+.remember-row { display:flex; align-items:center; gap:8px; margin: 4px 0 12px; color:var(--muted); font-size:12px; }
+.remember-row input { accent-color: var(--cyan); }
+.honeypot { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 .primary { width: 100%; margin-top: 7px; min-height: 49px; border: 0; border-radius: 13px; color: #080b19; background: linear-gradient(105deg, #c4b5fd, #67e8f9); font: inherit; font-weight: 900; cursor: pointer; transition: transform .2s, filter .2s; box-shadow: 0 10px 28px rgba(103,232,249,.11); }
 .primary:hover { transform: translateY(-2px); filter: brightness(1.06); }
 .errors { padding: 12px 14px; border: 1px solid rgba(248,113,113,.3); border-radius: 12px; background: rgba(127,29,29,.22); color: #fecaca; font-size: 12px; line-height: 1.9; margin-bottom: 16px; }
@@ -134,8 +145,19 @@ label { display: block; margin-bottom: 7px; color: #d7ddf2; font-size: 12px; fon
           </div>
           <div class="field">
             {{ form.password.label_tag }}
-            {{ form.password }}
+            <div class="password-wrap">
+              {{ form.password }}
+              <button class="password-toggle" type="button" data-password-toggle aria-label="نمایش رمز عبور">نمایش</button>
+            </div>
             {% for error in form.password.errors %}<div class="field-errors">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="remember-row">
+            {{ form.remember_me }}
+            <label for="{{ form.remember_me.id_for_label }}" style="margin:0">مرا به خاطر بسپار</label>
+          </div>
+          <div class="honeypot" aria-hidden="true">
+            <label for="login-website">این قسمت را خالی بگذارید</label>
+            <input id="login-website" type="text" name="website" tabindex="-1" autocomplete="off">
           </div>
           <input type="hidden" name="next" value="{{ next|default:'/workspace/' }}">
           <button class="primary" type="submit">ورود به فضای کاری <span aria-hidden="true">←</span></button>
@@ -156,11 +178,22 @@ label { display: block; margin-bottom: 7px; color: #d7ddf2; font-size: 12px; fon
           {% for field in register_form %}
             <div class="field">
               {{ field.label_tag }}
-              {{ field }}
+              {% if field.name == "password1" %}
+                <div class="password-wrap">
+                  {{ field }}
+                  <button class="password-toggle" type="button" data-password-toggle aria-label="نمایش رمز عبور">نمایش</button>
+                </div>
+              {% else %}
+                {{ field }}
+              {% endif %}
               {% if field.help_text %}<div class="field-errors">{{ field.help_text }}</div>{% endif %}
               {% for error in field.errors %}<div class="field-errors">{{ error }}</div>{% endfor %}
             </div>
           {% endfor %}
+          <div class="honeypot" aria-hidden="true">
+            <label for="register-website">این قسمت را خالی بگذارید</label>
+            <input id="register-website" type="text" name="website" tabindex="-1" autocomplete="off">
+          </div>
           <button class="primary" type="submit">ساخت حساب مشتری <span aria-hidden="true">←</span></button>
         </form>
       </section>
@@ -195,6 +228,17 @@ label { display: block; margin-bottom: 7px; color: #d7ddf2; font-size: 12px; fon
 
   loginTab.addEventListener("click", function () { activate("login"); });
   registerTab.addEventListener("click", function () { activate("register"); });
+
+  document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const input = button.parentElement.querySelector("input");
+      if (!input) return;
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      button.textContent = showing ? "نمایش" : "مخفی";
+      button.setAttribute("aria-label", showing ? "نمایش رمز عبور" : "مخفی کردن رمز عبور");
+    });
+  });
 
   const initialMode = "{{ active_panel|default:'login'|escapejs }}";
   const hasLoginError = {{ form.errors|yesno:"true,false" }};

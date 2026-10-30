@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.test import override_settings
+from django.core.cache import cache
 
 from organizations.models import Membership, Organization
 from .models import User
@@ -12,7 +14,6 @@ class CustomerRegistrationTests(TestCase):
             "last_name": "آزمایشی",
             "email": "customer@example.com",
             "password1": "S3cure-Long-Password-482!",
-            "password2": "S3cure-Long-Password-482!",
         }
         data.update(overrides)
         return data
@@ -68,18 +69,26 @@ class CustomerRegistrationTests(TestCase):
             1,
         )
 
-    def test_password_mismatch_is_rejected(self):
+    def test_registration_form_has_exactly_four_fields(self):
+        from users.forms import CustomerRegistrationForm
+
+        self.assertEqual(
+            list(CustomerRegistrationForm.base_fields),
+            ["first_name", "last_name", "email", "password1"],
+        )
+
+    def test_weak_password_is_rejected(self):
         response = self.client.post(
             reverse("register"),
             self.registration_data(
-                email="mismatch@example.com",
-                password2="Different-password-482!",
+                email="weak-password@example.com",
+                password1="123",
             ),
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(
-            User.objects.filter(email="mismatch@example.com").exists()
+            User.objects.filter(email="weak-password@example.com").exists()
         )
 
     def test_authenticated_user_cannot_create_another_signup(self):
@@ -244,3 +253,74 @@ class CustomerAccountTests(TestCase):
         self.assertEqual(password_response.status_code, 302)
         self.user.refresh_from_db()
         self.assertEqual(self.user.first_name, "نام")
+
+
+@override_settings(
+    AUTHENTICATION_BACKENDS=["users.backends.EmailOrUsernameBackend"]
+)
+class EmailOrUsernameLoginTests(TestCase):
+    password = "S3cure-Login-Password-482!"
+
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(
+            username="login-user",
+            email="login@example.com",
+            password=self.password,
+        )
+
+    def test_login_with_email(self):
+        response = self.client.post(
+            reverse("login"),
+            {
+                "username": "login@example.com",
+                "password": self.password,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            str(self.client.session["_auth_user_id"]),
+            str(self.user.pk),
+        )
+
+    def test_login_with_username(self):
+        response = self.client.post(
+            reverse("login"),
+            {
+                "username": "login-user",
+                "password": self.password,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            str(self.client.session["_auth_user_id"]),
+            str(self.user.pk),
+        )
+
+    def test_remember_me_sets_thirty_day_session(self):
+        response = self.client.post(
+            reverse("login"),
+            {
+                "username": "login@example.com",
+                "password": self.password,
+                "remember_me": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            self.client.session.get_expiry_age(),
+            60 * 60 * 24 * 30,
+        )
+
+    def test_unchecked_remember_me_uses_browser_session(self):
+        response = self.client.post(
+            reverse("login"),
+            {
+                "username": "login@example.com",
+                "password": self.password,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.client.session.get_expire_at_browser_close()
+        )
