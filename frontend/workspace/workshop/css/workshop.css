@@ -2422,3 +2422,91 @@ body.workshop-file-preview-open {
         transform: none;
     }
 }
+
+
+/* ==================================================
+   WORKSHOP TENDER AVAILABILITY — TOPBAR
+================================================== */
+
+.workshop-topbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tender-availability-control {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 9px;
+    min-width: 0;
+}
+
+.tender-availability-indicator {
+    color: var(--green);
+    font-size: 11px;
+}
+
+.tender-availability-control[data-available="false"] .tender-availability-indicator {
+    color: var(--muted);
+}
+
+.tender-availability-toggle {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: rgba(85, 232, 255, .08);
+    color: var(--cyan);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background .2s ease, opacity .2s ease;
+}
+
+.tender-availability-toggle:hover:not(:disabled) {
+    background: rgba(85, 232, 255, .16);
+}
+
+.tender-availability-toggle:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+.tender-availability-error {
+    flex-basis: 100%;
+    color: #ff8585;
+    font-size: 11px;
+    text-align: right;
+}
+
+@media (max-width: 760px) {
+    .workshop-topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .workshop-topbar-actions {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .tender-availability-control {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 420px) {
+    .workshop-topbar-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .tender-availability-control {
+        justify-content: flex-start;
+    }
+}

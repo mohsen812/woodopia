@@ -55,6 +55,18 @@ def _render_active_workspace(request, membership):
 
     context = {}
 
+    if workspace.get("workspace") == "workshop":
+        role = (
+            membership.role_fk.name
+            if membership.role_fk
+            else membership.role
+        )
+        context["workshop_organization"] = membership.organization
+        context["workshop_tender_availability_can_manage"] = (
+            membership.organization.owner_id == request.user.id
+            or role in ("owner", "manager")
+        )
+
     if workspace.get("workspace") == "customer":
         from django.contrib.auth.forms import PasswordChangeForm
         from organizations.models import Membership

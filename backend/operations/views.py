@@ -15,7 +15,12 @@ from django.views.decorators.http import require_GET, require_POST
 from access.models import AccessRequest
 from access.services import approve_access_request
 from organizations.models import Membership, Organization, OrganizationApplication
-from operations.models import OnlineUserSnapshot, UserPresence
+from operations.models import (
+    OnlineUserSnapshot,
+    UserPresence,
+    WorkshopStatusLog,
+    TenderAvailabilityLog,
+)
 from projects.models import Project
 from django.contrib.auth import get_user_model
 
@@ -117,6 +122,19 @@ def operations_dashboard(request):
         "pending_application_count": OrganizationApplication.objects.filter(
             status__in=["pending", "edit_required"]
         ).count(),
+        "workshops": Organization.objects.filter(
+            organization_type="workshop",
+        ).select_related("owner").order_by("name"),
+        "recent_workshop_status_logs": WorkshopStatusLog.objects.filter(
+            organization__organization_type="workshop",
+        ).select_related(
+            "organization", "changed_by"
+        )[:10],
+        "recent_tender_availability_logs": TenderAvailabilityLog.objects.filter(
+            organization__organization_type="workshop",
+        ).select_related(
+            "organization", "changed_by"
+        )[:10],
         "total_access_requests": access_total,
         "reviewed_access_requests": access_reviewed,
         "review_rate": round(access_reviewed * 100 / access_total)
@@ -218,6 +236,65 @@ def review_access_request(request, request_id):
 
 
 @login_required
+@require_POST
+def change_workshop_status(request, organization_id):
+    _require_operations_access(request.user)
+
+    requested_status = request.POST.get("status", "").strip()
+    reason = request.POST.get("reason", "").strip()
+
+    if not reason:
+        messages.error(request, "ثبت علت تغییر وضعیت الزامی است.")
+        return redirect("operations:dashboard")
+
+    if len(reason) > 500:
+        messages.error(request, "علت تغییر وضعیت نمی‌تواند بیشتر از ۵۰۰ کاراکتر باشد.")
+        return redirect("operations:dashboard")
+
+    if requested_status not in ("active", "suspended"):
+        messages.error(request, "وضعیت درخواستی معتبر نیست.")
+        return redirect("operations:dashboard")
+
+    with transaction.atomic():
+        workshop = get_object_or_404(
+            Organization.objects.select_for_update(),
+            pk=organization_id,
+            organization_type="workshop",
+        )
+
+        previous_status = workshop.status
+
+        if previous_status not in ("active", "suspended"):
+            messages.error(
+                request,
+                "فقط کارگاه‌های فعال یا تعلیق‌شده را می‌توان تغییر وضعیت داد.",
+            )
+            return redirect("operations:dashboard")
+
+        if previous_status == requested_status:
+            messages.info(request, "وضعیت کارگاه از قبل همین مقدار است.")
+            return redirect("operations:dashboard")
+
+        workshop.status = requested_status
+        workshop.save(update_fields=["status", "updated_at"])
+
+        WorkshopStatusLog.objects.create(
+            organization=workshop,
+            previous_status=previous_status,
+            new_status=requested_status,
+            changed_by=request.user,
+            reason=reason,
+        )
+
+    if requested_status == "suspended":
+        messages.success(request, "کارگاه با موفقیت تعلیق شد.")
+    else:
+        messages.success(request, "کارگاه با موفقیت فعال شد.")
+
+    return redirect("operations:dashboard")
+
+
+@login_required
 def operations_account(request):
     _require_operations_access(request.user)
 
@@ -246,3 +323,46 @@ def operations_account(request):
         "operations/account.html",
         {"form": form},
     )
+
+@login_required
+@require_POST
+def change_workshop_tender_availability(request, organization_id):
+    _require_operations_access(request.user)
+
+    requested_value = request.POST.get("is_tender_available", "").strip().lower()
+
+    if requested_value not in ("true", "false"):
+        messages.error(request, "وضعیت دسترس‌پذیری ارسالی معتبر نیست.")
+        return redirect("operations:dashboard")
+
+    available = requested_value == "true"
+
+    with transaction.atomic():
+        workshop = get_object_or_404(
+            Organization.objects.select_for_update(),
+            pk=organization_id,
+            organization_type="workshop",
+        )
+
+        previous_value = workshop.is_tender_available
+
+        if previous_value == available:
+            messages.info(request, "وضعیت دریافت دعوت‌های جدید از قبل همین مقدار است.")
+            return redirect("operations:dashboard")
+
+        workshop.is_tender_available = available
+        workshop.save(update_fields=["is_tender_available", "updated_at"])
+
+        TenderAvailabilityLog.objects.create(
+            organization=workshop,
+            previous_available=previous_value,
+            new_available=available,
+            changed_by=request.user,
+        )
+
+    if available:
+        messages.success(request, "دریافت دعوت‌های جدید برای این کارگاه فعال شد.")
+    else:
+        messages.success(request, "دریافت دعوت‌های جدید برای این کارگاه غیرفعال شد.")
+
+    return redirect("operations:dashboard")

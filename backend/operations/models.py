@@ -38,3 +38,86 @@ class OnlineUserSnapshot(models.Model):
 
     def __str__(self):
         return "{} — {}".format(self.recorded_at, self.online_count)
+
+
+class WorkshopStatusLog(models.Model):
+    """
+    Audit trail for operational workshop status changes.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="operational_status_logs",
+    )
+    previous_status = models.CharField(max_length=50)
+    new_status = models.CharField(max_length=50)
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="workshop_status_changes",
+    )
+    reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Workshop status change"
+        verbose_name_plural = "Workshop status changes"
+        indexes = [
+            models.Index(
+                fields=["organization", "-created_at"],
+                name="ops_ws_org_created_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            "{}: {} → {}".format(
+                self.organization_id,
+                self.previous_status,
+                self.new_status,
+            )
+        )
+
+class TenderAvailabilityLog(models.Model):
+    """
+    Audit trail for changes to a workshop's new-tender availability.
+    This is independent of operational workshop status.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="tender_availability_logs",
+    )
+    previous_available = models.BooleanField()
+    new_available = models.BooleanField()
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="workshop_tender_availability_changes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Workshop tender availability change"
+        verbose_name_plural = "Workshop tender availability changes"
+        indexes = [
+            models.Index(
+                fields=["organization", "-created_at"],
+                name="ops_ta_org_created_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return "{}: {} → {}".format(
+            self.organization_id,
+            self.previous_available,
+            self.new_available,
+        )

@@ -32,6 +32,13 @@ body {
 }
 a {color:inherit;text-decoration:none}
 button,input {font:inherit}
+.workshop-reason {
+    display:block;width:100%;box-sizing:border-box;margin-top:10px;
+    padding:10px 12px;border:1px solid var(--line);border-radius:9px;
+    background:#0d192a;color:var(--text);outline:none;
+}
+.workshop-reason:focus {border-color:var(--cyan)}
+.workshop-reason::placeholder {color:var(--muted)}
 button {cursor:pointer}
 .layout {display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
 .sidebar {
@@ -203,6 +210,7 @@ td {color:#dbe6f6}
             <a href="#performance"><span class="nav-icon">◉</span> عملکرد سامانه</a>
             <a href="#access-queue"><span class="nav-icon">⌁</span> درخواست‌های دسترسی <span class="tag">{{ pending_access_count }}</span></a>
             <a href="#organization-queue"><span class="nav-icon">▦</span> درخواست‌های سازمانی <span class="tag">{{ pending_application_count }}</span></a>
+            <a href="#workshop-management"><span class="nav-icon">⚒</span> مدیریت کارگاه‌ها <span class="tag">{{ workshops|length }}</span></a>
             <a href="#recent-activity"><span class="nav-icon">↻</span> آخرین بررسی‌ها</a>
             <a href="{% url 'operations:account' %}"><span class="nav-icon">⚙</span> حساب من</a>
         </nav>
@@ -469,6 +477,169 @@ td {color:#dbe6f6}
                 {% endfor %}
             </div>
             <p class="request-meta">این فهرست فقط‌خواندنی است؛ گردش تأیید سازمانی هنوز به عملیات این صفحه متصل نشده است.</p>
+        </article>
+    </section>
+
+
+    <section class="section-grid" id="workshop-management">
+        <article class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>مدیریت وضعیت کارگاه‌ها</h2>
+                    <p>فعال‌سازی یا تعلیق محیط عملیاتی کارگاه؛ بدون تغییر حساب شخصی مالک</p>
+                </div>
+                <span class="tag">{{ workshops|length }} کارگاه</span>
+            </div>
+
+            <div class="request-list">
+                {% for workshop in workshops %}
+                <div class="request">
+                    <div class="request-main">
+                        <div>
+                            <div class="request-name">{{ workshop.name }}</div>
+                            <div class="request-meta">
+                                مالک: {{ workshop.owner.username }} ·
+                                کد سازمان: {{ workshop.account_code|default:"—" }}
+                            </div>
+                        </div>
+                        <span class="status-text">
+                            {% if workshop.status == "active" %}
+                                <i class="dot"></i> فعال
+                            {% elif workshop.status == "suspended" %}
+                                <i class="dot bad"></i> تعلیق‌شده
+                            {% else %}
+                                <i class="dot warn"></i> {{ workshop.get_status_display }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    {% if workshop.status == "active" %}
+                    <form method="post"
+                          action="{% url 'operations:change_workshop_status' workshop.pk %}"
+                          onsubmit="return confirm('کارگاه «{{ workshop.name|escapejs }}» تعلیق شود؟')">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="suspended">
+                        <input type="text" name="reason" class="workshop-reason"
+                               maxlength="500" required
+                               placeholder="علت تعلیق (الزامی)">
+                        <div class="actions">
+                            <button class="btn btn-sm btn-reject" type="submit">
+                                تعلیق کارگاه
+                            </button>
+                        </div>
+                    </form>
+                    {% elif workshop.status == "suspended" %}
+                    <form method="post"
+                          action="{% url 'operations:change_workshop_status' workshop.pk %}"
+                          onsubmit="return confirm('کارگاه «{{ workshop.name|escapejs }}» دوباره فعال شود؟')">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="active">
+                        <input type="text" name="reason" class="workshop-reason"
+                               maxlength="500" required
+                               placeholder="علت فعال‌سازی (الزامی)">
+                        <div class="actions">
+                            <button class="btn btn-sm btn-approve" type="submit">
+                                فعال‌سازی کارگاه
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+
+                    <div class="request-meta">
+                        دریافت دعوت مناقصه جدید:
+                        {% if workshop.is_tender_available %}
+                            <span class="status-text"><i class="dot"></i> روشن</span>
+                        {% else %}
+                            <span class="status-text"><i class="dot bad"></i> خاموش</span>
+                        {% endif %}
+                    </div>
+
+                    <form method="post"
+                          action="{% url 'operations:change_workshop_tender_availability' workshop.pk %}"
+                          onsubmit="return confirm('وضعیت دریافت دعوت مناقصه جدید برای کارگاه «{{ workshop.name|escapejs }}» تغییر کند؟')">
+                        {% csrf_token %}
+                        {% if workshop.is_tender_available %}
+                            <input type="hidden" name="is_tender_available" value="false">
+                            <div class="actions">
+                                <button class="btn btn-sm btn-reject" type="submit">
+                                    غیرفعال‌کردن دعوت‌های جدید
+                                </button>
+                            </div>
+                        {% else %}
+                            <input type="hidden" name="is_tender_available" value="true">
+                            <div class="actions">
+                                <button class="btn btn-sm btn-approve" type="submit">
+                                    فعال‌کردن دعوت‌های جدید
+                                </button>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+                {% empty %}
+                <div class="empty">هنوز کارگاهی در سامانه ثبت نشده است.</div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>تاریخچه تغییر وضعیت کارگاه‌ها</h2>
+                    <p>آخرین تغییرات ثبت‌شده توسط مدیران عملیات</p>
+                </div>
+                <span class="tag">۱۰ رویداد اخیر</span>
+            </div>
+
+            <div class="request-list">
+                {% for log in recent_workshop_status_logs %}
+                <div class="request">
+                    <div class="request-name">{{ log.organization.name }}</div>
+                    <div class="request-meta">
+                        {% if log.previous_status == "active" %}فعال{% else %}تعلیق‌شده{% endif %}
+                        ←
+                        {% if log.new_status == "active" %}فعال{% else %}تعلیق‌شده{% endif %}
+                        · {{ log.created_at|date:"Y/m/d H:i" }}
+                    </div>
+                    <div class="request-meta">
+                        مدیر: {{ log.changed_by.username|default:"کاربر حذف‌شده" }}
+                    </div>
+                    {% if log.reason %}
+                    <div class="request-message">{{ log.reason|truncatechars:250 }}</div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="empty">هنوز تغییری در وضعیت کارگاه‌ها ثبت نشده است.</div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>تاریخچه دریافت دعوت مناقصه</h2>
+                    <p>آخرین تغییرات مستقل از وضعیت عملیاتی کارگاه‌ها</p>
+                </div>
+                <span class="tag">۱۰ رویداد اخیر</span>
+            </div>
+
+            <div class="request-list">
+                {% for log in recent_tender_availability_logs %}
+                <div class="request">
+                    <div class="request-name">{{ log.organization.name }}</div>
+                    <div class="request-meta">
+                        {% if log.previous_available %}روشن{% else %}خاموش{% endif %}
+                        ←
+                        {% if log.new_available %}روشن{% else %}خاموش{% endif %}
+                        · {{ log.created_at|date:"Y/m/d H:i" }}
+                    </div>
+                    <div class="request-meta">
+                        مدیر: {{ log.changed_by.username|default:"کاربر حذف‌شده" }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty">هنوز تغییری در دسترس‌پذیری مناقصه ثبت نشده است.</div>
+                {% endfor %}
+            </div>
         </article>
     </section>
 

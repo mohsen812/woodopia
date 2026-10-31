@@ -638,45 +638,58 @@ class TenderParticipantListCreateView(
             dict.fromkeys(organization_ids)
         )
 
-        workshops = list(
-            Organization.objects.filter(
-                id__in=organization_ids,
-                organization_type="workshop",
-                status="active",
-            )
-        )
-
-        found_ids = {
-            workshop.id
-            for workshop in workshops
-        }
-
-        invalid_ids = [
-            organization_id
-            for organization_id in organization_ids
-            if organization_id not in found_ids
-        ]
-
-        if invalid_ids:
-            raise ValidationError({
-                "organizations": (
-                    "یک یا چند کارگاه انتخاب‌شده معتبر یا فعال نیستند."
-                )
-            })
-
         with transaction.atomic():
 
-            TenderParticipant.objects.filter(
-                tender=tender
-            ).delete()
-
-            TenderParticipant.objects.bulk_create([
-                TenderParticipant(
+            existing_ids = set(
+                TenderParticipant.objects.filter(
                     tender=tender,
-                    organization=workshop,
+                    organization_id__in=organization_ids,
+                ).values_list("organization_id", flat=True)
+            )
+
+            new_ids = [
+                organization_id
+                for organization_id in organization_ids
+                if organization_id not in existing_ids
+            ]
+
+            new_workshops = list(
+                Organization.objects.filter(
+                    id__in=new_ids,
+                    organization_type="workshop",
+                    status="active",
+                    is_tender_available=True,
                 )
-                for workshop in workshops
-            ])
+            )
+
+            valid_new_ids = {
+                workshop.id
+                for workshop in new_workshops
+            }
+
+            invalid_ids = [
+                organization_id
+                for organization_id in new_ids
+                if organization_id not in valid_new_ids
+            ]
+
+            if invalid_ids:
+                raise ValidationError({
+                    "organizations": (
+                        "یک یا چند کارگاه برای دریافت دعوت جدید در دسترس نیستند."
+                    )
+                })
+
+            TenderParticipant.objects.bulk_create(
+                [
+                    TenderParticipant(
+                        tender=tender,
+                        organization=workshop,
+                    )
+                    for workshop in new_workshops
+                ],
+                ignore_conflicts=True,
+            )
 
         participants = (
             TenderParticipant.objects
@@ -690,7 +703,7 @@ class TenderParticipantListCreateView(
 
         return Response({
             "status": "ok",
-            "message": "کارگاه‌های مناقصه با موفقیت به‌روزرسانی شدند.",
+            "message": "کارگاه‌های جدید اضافه شدند؛ دعوت‌های قبلی حفظ شدند.",
             "tender_id": tender.id,
             "participant_count": participants.count(),
             "participants": TenderParticipantSerializer(

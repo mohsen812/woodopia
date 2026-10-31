@@ -1909,7 +1909,7 @@ async function openTenderWorkshopSelector(
                 <div class="tender-workshop-footer-info">
 
                     <span>
-                        انتخاب‌های فعلی جایگزین انتخاب‌های قبلی می‌شوند.
+                        دعوت‌های قبلی حفظ می‌شوند؛ فقط کارگاه‌های جدید اضافه خواهند شد.
                     </span>
 
                 </div>
@@ -2095,8 +2095,23 @@ async function openTenderWorkshopSelector(
                         const id =
                             Number(workshop.id);
 
-                        const checked =
+                        const isExisting =
                             selectedIds.has(id);
+
+                        const available =
+                            workshop.is_tender_available !== false;
+
+                        const checked = isExisting;
+
+                        const disabled =
+                            !available && !isExisting;
+
+                        const statusText =
+                            isExisting && !available
+                                ? "دعوت قبلی؛ دسترس‌پذیری خاموش"
+                                : available
+                                    ? "آماده دریافت دعوت"
+                                    : "غیرفعال برای دعوت جدید";
 
                         const safeName =
                             escapeHTML(
@@ -2109,7 +2124,8 @@ async function openTenderWorkshopSelector(
 
                             <label
                                 class="tender-workshop-option
-                                ${checked ? "selected" : ""}"
+                                ${checked ? "selected" : ""}
+                                ${disabled ? "unavailable" : ""}"
                                 data-workshop-option="${id}"
                             >
 
@@ -2118,6 +2134,7 @@ async function openTenderWorkshopSelector(
                                     class="tender-workshop-checkbox"
                                     value="${id}"
                                     ${checked ? "checked" : ""}
+                                    ${disabled ? "disabled" : ""}
                                 >
 
                                 <span
@@ -2135,7 +2152,7 @@ async function openTenderWorkshopSelector(
                                     </strong>
 
                                     <small>
-                                        کارگاه فعال
+                                        ${statusText}
                                     </small>
 
                                 </span>

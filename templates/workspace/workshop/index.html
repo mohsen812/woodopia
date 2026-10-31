@@ -178,13 +178,54 @@
             </div>
 
 
-            <div class="topbar-status">
+            <div class="workshop-topbar-actions">
 
-                <span class="status-dot"></span>
+                <div class="topbar-status">
+                    <span class="status-dot"></span>
+                    <span>محیط کارگاه</span>
+                </div>
 
-                <span>
-                    محیط کارگاه
-                </span>
+                <div
+                    class="tender-availability-control"
+                    id="workshop-tender-availability"
+                    data-url="/api/organizations/workshop/tender-availability/"
+                    data-available="{{ workshop_organization.is_tender_available|yesno:'true,false' }}"
+                >
+                    <span
+                        class="tender-availability-indicator"
+                        id="workshop-tender-availability-status"
+                        aria-live="polite"
+                    >
+                        {% if workshop_organization.is_tender_available %}
+                            آماده دریافت دعوت‌های جدید
+                        {% else %}
+                            دریافت دعوت جدید غیرفعال
+                        {% endif %}
+                    </span>
+
+                    {% if workshop_tender_availability_can_manage %}
+                        <button
+                            type="button"
+                            class="tender-availability-toggle"
+                            id="workshop-tender-availability-toggle"
+                            aria-pressed="{{ workshop_organization.is_tender_available|yesno:'true,false' }}"
+                        >
+                            {% if workshop_organization.is_tender_available %}
+                                غیرفعال‌کردن دریافت دعوت
+                            {% else %}
+                                فعال‌کردن دریافت دعوت
+                            {% endif %}
+                        </button>
+                    {% endif %}
+
+                    <span
+                        class="tender-availability-error"
+                        id="workshop-tender-availability-error"
+                        role="status"
+                        aria-live="polite"
+                        hidden
+                    ></span>
+                </div>
 
             </div>
 
@@ -845,6 +886,7 @@
 <script src="{% static 'workspace/workshop/js/workshop-project.js' %}"></script>
 
 <script src="{% static 'workspace/workshop/js/workshop-tender.js' %}"></script>
+<script src="{% static 'workspace/workshop/js/workshop-availability.js' %}"></script>
 
 </body>
 

@@ -54,6 +54,9 @@ class Organization(models.Model):
         default='active'
     )
 
+    # Controls invitations to new tenders; independent of operational status.
+    is_tender_available = models.BooleanField(default=True)
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
