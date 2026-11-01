@@ -30,7 +30,53 @@
 
             this.bindModalEvents();
 
+            this.initClock();
+
             this.loadInvitations();
+
+        },
+
+
+        initClock: function () {
+
+            const timeElement = document.getElementById("workshop-clock-time");
+            const dateElement = document.getElementById("workshop-clock-date");
+
+            if (!timeElement || !dateElement) {
+                return;
+            }
+
+            const timeFormatter = new Intl.DateTimeFormat(
+                "fa-IR-u-ca-persian-nu-arabext",
+                {
+                    timeZone: "Asia/Tehran",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hourCycle: "h23"
+                }
+            );
+
+            const dateFormatter = new Intl.DateTimeFormat(
+                "fa-IR-u-ca-persian-nu-arabext",
+                {
+                    timeZone: "Asia/Tehran",
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric"
+                }
+            );
+
+            const updateClock = () => {
+                const now = new Date();
+
+                timeElement.textContent = timeFormatter.format(now);
+                dateElement.textContent = dateFormatter.format(now);
+            };
+
+            updateClock();
+            window.setInterval(updateClock, 1000);
 
         },
 
@@ -446,7 +492,8 @@
                         makeElement(
                             "p",
                             "workshop-project-tender",
-                            "مناقصه: " + invitation.tender_title
+                            "مناقصه: " + String(invitation.tender_title)
+                                .replace(/\s*[-–—]\s*استانداردسازی\s*$/u, "")
                         )
                     );
                 }

@@ -9,6 +9,7 @@ from .models import (
     BidItem,
     PaymentSchedule,
     TenderAward,
+    CustomerTenderSelection,
     ConsultantSpecification,
     SpecificationAttachment,
 
@@ -524,7 +525,21 @@ class WorkshopTenderInvitationSerializer(
 
     bid_id = serializers.SerializerMethodField()
 
+    public_alias = serializers.SerializerMethodField()
+
+    is_preliminary_winner = serializers.SerializerMethodField()
+
     project_progress = serializers.SerializerMethodField()
+
+    def get_is_preliminary_winner(self, obj):
+        if TenderAward.objects.filter(tender=obj.tender).exists():
+            return False
+
+        return CustomerTenderSelection.objects.filter(
+            tender=obj.tender,
+            bid__tender_round__tender=obj.tender,
+            bid__workshop_id=obj.organization_id,
+        ).exclude(status="cancelled").exists()
 
     def get_project_progress(self, obj):
         return get_project_progress(
@@ -546,6 +561,8 @@ class WorkshopTenderInvitationSerializer(
             "invited_at",
             "responded_at",
             "bid_id",
+            "public_alias",
+            "is_preliminary_winner",
             "project_progress",
         ]
 
@@ -563,6 +580,23 @@ class WorkshopTenderInvitationSerializer(
         )
 
         return bid.id if bid else None
+
+    def get_public_alias(self, obj):
+        bid = (
+            Bid.objects
+            .filter(
+                tender_round__tender=obj.tender,
+                workshop=obj.organization,
+                status="submitted",
+                public_alias__isnull=False,
+            )
+            .exclude(public_alias="")
+            .order_by("-tender_round__round_number")
+            .first()
+        )
+        return bid.public_alias if bid else None
+
+
 class TenderSerializer(serializers.ModelSerializer):
 
     rounds = TenderRoundSerializer(

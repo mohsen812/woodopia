@@ -3915,3 +3915,272 @@ class WorkshopTenderInvitationProgressAPITests(TestCase):
             "stages",
             invitation["project_progress"],
         )
+
+    def test_invitation_exposes_only_own_submitted_bid_alias(self):
+        other_workshop = Organization.objects.create(
+            name="Other Alias Test Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+
+        first_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+
+        own_submitted_bid = Bid.objects.create(
+            tender_round=first_round,
+            workshop=self.workshop,
+            status="submitted",
+            public_alias="FEEMAAS-OWN-01",
+        )
+
+        Bid.objects.create(
+            tender_round=first_round,
+            workshop=other_workshop,
+            status="submitted",
+            public_alias="FEEMAAS-OTHER-01",
+        )
+
+        newer_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=2,
+            status="open",
+        )
+
+        Bid.objects.create(
+            tender_round=newer_round,
+            workshop=self.workshop,
+            status="draft",
+        )
+
+        response = self.client.get(
+            "/api/tenders/workshop/invitations/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        invitations = (
+            response.data["results"]
+            if isinstance(response.data, dict)
+            else response.data
+        )
+
+        self.assertEqual(len(invitations), 1)
+
+        invitation = invitations[0]
+
+        self.assertEqual(
+            invitation["public_alias"],
+            own_submitted_bid.public_alias,
+        )
+        self.assertNotEqual(
+            invitation["public_alias"],
+            "FEEMAAS-OTHER-01",
+        )
+
+    def test_preliminary_winner_is_visible_only_to_selected_workshop(self):
+        other_workshop = Organization.objects.create(
+            name="Other Preliminary Workshop",
+            organization_type="workshop",
+            owner=self.user,
+        )
+        Membership.objects.create(
+            user=self.user,
+            organization=other_workshop,
+            status="active",
+        )
+        other_participant = TenderParticipant.objects.create(
+            tender=self.tender,
+            organization=other_workshop,
+        )
+
+        tender_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+        own_bid = Bid.objects.create(
+            tender_round=tender_round,
+            workshop=self.workshop,
+            status="submitted",
+        )
+        Bid.objects.create(
+            tender_round=tender_round,
+            workshop=other_workshop,
+            status="submitted",
+        )
+
+        CustomerTenderSelection.objects.create(
+            tender=self.tender,
+            bid=own_bid,
+            selected_by=self.user,
+            status="selected",
+        )
+
+        response = self.client.get(
+            "/api/tenders/workshop/invitations/"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        invitations = (
+            response.data["results"]
+            if isinstance(response.data, dict)
+            else response.data
+        )
+        by_participant = {
+            item["id"]: item
+            for item in invitations
+        }
+
+        own_invitation = by_participant[self.participant.id]
+        other_invitation = by_participant[other_participant.id]
+
+        self.assertTrue(own_invitation["is_preliminary_winner"])
+        self.assertFalse(other_invitation["is_preliminary_winner"])
+
+        self.assertNotIn("organization", other_invitation)
+        self.assertNotIn("winning_workshop", other_invitation)
+
+    def test_preliminary_winner_indicator_disappears_after_final_award(self):
+        tender_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+        own_bid = Bid.objects.create(
+            tender_round=tender_round,
+            workshop=self.workshop,
+            status="submitted",
+        )
+        CustomerTenderSelection.objects.create(
+            tender=self.tender,
+            bid=own_bid,
+            selected_by=self.user,
+            status="selected",
+        )
+
+        TenderAward.objects.create(
+            tender=self.tender,
+            bid=own_bid,
+            awarded_by=self.user,
+        )
+
+        response = self.client.get(
+            "/api/tenders/workshop/invitations/"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        invitations = (
+            response.data["results"]
+            if isinstance(response.data, dict)
+            else response.data
+        )
+        self.assertEqual(len(invitations), 1)
+        self.assertFalse(invitations[0]["is_preliminary_winner"])
+
+    def test_cancelled_selection_is_not_a_preliminary_win(self):
+        tender_round = TenderRound.objects.create(
+            tender=self.tender,
+            round_number=1,
+            status="closed",
+        )
+        own_bid = Bid.objects.create(
+            tender_round=tender_round,
+            workshop=self.workshop,
+            status="submitted",
+        )
+        CustomerTenderSelection.objects.create(
+            tender=self.tender,
+            bid=own_bid,
+            selected_by=self.user,
+            status="cancelled",
+        )
+
+        response = self.client.get(
+            "/api/tenders/workshop/invitations/"
+        )
+        self.assertEqual(response.status_code, 200)
+
+        invitations = (
+            response.data["results"]
+            if isinstance(response.data, dict)
+            else response.data
+        )
+        self.assertEqual(len(invitations), 1)
+        self.assertFalse(invitations[0]["is_preliminary_winner"])
+
+    def _get_awarded_project_progress(self, selection_status=None):
+        from projects.services import get_project_progress
+
+        self.tender.status = "awarded"
+        self.tender.standardization_status = "approved"
+        self.tender.save(
+            update_fields=["status", "standardization_status"]
+        )
+
+        if selection_status is not None:
+            tender_round = TenderRound.objects.create(
+                tender=self.tender,
+                round_number=1,
+                status="closed",
+            )
+            bid = Bid.objects.create(
+                tender_round=tender_round,
+                workshop=self.workshop,
+                status="submitted",
+            )
+            CustomerTenderSelection.objects.create(
+                tender=self.tender,
+                bid=bid,
+                selected_by=self.user,
+                status=selection_status,
+            )
+
+        return get_project_progress(
+            project=self.project,
+            user=self.user,
+        )
+
+    def test_awarded_tender_without_selection_waits_at_selection_payment(self):
+        progress = self._get_awarded_project_progress()
+
+        self.assertEqual(
+            progress["current_stage"],
+            "selection_payment",
+        )
+        self.assertEqual(
+            progress["next_action"]["action"],
+            None,
+        )
+        self.assertFalse(progress["next_action"]["required"])
+
+    def test_awarded_tender_with_confirmed_payment_moves_to_production(self):
+        progress = self._get_awarded_project_progress(
+            selection_status="payment_confirmed",
+        )
+
+        self.assertEqual(
+            progress["current_stage"],
+            "production",
+        )
+        self.assertEqual(
+            progress["stages"][4]["state"],
+            "completed",
+        )
+
+    def test_awarded_tender_with_cancelled_selection_is_blocked(self):
+        progress = self._get_awarded_project_progress(
+            selection_status="cancelled",
+        )
+
+        self.assertEqual(
+            progress["current_stage"],
+            "selection_payment",
+        )
+        self.assertEqual(
+            progress["stages"][4]["state"],
+            "blocked",
+        )
+        self.assertIsNone(progress["next_action"]["action"])

@@ -977,7 +977,7 @@ function loadConsultantFileCenter(projectId, content) {
                                             <strong>${escapeText(title)}</strong>
                                             <span>${escapeText(file.file_type || ext.toUpperCase() || "FILE")}</span>
                                             <small>${escapeText(label)}${
-                                                source === "standardization" ? " · استانداردسازی" : ""
+                                                source === "standardization" ? " · مشخصات فنی" : ""
                                             }</small>
                                         </div>
                                         ${source === "project" ? `
@@ -1430,12 +1430,12 @@ async function loadConsultantStandardization(
         <div class="project-section">
 
             <h3>
-                استانداردسازی پروژه
+                مشخصات فنی پروژه
             </h3>
 
 
             <div class="empty-state">
-                در حال دریافت اطلاعات استانداردسازی...
+                در حال دریافت مشخصات فنی...
             </div>
 
         </div>
@@ -1496,12 +1496,12 @@ async function loadConsultantStandardization(
                 </div>
 
                 <h3>
-                    خطا در دریافت استانداردسازی
+                    خطا در دریافت مشخصات فنی
                 </h3>
 
 
                 <p>
-                    اطلاعات استانداردسازی پروژه دریافت نشد.
+                    اطلاعات مشخصات فنی پروژه دریافت نشد.
                 </p>
 
             </div>
@@ -3892,7 +3892,7 @@ function renderConsultantTender(
                     </h4>
 
                     <p>
-                        پس از تأیید استانداردسازی، تنظیمات مناقصه
+                        پس از تأیید مشخصات فنی توسط مشتری، تنظیمات مناقصه
                         از همین بخش مدیریت خواهد شد.
                     </p>
 
@@ -4463,7 +4463,7 @@ function renderConsultantTender(
                         </span>
 
                         <span class="tender-card-label">
-                            استانداردسازی
+                            مشخصات فنی
                         </span>
 
                     </div>
@@ -4480,7 +4480,7 @@ function renderConsultantTender(
                             class="tender-mini-dot ${standardizationStatus}"
                         ></span>
 
-                        وضعیت استانداردسازی
+                        وضعیت تأیید مشخصات فنی
 
                     </div>
 
@@ -5014,7 +5014,7 @@ console.log(
                 <div>
 
                     <h3>
-                        استانداردسازی پروژه
+                        مشخصات فنی پروژه
                     </h3>
 
                     <p>
@@ -5157,7 +5157,7 @@ ${
                     class="standardization-save-button"
                     id="save-standardization"
                 >
-                    ذخیره استانداردسازی
+                    ذخیره مشخصات فنی
 
                 </button>
 
@@ -5755,7 +5755,7 @@ async function loadFileManagerFiles() {
 
         list.innerHTML = `
             <div class="standardization-file-manager-empty">
-                ابتدا استانداردسازی این آیتم را ذخیره کنید.
+                ابتدا مشخصات فنی این آیتم را ذخیره کنید.
             </div>
         `;
 
@@ -6153,7 +6153,7 @@ function openStandardizationFileManager(
     if (!specificationId) {
 
         alert(
-            "ابتدا استانداردسازی را ذخیره کنید."
+            "ابتدا مشخصات فنی را ذخیره کنید."
         );
 
         return;
@@ -6669,7 +6669,7 @@ if (sendButton) {
 
 
                 alert(
-                    "استانداردسازی برای تایید مشتری ارسال شد."
+                    "مشخصات فنی برای تأیید مشتری ارسال شد."
                 );
 
 
@@ -6681,7 +6681,7 @@ if (sendButton) {
                 );
 
                 alert(
-                    "ارسال استانداردسازی ناموفق بود."
+                    "ارسال مشخصات فنی ناموفق بود."
                 );
 
             }
@@ -7034,7 +7034,7 @@ savedCount++;
 
 
         alert(
-            "استانداردسازی با موفقیت ذخیره شد."
+            "مشخصات فنی با موفقیت ذخیره شد."
         );
 
 
@@ -7054,7 +7054,7 @@ savedCount++;
 
         alert(
             error.message ||
-            "ذخیره استانداردسازی انجام نشد."
+            "ذخیره مشخصات فنی انجام نشد."
         );
 
     }
@@ -7067,7 +7067,7 @@ savedCount++;
                 false;
 
             saveButton.textContent =
-                "ذخیره استانداردسازی";
+                "ذخیره مشخصات فنی";
 
         }
 

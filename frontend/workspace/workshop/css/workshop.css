@@ -2510,3 +2510,901 @@ body.workshop-file-preview-open {
         justify-content: flex-start;
     }
 }
+
+
+/* ==================================================
+   FEEMAAS OFFICIAL CLOCK
+================================================== */
+
+.workshop-clock {
+    direction: rtl;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1px;
+    width: fit-content;
+    min-width: 180px;
+    margin-top: 8px;
+    padding: 5px 10px;
+    border-right: 2px solid var(--cyan);
+    border-radius: 0 8px 8px 0;
+    background: linear-gradient(110deg, rgba(34, 211, 238, .07), rgba(192, 132, 252, .07));
+    box-shadow: 0 0 14px rgba(34, 211, 238, .05);
+    font-variant-numeric: tabular-nums;
+}
+
+.workshop-clock-heading {
+    color: var(--cyan);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.workshop-clock-time {
+    color: #f1f5f9;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 1px;
+    text-shadow: 0 0 12px rgba(34, 211, 238, .2);
+}
+
+.workshop-clock-date {
+    color: #d1d5db;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.workshop-clock-location {
+    color: var(--muted);
+    font-size: 8px;
+    line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+    .workshop-clock {
+        width: 100%;
+        min-width: 0;
+        align-items: flex-start;
+    }
+
+    .workshop-clock-time {
+        font-size: 21px;
+    }
+}
+
+
+/* FEEMAAS QUIET COLOR SYSTEM — WORKSHOP DASHBOARD */
+
+body {
+    font-family: "IRANSansX", "IRANSans", "Vazirmatn", Tahoma, Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: -.15px;
+}
+
+.workshop-clock,
+.workshop-clock *,
+.workshop-main,
+.workshop-main button,
+.workshop-main input {
+    font-family: "IRANSansX", "IRANSans", "Vazirmatn", Tahoma, Arial, sans-serif;
+}
+
+.dashboard-cards {
+    gap: 15px;
+}
+
+.dashboard-card {
+    --card-accent: #55c9d8;
+    position: relative;
+    min-height: 116px;
+    padding: 17px 18px 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.075);
+    border-bottom: 2px solid var(--card-accent);
+    border-radius: 12px;
+    background: linear-gradient(150deg, rgba(23,32,40,.96), rgba(12,19,26,.98));
+    box-shadow: 0 10px 20px -15px var(--card-accent);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.dashboard-card[data-tone="cyan"] {
+    --card-accent: #55c9d8;
+}
+
+.dashboard-card[data-tone="violet"] {
+    --card-accent: #b58ae8;
+}
+
+.dashboard-card[data-tone="lime"] {
+    --card-accent: #a5cf62;
+}
+
+.dashboard-card::after {
+    content: "";
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: -9px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--card-accent);
+    filter: blur(15px);
+    opacity: .32;
+    pointer-events: none;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--card-accent) 40%, transparent);
+    box-shadow: 0 13px 25px -14px var(--card-accent);
+}
+
+.dashboard-card .card-icon {
+    float: left;
+    color: var(--card-accent);
+    font-size: 17px;
+    line-height: 1;
+    opacity: .9;
+}
+
+.dashboard-card .card-label {
+    margin: 0 0 12px;
+    color: #b5c1c8;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.dashboard-card strong {
+    display: block;
+    color: var(--card-accent);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.dashboard-card .card-caption {
+    display: block;
+    margin-top: 5px;
+    color: #71818a;
+    font-size: 9px;
+}
+
+#dashboard-invitations .invitation-item {
+    --invitation-accent: #d6a653;
+    border-color: rgba(214,166,83,.16);
+    border-bottom: 2px solid var(--invitation-accent);
+    background: linear-gradient(150deg, rgba(25,31,37,.96), rgba(13,19,25,.98));
+    box-shadow: 0 10px 22px -17px var(--invitation-accent);
+}
+
+#dashboard-invitations .invitation-item.status-pending {
+    --invitation-accent: #e3ad57;
+}
+
+#dashboard-invitations .invitation-item.status-accepted {
+    --invitation-accent: #91c96b;
+}
+
+#dashboard-invitations .invitation-item.status-declined {
+    --invitation-accent: #df8191;
+}
+
+#dashboard-invitations .invitation-item::before {
+    background: var(--invitation-accent);
+    box-shadow: 0 0 8px var(--invitation-accent);
+    animation: workshop-status-pulse 2.8s ease-in-out infinite;
+}
+
+#dashboard-invitations .invitation-item:hover {
+    border-color: color-mix(in srgb, var(--invitation-accent) 45%, transparent);
+    box-shadow: 0 13px 25px -15px var(--invitation-accent);
+}
+
+#dashboard-invitations .meta-chip {
+    border-color: rgba(255,255,255,.075);
+    background: rgba(255,255,255,.035);
+}
+
+#dashboard-invitations .meta-chip.project-stage-chip {
+    border-color: color-mix(in srgb, var(--invitation-accent) 30%, transparent);
+    background: color-mix(in srgb, var(--invitation-accent) 8%, transparent);
+    color: #d9e0e3;
+    box-shadow: none;
+}
+
+#dashboard-invitations .stage-chip-icon {
+    border: 0;
+    background: transparent;
+    color: var(--invitation-accent);
+    text-shadow: none;
+    box-shadow: none;
+}
+
+@keyframes workshop-status-pulse {
+    0%, 100% {
+        opacity: .95;
+        box-shadow: 0 0 7px var(--invitation-accent);
+    }
+    50% {
+        opacity: .55;
+        box-shadow: 0 0 2px var(--invitation-accent);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-card,
+    #dashboard-invitations .invitation-item::before {
+        animation: none;
+        transition: none;
+    }
+}
+
+
+
+/* FEEMAAS PRELIMINARY WINNER INDICATOR */
+#dashboard-invitations .preliminary-winner-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid rgba(145, 201, 107, .32);
+    background: rgba(145, 201, 107, .09);
+    color: #b9df91;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+#dashboard-invitations .preliminary-winner-led {
+    flex: 0 0 7px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #91c96b;
+    box-shadow: 0 0 7px rgba(145, 201, 107, .85);
+    animation: preliminary-winner-pulse 2s ease-in-out infinite;
+}
+
+@keyframes preliminary-winner-pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 7px rgba(145, 201, 107, .85);
+    }
+    50% {
+        opacity: .55;
+        box-shadow: 0 0 2px rgba(145, 201, 107, .45);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #dashboard-invitations .preliminary-winner-led {
+        animation: none;
+    }
+}
+
+
+
+/* ==================================================
+   FEEMAAS — WORKSHOP PROPOSAL RESPONSIVE UI
+   Presentation only — existing business logic preserved
+================================================== */
+
+#workshop-tender-view {
+    min-width: 0;
+}
+
+#workshop-tender-view .tender-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+#workshop-tender-view .tender-header > div {
+    min-width: 0;
+}
+
+#workshop-tender-view .spec-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 12px;
+    background: rgba(10,17,23,.55);
+}
+
+#workshop-tender-view .spec-table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#workshop-tender-view .spec-table th {
+    padding: 13px 10px;
+    background: #17232c;
+    color: #8bdce7;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+}
+
+#workshop-tender-view .spec-table td {
+    padding: 12px 10px;
+    color: #d5e0e5;
+    font-size: 10px;
+    line-height: 1.8;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+#workshop-tender-view .spec-table tbody tr {
+    transition: background .18s ease;
+}
+
+#workshop-tender-view .spec-table tbody tr:hover {
+    background: rgba(85,201,216,.045);
+}
+
+#workshop-tender-view .spec-table .spec-input {
+    min-width: 90px;
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 11px;
+}
+
+#workshop-tender-view .line-total-field {
+    color: #a5cf82;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Financial summary and proposal form */
+
+#workshop-tender-view .bid-total-box {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 18px;
+}
+
+#workshop-tender-view .bid-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 17px 20px;
+    border: 1px solid rgba(100,255,173,.20);
+    border-radius: 12px;
+    background: linear-gradient(110deg, rgba(100,255,173,.075), rgba(16,29,29,.55));
+}
+
+#workshop-tender-view .bid-total span {
+    margin: 0;
+    font-size: 11px;
+}
+
+#workshop-tender-view .bid-total strong {
+    margin: 0;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+}
+
+#workshop-tender-view .bid-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 12px;
+    background: rgba(17,25,32,.72);
+}
+
+#workshop-tender-view .bid-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+#workshop-tender-view .bid-field label {
+    color: #aebdc5;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+#workshop-tender-view .bid-field .spec-input {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    box-sizing: border-box;
+    font-size: 11px;
+}
+
+#workshop-tender-view .bid-field textarea.spec-input {
+    min-height: 88px;
+    resize: vertical;
+    line-height: 1.9;
+}
+
+#workshop-tender-view .bid-field-wide {
+    grid-column: 1 / -1;
+}
+
+#workshop-tender-view .calculated-field {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid rgba(100,255,173,.18);
+    border-radius: 7px;
+    background: rgba(100,255,173,.055);
+    color: #a5e5a9;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Payment schedule */
+
+#workshop-tender-view .payment-section {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    background: rgba(17,25,32,.72);
+}
+
+#workshop-tender-view .payment-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+#workshop-tender-view .payment-section-header h4 {
+    margin: 0;
+    color: #dcecf1;
+    font-size: 13px;
+}
+
+#workshop-tender-view .payment-section-header p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+#workshop-tender-view .payment-section-header .bid-field {
+    width: min(180px, 100%);
+}
+
+#workshop-tender-view .payment-stage-list {
+    display: grid;
+    gap: 10px;
+}
+
+#workshop-tender-view .payment-stage-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1.5fr) minmax(100px, .8fr) minmax(120px, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 9px;
+    background: rgba(255,255,255,.025);
+}
+
+#workshop-tender-view .payment-stage-row .spec-input {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    box-sizing: border-box;
+}
+
+#workshop-tender-view .payment-stage-number {
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+#workshop-tender-view .payment-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px 14px;
+    margin-top: 15px;
+    padding: 13px 15px;
+    border-radius: 9px;
+    background: rgba(85,201,216,.055);
+    color: #b8c8ce;
+    font-size: 10px;
+}
+
+#workshop-tender-view .payment-summary strong {
+    color: #8bdce7;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Tablet */
+
+@media (max-width: 1050px) {
+    #workshop-tender-view .bid-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #workshop-tender-view .spec-table {
+        min-width: 1050px;
+    }
+}
+
+/* Mobile proposal cards */
+
+@media (max-width: 760px) {
+    #workshop-tender-view .tender-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #workshop-tender-view .tender-header > button {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    #workshop-tender-view .spec-table-wrapper {
+        overflow: visible;
+        border: 0;
+        background: transparent;
+    }
+
+    #workshop-tender-view .spec-table {
+        display: block;
+        min-width: 0;
+        width: 100%;
+    }
+
+    #workshop-tender-view .spec-table thead {
+        display: none;
+    }
+
+    #workshop-tender-view .spec-table tbody {
+        display: grid;
+        gap: 13px;
+    }
+
+    #workshop-tender-view .spec-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(23,32,40,.96), rgba(12,19,26,.98));
+    }
+
+    #workshop-tender-view .spec-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        min-width: 0;
+        padding: 9px 2px;
+        border-bottom: 1px solid rgba(255,255,255,.055);
+        font-size: 11px;
+    }
+
+    #workshop-tender-view .spec-table td::before {
+        display: block;
+        margin-bottom: 5px;
+        color: #82949e;
+        font-size: 9px;
+        font-weight: 600;
+    }
+
+    #workshop-tender-view .spec-table td:nth-child(1)::before { content: "ردیف"; }
+    #workshop-tender-view .spec-table td:nth-child(2)::before { content: "عنوان"; }
+    #workshop-tender-view .spec-table td:nth-child(3)::before { content: "تعداد"; }
+    #workshop-tender-view .spec-table td:nth-child(4)::before { content: "ابعاد"; }
+    #workshop-tender-view .spec-table td:nth-child(5)::before { content: "متریال"; }
+    #workshop-tender-view .spec-table td:nth-child(6)::before { content: "مشخصات فنی"; }
+    #workshop-tender-view .spec-table td:nth-child(7)::before { content: "فایل"; }
+    #workshop-tender-view .spec-table td:nth-child(8)::before { content: "قیمت واحد"; }
+    #workshop-tender-view .spec-table td:nth-child(9)::before { content: "مبلغ کل"; }
+    #workshop-tender-view .spec-table td:nth-child(10)::before { content: "قابلیت ساخت"; }
+    #workshop-tender-view .spec-table td:nth-child(11)::before { content: "توضیحات کارگاه"; }
+
+    #workshop-tender-view .spec-table td:nth-child(2),
+    #workshop-tender-view .spec-table td:nth-child(6),
+    #workshop-tender-view .spec-table td:nth-child(11) {
+        grid-column: 1 / -1;
+    }
+
+    #workshop-tender-view .spec-table td:last-child {
+        border-bottom: 0;
+    }
+
+    #workshop-tender-view .spec-table .spec-input {
+        min-width: 0;
+        min-height: 42px;
+        font-size: 11px;
+    }
+
+    #workshop-tender-view .bid-total {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #workshop-tender-view .bid-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 14px;
+        gap: 13px;
+    }
+
+    #workshop-tender-view .bid-field-wide {
+        grid-column: auto;
+    }
+
+    #workshop-tender-view .payment-section {
+        padding: 14px;
+    }
+
+    #workshop-tender-view .payment-section-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #workshop-tender-view .payment-section-header .bid-field {
+        width: 100%;
+    }
+
+    #workshop-tender-view .payment-stage-row {
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 9px;
+    }
+
+    #workshop-tender-view .payment-stage-row > *:not(.payment-stage-number) {
+        grid-column: 2;
+    }
+
+    #workshop-tender-view .payment-summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #workshop-tender-view .spec-table tbody tr {
+        transition: none;
+    }
+}
+
+
+/* ==================================================
+   WORKSHOP PROPOSAL — FINAL VISUAL POLISH
+================================================== */
+
+/* Unified active tab — restrained turquoise neon */
+.project-tabs .project-tab.active {
+    color: #d9fbff !important;
+    background: linear-gradient(135deg, #123640, #164653) !important;
+    border: 1px solid rgba(73, 220, 235, .62) !important;
+    box-shadow:
+        inset 0 0 12px rgba(54, 211, 226, .09),
+        0 0 10px rgba(54, 211, 226, .15) !important;
+    font-weight: 700;
+}
+
+/* Blue neon proposal submission button */
+#workshop-tender-view [data-submit-workshop-bid] {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    min-height: 44px;
+    padding: 11px 22px;
+    border: 1px solid rgba(105, 190, 255, .72);
+    border-radius: 10px;
+    color: #eff8ff;
+    background: linear-gradient(120deg, #17649b, #167fba, #17649b);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.12),
+        0 3px 14px rgba(30, 145, 220, .20);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        filter .22s ease,
+        background .3s ease,
+        border-color .3s ease;
+}
+
+#workshop-tender-view [data-submit-workshop-bid]::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: -60%;
+    left: -75%;
+    width: 38%;
+    height: 220%;
+    transform: rotate(22deg);
+    pointer-events: none;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.24),
+        transparent
+    );
+    animation: workshop-button-shine 4.5s ease-in-out infinite;
+}
+
+@keyframes workshop-button-shine {
+    0%, 65% { left: -75%; }
+    100% { left: 145%; }
+}
+
+#workshop-tender-view [data-submit-workshop-bid]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.16),
+        0 5px 19px rgba(30, 145, 220, .30),
+        0 0 9px rgba(75, 180, 255, .13);
+}
+
+#workshop-tender-view [data-submit-workshop-bid]:active:not(:disabled) {
+    transform: translateY(0) scale(.985);
+}
+
+/* Successful submission — soft neon green */
+#workshop-tender-view [data-submit-workshop-bid].is-submitted,
+#workshop-tender-view [data-submit-workshop-bid].is-submitted:disabled {
+    color: #eafff1;
+    border-color: rgba(91, 220, 151, .65);
+    background: linear-gradient(120deg, #176b4b, #20865b, #176b4b);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        0 3px 15px rgba(46, 190, 119, .19);
+    opacity: 1;
+    cursor: default;
+}
+
+#workshop-tender-view [data-submit-workshop-bid].is-submitted::before {
+    animation: none;
+    display: none;
+}
+
+#workshop-tender-view [data-submit-workshop-bid]:disabled:not(.is-submitted) {
+    opacity: .65;
+    cursor: wait;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Readable native select options */
+#workshop-tender-view select.spec-input {
+    color: #eaf4f5;
+    background-color: #17252d;
+    font-family: "Vazirmatn", Tahoma, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color-scheme: dark;
+}
+
+#workshop-tender-view select.spec-input option {
+    color: #edf7f7;
+    background-color: #17252d;
+    font-family: "Vazirmatn", Tahoma, sans-serif;
+    font-size: 13px;
+}
+
+/* Larger, consistent Persian numeric typography */
+#workshop-tender-view,
+#workshop-tender-view input,
+#workshop-tender-view select,
+#workshop-tender-view textarea {
+    font-family: "Vazirmatn", Tahoma, sans-serif;
+}
+
+#workshop-tender-view .spec-table .spec-input,
+#workshop-tender-view .bid-field .spec-input,
+#workshop-tender-view .payment-stage-row .spec-input {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+#workshop-tender-view .bid-field label {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#workshop-tender-view .payment-stage-row [data-payment-percentage] {
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    direction: ltr;
+}
+
+#workshop-tender-view [data-discount] {
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    direction: ltr;
+}
+
+#workshop-tender-view .calculated-field {
+    font-size: 14px;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+#workshop-tender-view .bid-total strong {
+    font-size: 24px;
+}
+
+/* Currency unit is intentionally smaller than the amount */
+#workshop-tender-view .currency-value {
+    font-size: inherit;
+    font-weight: inherit;
+    direction: ltr;
+    unicode-bidi: isolate;
+}
+
+#workshop-tender-view .currency-unit {
+    font-size: .72em;
+    font-weight: 600;
+    opacity: .82;
+    white-space: nowrap;
+}
+
+#workshop-tender-view .discount-amount-field {
+    color: #ffd18a;
+    background: rgba(255,190,90,.075);
+    border-color: rgba(255,190,90,.25);
+}
+
+#workshop-tender-view .line-total-field {
+    font-size: 13px;
+}
+
+/* Payment stage readability */
+#workshop-tender-view .payment-stage-number {
+    font-size: 13px;
+}
+
+#workshop-tender-view .payment-summary {
+    font-size: 12px;
+}
+
+#workshop-tender-view .payment-summary strong {
+    font-size: 14px;
+}
+
+@media (max-width: 700px) {
+    #workshop-tender-view [data-submit-workshop-bid] {
+        width: 100%;
+    }
+
+    #workshop-tender-view .bid-field .spec-input,
+    #workshop-tender-view .payment-stage-row .spec-input {
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #workshop-tender-view [data-submit-workshop-bid],
+    #workshop-tender-view [data-submit-workshop-bid]::before {
+        transition: none;
+    }
+}

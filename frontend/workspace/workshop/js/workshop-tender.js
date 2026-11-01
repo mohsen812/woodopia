@@ -118,14 +118,16 @@
             return `
 
                 <div
-                    class="invitation-item"
+                    class="invitation-item status-${["pending", "accepted", "declined"].includes(status) ? status : "pending"}"
+                    data-status="${["pending", "accepted", "declined"].includes(status) ? status : "pending"}"
                     data-tender-id="${item.tender}">
 
                     <div class="invitation-main">
 
                         <h4>
                             ${this.escape(
-                                item.tender_title || "مناقصه"
+                                String(item.tender_title || "مناقصه")
+                                    .replace(/\s*[-–—]\s*استانداردسازی\s*$/u, "")
                             )}
                         </h4>
 
@@ -142,10 +144,29 @@
                                 وضعیت: ${statusText}
                             </span>
                             ${
+                                item.public_alias
+                                ? `
+                                <span class="meta-chip public-alias-chip" title="کد مستعار پیشنهاد">
+                                    کد مستعار: ${this.escape(item.public_alias)}
+                                </span>
+                                `
+                                : ""
+                            }
+                            ${
+                                item.is_preliminary_winner === true
+                                ? `
+                                <span class="meta-chip preliminary-winner-chip">
+                                    <span class="preliminary-winner-led" aria-hidden="true"></span>
+                                    شما برنده اولیه مناقصه شده‌اید
+                                </span>
+                                `
+                                : ""
+                            }
+                            ${
                                 stageLabel
                                 ? `
                                 <span class="meta-chip project-stage-chip" title="مرحله فعلی پروژه">
-                                    <span class="stage-chip-icon" aria-hidden="true">✧</span>
+                                    <span class="stage-chip-icon" aria-hidden="true">▦</span>
                                     <span>${this.escape(stageLabel)}</span>
                                 </span>
                                 `
@@ -566,7 +587,7 @@
 
                     <button
                         type="button"
-                        class="primary-button"
+                        class="primary-button${submitted ? " is-submitted" : ""}"
                         data-submit-workshop-bid
                         ${submitted ? "disabled" : ""}>
 
@@ -669,6 +690,21 @@
                                 )}"
                                 ${submitted ? "disabled" : ""}
                             >
+
+                        </div>
+
+
+                        <div class="bid-field">
+
+                            <label>
+                                مبلغ تخفیف
+                            </label>
+
+                            <div
+                                class="calculated-field discount-amount-field"
+                                data-discount-amount>
+                                ۰ ریال
+                            </div>
 
                         </div>
 
@@ -1334,8 +1370,8 @@
 
                     if (lineTotal) {
 
-                        lineTotal.textContent =
-                            this.formatMoney(
+                        lineTotal.innerHTML =
+                            this.formatCurrency(
                                 total
                             );
 
@@ -1351,8 +1387,8 @@
 
             if (totalElement) {
 
-                totalElement.textContent =
-                    this.formatMoney(
+                totalElement.innerHTML =
+                    this.formatCurrency(
                         grandTotal
                     );
 
@@ -1436,6 +1472,20 @@
                 total -
                 discountAmount;
 
+            const discountAmountElement =
+                document.querySelector(
+                    "[data-discount-amount]"
+                );
+
+            if (discountAmountElement) {
+
+                discountAmountElement.innerHTML =
+                    this.formatCurrency(
+                        discountAmount
+                    );
+
+            }
+
             const element =
                 document.querySelector(
                     "[data-final-amount]"
@@ -1443,8 +1493,8 @@
 
             if (element) {
 
-                element.textContent =
-                    this.formatMoney(
+                element.innerHTML =
+                    this.formatCurrency(
                         finalAmount
                     );
 
@@ -1705,8 +1755,8 @@
 
                     if (amountElement) {
 
-                        amountElement.textContent =
-                            this.formatMoney(
+                        amountElement.innerHTML =
+                            this.formatCurrency(
                                 amount
                             );
 
@@ -1735,8 +1785,8 @@
 
             if (amountElement) {
 
-                amountElement.textContent =
-                    this.formatMoney(
+                amountElement.innerHTML =
+                    this.formatCurrency(
                         amountTotal
                     );
 
@@ -2330,6 +2380,8 @@
 
                 if (submitButton) {
 
+                    submitButton.classList.add("is-submitted");
+
                     submitButton.disabled =
                         true;
 
@@ -2356,6 +2408,8 @@
                 );
 
                 if (submitButton) {
+
+                    submitButton.classList.remove("is-submitted");
 
                     submitButton.disabled =
                         false;
@@ -3429,6 +3483,13 @@
             ).format(
                 Number(value) || 0
             );
+
+        },
+
+
+        formatCurrency: function (value) {
+
+            return `<span class="currency-value">${this.formatMoney(value)}</span><span class="currency-unit">ریال</span>`;
 
         },
 

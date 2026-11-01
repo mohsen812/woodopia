@@ -379,7 +379,7 @@ def get_project_progress(project, user=None):
                         "action": "evaluate_tender",
                     }
 
-                elif tender.status == "revealed":
+                elif tender.status in ("revealed", "awarded"):
                     stages[3]["state"] = "completed"
 
                     # ---------------------------------
@@ -396,11 +396,18 @@ def get_project_progress(project, user=None):
                         stages[4]["state"] = "current"
                         current_stage = "selection_payment"
 
-                        next_action = {
-                            "required": True,
-                            "title": "انتخاب پیشنهاد",
-                            "action": "select_tender_bid",
-                        }
+                        if tender.status == "revealed":
+                            next_action = {
+                                "required": True,
+                                "title": "انتخاب پیشنهاد",
+                                "action": "select_tender_bid",
+                            }
+                        else:
+                            next_action = {
+                                "required": False,
+                                "title": "در انتظار تکمیل فرآیند انتخاب و پرداخت",
+                                "action": None,
+                            }
 
                     elif selection.status in (
                         "selected",

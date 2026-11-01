@@ -444,10 +444,7 @@ class ConsultantStandardizationView(
 
         return Tender.objects.create(
             project=project,
-            title=(
-                f"{project.title} - "
-                "استانداردسازی"
-            ),
+            title=project.title,
             description=project.description or "",
             status="draft",
         )
@@ -809,10 +806,7 @@ class CustomerStandardizationView(
 
         return Tender.objects.create(
             project=project,
-            title=(
-                f"{project.title} - "
-                "استانداردسازی"
-            ),
+            title=project.title,
             description=project.description or "",
             status="draft",
         )

@@ -175,6 +175,13 @@
                     داشبورد کارگاه
                 </h1>
 
+                <div class="workshop-clock" id="workshop-clock" dir="rtl">
+                    <div class="workshop-clock-heading">ساعت رسمی FEEMAAS</div>
+                    <time class="workshop-clock-time" id="workshop-clock-time" aria-label="ساعت رسمی"></time>
+                    <div class="workshop-clock-date" id="workshop-clock-date"></div>
+                    <div class="workshop-clock-location">به وقت شیراز، ایران</div>
+                </div>
+
             </div>
 
 
@@ -259,56 +266,25 @@
 
             <div class="dashboard-cards">
 
-                <div class="dashboard-card">
-
-                    <span class="card-label">
-                        دعوت‌های جدید
-                    </span>
-
-                    <strong
-                        id="dashboard-invitation-count">
-                        -
-                    </strong>
-
+                <div class="dashboard-card" data-tone="cyan">
+                    <span class="card-icon" aria-hidden="true">▤</span>
+                    <span class="card-label">دعوت‌های جدید</span>
+                    <strong id="dashboard-invitation-count">-</strong>
+                    <span class="card-caption">دعوت‌های دریافتی کارگاه</span>
                 </div>
 
-
-                <div class="dashboard-card">
-
-                    <span class="card-label">
-                        مناقصه‌های فعال
-                    </span>
-
-                    <strong>
-                        -
-                    </strong>
-
+                <div class="dashboard-card" data-tone="violet">
+                    <span class="card-icon" aria-hidden="true">◈</span>
+                    <span class="card-label">مناقصه‌های فعال</span>
+                    <strong>-</strong>
+                    <span class="card-caption">فرصت‌های قابل مشارکت</span>
                 </div>
 
-
-                <div class="dashboard-card">
-
-                    <span class="card-label">
-                        پیشنهادهای ارسال‌شده
-                    </span>
-
-                    <strong>
-                        -
-                    </strong>
-
-                </div>
-
-
-                <div class="dashboard-card">
-
-                    <span class="card-label">
-                        قراردادهای جاری
-                    </span>
-
-                    <strong>
-                        -
-                    </strong>
-
+                <div class="dashboard-card" data-tone="lime">
+                    <span class="card-icon" aria-hidden="true">↗</span>
+                    <span class="card-label">پیشنهادهای ارسال‌شده</span>
+                    <strong>-</strong>
+                    <span class="card-caption">پیشنهادهای ثبت‌شده کارگاه</span>
                 </div>
 
             </div>
