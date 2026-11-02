@@ -1678,6 +1678,21 @@ const projectProgressHtml =
                     خلاصه پروژه
                 </button>
 
+                <button
+                    type="button"
+                    class="project-detail-tab"
+                    data-project-tab="standardization"
+                >
+                    مشخصات فنی
+                </button>
+
+                <button
+                    type="button"
+                    class="project-detail-tab"
+                    data-project-tab="files"
+                >
+                    فایل‌ها و طراحی
+                </button>
 
                 <button
                     type="button"
@@ -1686,16 +1701,6 @@ const projectProgressHtml =
                 >
                     مناقصه
                 </button>
-
-
-                <button
-                    type="button"
-                    class="project-detail-tab"
-                    data-project-tab="messages"
-                >
-                    پیام‌ها
-                </button>
-
 
                 <button
                     type="button"
@@ -1708,18 +1713,10 @@ const projectProgressHtml =
                 <button
                     type="button"
                     class="project-detail-tab"
-                    data-project-tab="standardization"
+                    data-project-tab="messages"
                 >
-                    استانداردسازی
+                    پیام‌ها
                 </button>
-                <button
-                    type="button"
-                    class="project-detail-tab"
-                    data-project-tab="files"
-                >
-                    فایل‌ها و طراحی
-                </button>
-
 
                 <button
                     type="button"
@@ -2278,7 +2275,117 @@ if (sendToConsultantButton) {
 ============================================================
 */
 
-async function loadTenderDashboard(projectId) {
+
+/* =========================================================
+   PROJECT TAB LOADER — REQUEST DEDUPLICATION
+========================================================= */
+
+function loadProjectTabOnce(panelId, projectId, force, loader) {
+
+    const panel = document.getElementById(panelId);
+
+    if (!panel) {
+        console.warn("FEEMAAS: Project tab panel not found:", panelId);
+        return Promise.resolve();
+    }
+
+    const projectKey = String(projectId);
+
+    if (
+        !force &&
+        panel._feemaasLoadedProjectId === projectKey
+    ) {
+        return Promise.resolve();
+    }
+
+    if (
+        !force &&
+        panel._feemaasLoadingProjectId === projectKey &&
+        panel._feemaasLoadingPromise
+    ) {
+        return panel._feemaasLoadingPromise;
+    }
+
+    const requestId = (panel._feemaasRequestId || 0) + 1;
+
+    panel._feemaasRequestId = requestId;
+    panel._feemaasLoadingProjectId = projectKey;
+    panel._feemaasLoadedProjectId = null;
+    panel.dataset.projectId = projectKey;
+    delete panel.dataset.loadFailed;
+
+    const promise = Promise.resolve()
+        .then(() => loader(projectId, requestId))
+        .then(() => {
+
+            if (
+                isCurrentProjectTabRequest(panel, projectId, requestId) &&
+                panel.dataset.loadFailed !== "1"
+            ) {
+                panel._feemaasLoadedProjectId = projectKey;
+            }
+
+        })
+        .catch(error => {
+            console.error("FEEMAAS: Project tab loader failed.", error);
+        })
+        .finally(() => {
+
+            if (panel._feemaasRequestId === requestId) {
+                panel._feemaasLoadingPromise = null;
+                panel._feemaasLoadingProjectId = null;
+            }
+
+        });
+
+    panel._feemaasLoadingPromise = promise;
+
+    return promise;
+}
+
+
+function isCurrentProjectTabRequest(panel, projectId, requestId) {
+
+    return Boolean(
+        panel &&
+        panel._feemaasRequestId === requestId &&
+        panel.dataset.projectId === String(projectId)
+    );
+
+}
+
+
+function loadTenderDashboard(projectId, force = false) {
+    return loadProjectTabOnce(
+        "tender-dashboard",
+        projectId,
+        force,
+        loadTenderDashboardInternal
+    );
+}
+
+
+function loadProjectStandardization(projectId, force = false) {
+    return loadProjectTabOnce(
+        "project-standardization-panel",
+        projectId,
+        force,
+        loadProjectStandardizationInternal
+    );
+}
+
+
+function loadProjectFiles(projectId, force = false) {
+    return loadProjectTabOnce(
+        "project-files-panel",
+        projectId,
+        force,
+        loadProjectFilesInternal
+    );
+}
+
+
+async function loadTenderDashboardInternal(projectId, requestId) {
 
     const container =
         document.getElementById(
@@ -2322,6 +2429,10 @@ async function loadTenderDashboard(projectId) {
             );
 
 
+        if (!isCurrentProjectTabRequest(container, projectId, requestId)) {
+            return;
+        }
+
         renderTenderDashboard(
             container,
             data,
@@ -2330,6 +2441,12 @@ async function loadTenderDashboard(projectId) {
 
 
     } catch (error) {
+
+        if (!isCurrentProjectTabRequest(container, projectId, requestId)) {
+            return;
+        }
+
+        container.dataset.loadFailed = "1";
 
         console.error(
             "FEEMAAS: Tender dashboard load failed.",
@@ -2783,7 +2900,8 @@ await apiPost(
     );
 
     await loadTenderDashboard(
-        projectId
+        projectId,
+        true
     );
 
 } catch(error) {
@@ -3233,7 +3351,7 @@ function escapeHtml(value) {
 ============================================================
 */
 
-async function loadProjectStandardization(projectId){
+async function loadProjectStandardizationInternal(projectId, requestId){
 
     console.log(
         "PROJECT STANDARDIZATION LOAD:",
@@ -3256,6 +3374,10 @@ async function loadProjectStandardization(projectId){
 
 
         if (!panel) {
+            return;
+        }
+
+        if (!isCurrentProjectTabRequest(panel, projectId, requestId)) {
             return;
         }
 
@@ -3769,7 +3891,8 @@ async function loadProjectStandardization(projectId){
 
 
                                 await loadProjectStandardization(
-                                    projectId
+                                    projectId,
+                                    true
                                 );
 
                             }
@@ -3847,7 +3970,8 @@ async function loadProjectStandardization(projectId){
 
 
                                 await loadProjectStandardization(
-                                    projectId
+                                    projectId,
+                                    true
                                 );
 
                             }
@@ -3959,7 +4083,12 @@ async function loadProjectStandardization(projectId){
             );
 
 
-        if (panel) {
+        if (
+            panel &&
+            isCurrentProjectTabRequest(panel, projectId, requestId)
+        ) {
+
+            panel.dataset.loadFailed = "1";
 
             panel.innerHTML = `
 
@@ -4186,7 +4315,7 @@ function uploadProjectFileCenterFile(
 ============================================================
 */
 
-async function loadProjectFiles(projectId){
+async function loadProjectFilesInternal(projectId, requestId){
 
     console.log("FEEMAAS FILE CENTER: loadProjectFiles START", projectId);
 
@@ -4228,6 +4357,10 @@ async function loadProjectFiles(projectId){
 
         console.log("FEEMAAS FILE CENTER: API DATA", data);
 
+        if (!isCurrentProjectTabRequest(container, projectId, requestId)) {
+            return;
+        }
+
         renderProjectFileCenter(
             container,
             data,
@@ -4238,6 +4371,12 @@ async function loadProjectFiles(projectId){
 
 
     } catch(error){
+
+        if (!isCurrentProjectTabRequest(container, projectId, requestId)) {
+            return;
+        }
+
+        container.dataset.loadFailed = "1";
 
         console.error(
             "FEEMAAS FILE CENTER ERROR",
@@ -5295,7 +5434,8 @@ function renderProjectFileCenter(
                                 container;
 
                             await loadProjectFiles(
-                                projectId
+                                projectId,
+                                true
                             );
 
                             console.info(
@@ -5569,7 +5709,8 @@ catch(error){
 
 
                         await loadProjectFiles(
-                            projectId
+                            projectId,
+                            true
                         );
 
                     }

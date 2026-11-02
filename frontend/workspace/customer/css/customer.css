@@ -5706,3 +5706,336 @@ body.collaboration-modal-open {
 }
 
 /* END CUSTOMER_ACCOUNT_COMPACT_UI_V1 */
+
+/* CUSTOMER RESPONSIVE REFINEMENT V1
+   Customer workspace layout and project modal improvements.
+*/
+
+/* ---------- Desktop workspace proportions ---------- */
+
+@media (min-width: 769px) {
+
+    .sidebar {
+        width: 220px;
+        min-width: 220px;
+        padding: 20px 16px;
+    }
+
+    .content {
+        min-width: 0;
+        padding: 24px;
+    }
+
+    .dashboard-nav {
+        gap: 6px;
+    }
+
+    .nav-item {
+        min-height: 44px;
+        padding: 10px 12px;
+        font-size: 13px;
+        border-radius: 13px;
+    }
+
+    .nav-icon {
+        font-size: 19px;
+    }
+
+    .topbar {
+        padding: 18px 22px;
+    }
+
+    .workspace-view {
+        min-width: 0;
+    }
+}
+
+/* ---------- Customer sidebar mobile grid ---------- */
+
+@media (max-width: 768px) {
+
+    .app {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .sidebar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+        padding: 14px;
+        border-left: 0;
+        border-bottom: 1px solid rgba(124, 140, 255, .18);
+        border-radius: 0 0 18px 18px;
+    }
+
+    .brand,
+    .user-panel {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+
+    .brand {
+        justify-content: center;
+        padding: 4px 0;
+    }
+
+    .user-panel {
+        margin: 0;
+    }
+
+    .dashboard-nav {
+        display: contents;
+    }
+
+    .nav-section-title {
+        display: none;
+    }
+
+    .sidebar > .nav-item,
+    .dashboard-nav > .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        min-width: 0;
+        min-height: 76px;
+        margin: 0;
+        padding: 10px 5px;
+        border-radius: 14px;
+        text-align: center;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: normal;
+        transform: none;
+    }
+
+    .sidebar .nav-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 27px;
+        font-size: 23px;
+        line-height: 1;
+    }
+
+    .sidebar .nav-item:hover {
+        transform: none;
+    }
+
+    .sidebar .collaboration-request-trigger {
+        margin-top: 0;
+    }
+
+    .content {
+        width: 100%;
+        min-width: 0;
+        padding: 16px;
+    }
+
+    .topbar {
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .topbar h1 {
+        font-size: 20px;
+    }
+
+    .workspace-view {
+        min-width: 0;
+    }
+}
+
+/* ---------- Narrow mobile screens ---------- */
+
+@media (max-width: 480px) {
+
+    .sidebar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .sidebar > .nav-item,
+    .dashboard-nav > .nav-item {
+        min-height: 70px;
+        font-size: 12px;
+    }
+
+    .content {
+        padding: 12px;
+    }
+
+    .topbar {
+        border-radius: 14px;
+    }
+
+    .topbar-actions {
+        gap: 6px;
+    }
+}
+
+/* ---------- Customer project modal ---------- */
+
+#project-modal {
+    padding: 24px;
+    background: rgba(3, 7, 15, .76);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#project-modal .modal-panel {
+    width: min(1120px, calc(100vw - 48px));
+    max-width: 1120px;
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
+    padding: 30px;
+    border-radius: 22px;
+    background: linear-gradient(
+        145deg,
+        #202e45,
+        #17243a
+    );
+    border: 1px solid rgba(150, 178, 220, .24);
+    box-shadow:
+        0 24px 65px rgba(0, 0, 0, .48),
+        0 0 24px rgba(72, 228, 242, .06);
+    color: #f2f6ff;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(145, 169, 210, .45) transparent;
+}
+
+#project-modal .modal-close {
+    width: 40px;
+    height: 40px;
+    top: 14px;
+    right: 14px;
+    background: rgba(255, 255, 255, .09);
+    border-color: rgba(255, 255, 255, .18);
+    transition: background-color .18s ease, border-color .18s ease;
+}
+
+#project-modal .modal-close:hover {
+    background: rgba(255, 255, 255, .16);
+}
+
+#project-modal #project-detail {
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.85;
+}
+
+#project-modal #project-detail h1,
+#project-modal #project-detail h2,
+#project-modal #project-detail h3,
+#project-modal #project-detail h4 {
+    line-height: 1.6;
+}
+
+#project-modal #project-detail p,
+#project-modal #project-detail label,
+#project-modal #project-detail li {
+    line-height: 1.9;
+}
+
+#project-modal #project-detail .project-detail-tabs {
+    gap: 8px;
+    padding: 9px;
+    margin: 18px 0;
+    border-radius: 14px;
+    background: rgba(9, 18, 34, .48);
+    border-color: rgba(150, 178, 220, .16);
+}
+
+#project-modal #project-detail .project-detail-tab {
+    min-height: 44px;
+    padding: 9px 15px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 11px;
+    transition:
+        color .18s ease,
+        background-color .18s ease,
+        border-color .18s ease;
+}
+
+#project-modal #project-detail .project-detail-tab:hover {
+    transform: none;
+}
+
+#project-modal #project-detail .project-detail-tab-content {
+    min-width: 0;
+}
+
+#project-modal input,
+#project-modal textarea,
+#project-modal select {
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* ---------- Project modal responsive behavior ---------- */
+
+@media (max-width: 768px) {
+
+    #project-modal {
+        align-items: center;
+        padding: 12px;
+    }
+
+    #project-modal .modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: calc(100vh - 24px);
+        max-height: calc(100dvh - 24px);
+        padding: 24px 18px;
+        border-radius: 18px;
+    }
+
+    #project-modal #project-detail .project-detail-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    #project-modal #project-detail .project-detail-tab {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    #project-modal {
+        padding: 7px;
+    }
+
+    #project-modal .modal-panel {
+        max-height: calc(100vh - 14px);
+        max-height: calc(100dvh - 14px);
+        padding: 22px 13px;
+        border-radius: 15px;
+    }
+
+    #project-modal .modal-close {
+        width: 36px;
+        height: 36px;
+    }
+
+    #project-modal #project-detail {
+        font-size: 14px;
+    }
+}
+
+/* End CUSTOMER RESPONSIVE REFINEMENT V1 */
