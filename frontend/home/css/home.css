@@ -1272,75 +1272,80 @@ img {
 /* PROCESS */
 
 .process-wrapper {
-
     margin-top: 110px;
 }
 
 .process {
-
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     gap: 12px;
-
-    padding:
-        30px;
-
-    border:
-        1px solid var(--border);
-
+    padding: 34px 30px;
+    border: 1px solid var(--border);
     border-radius: 24px;
-
-    background:
-        var(--bg);
-}
-
-.process-item {
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    gap: 3px;
-
-    min-width: 80px;
-
+    background: var(--bg);
     position: relative;
 }
 
+.process-item {
+    --step-color: var(--cyan);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 80px;
+    position: relative;
+    z-index: 1;
+    padding: 5px 7px 9px;
+    border-radius: 14px;
+    background: transparent;
+    animation: process-step-glow 12s ease-in-out infinite both;
+}
+
+.process-item:nth-child(3) {
+    --step-color: var(--purple);
+}
+
+.process-item:nth-child(5) {
+    --step-color: var(--orange);
+}
+
+.process-item:nth-child(7) {
+    --step-color: var(--lime);
+}
+
+.process-item:nth-child(9) {
+    --step-color: var(--cyan);
+}
+
+.process-item:nth-child(11) {
+    --step-color: var(--purple);
+}
+
 .process-number {
-
     position: absolute;
-
     top: -20px;
-
-    font-size: 8px;
-
-    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text);
+    transition: color .3s ease;
 }
 
 .process-icon {
-
     width: 48px;
     height: 48px;
-
     display: grid;
-
     place-items: center;
-
     border-radius: 16px;
-
-    background: white;
-
-    box-shadow:
-        0 8px 20px rgba(0,0,0,.05);
-
-    font-size: 18px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(0,0,0,.05);
+    font-size: 19px;
+    color: var(--step-color);
+    border-color: color-mix(in srgb, var(--step-color) 45%, var(--border));
+    box-shadow: 0 5px 16px color-mix(in srgb, var(--step-color) 16%, transparent);
+    transition: color .3s ease, border-color .3s ease;
 }
 
 .process-item:nth-child(1) .process-icon {
@@ -1360,33 +1365,206 @@ img {
 }
 
 .process-item strong {
-
     font-size: 9px;
-
     letter-spacing: .1em;
+    color: var(--text);
+    font-weight: 700;
+    transition: color .3s ease;
 }
 
 .process-item small {
-
     font-size: 9px;
+    color: var(--text-secondary, var(--text-muted));
+    font-weight: 500;
+}
 
-    color: var(--text-muted);
+/* Soft pulse underneath the active stage. */
+.process-item::after {
+    content: "";
+    position: absolute;
+    width: 38px;
+    height: 5px;
+    left: 50%;
+    bottom: 0;
+    border-radius: 50%;
+    background: var(--step-color);
+    filter: blur(7px);
+    opacity: 0;
+    transform: translateX(-50%) scale(.65);
+    pointer-events: none;
+    animation: process-underlight 12s ease-in-out infinite both;
 }
 
 .process-connector {
+    --transfer-color: var(--cyan);
 
     flex: 1;
-
-    height: 1px;
-
-    background:
-        linear-gradient(
-            to left,
-            var(--border),
-            transparent
-        );
+    transform: translateY(-14px);
+    height: 2px;
+    min-width: 12px;
+    position: relative;
+    z-index: 0;
+    border-radius: 2px;
+    background: var(--border);
 }
 
+/* The moving electronic light travels toward the next stage. */
+.process-connector::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--transfer-color);
+    box-shadow:
+        0 0 5px var(--transfer-color),
+        0 0 11px var(--transfer-color),
+        0 0 18px var(--transfer-color);
+    opacity: 0;
+    transform: translateY(-50%);
+    animation: process-energy-transfer 12s ease-in-out infinite both;
+}
+
+.process-connector:nth-child(2) {
+    --transfer-color: var(--cyan);
+}
+
+.process-connector:nth-child(4) {
+    --transfer-color: var(--purple);
+}
+
+.process-connector:nth-child(6) {
+    --transfer-color: var(--orange);
+}
+
+.process-connector:nth-child(8) {
+    --transfer-color: var(--lime);
+}
+
+.process-connector:nth-child(10) {
+    --transfer-color: var(--cyan);
+}
+
+/* Six stages: two seconds per stage. */
+.process-item:nth-child(1),
+.process-item:nth-child(1)::after {
+    animation-delay: 0s;
+}
+
+.process-item:nth-child(3),
+.process-item:nth-child(3)::after {
+    animation-delay: 2s;
+}
+
+.process-item:nth-child(5),
+.process-item:nth-child(5)::after {
+    animation-delay: 4s;
+}
+
+.process-item:nth-child(7),
+.process-item:nth-child(7)::after {
+    animation-delay: 6s;
+}
+
+.process-item:nth-child(9),
+.process-item:nth-child(9)::after {
+    animation-delay: 8s;
+}
+
+.process-item:nth-child(11),
+.process-item:nth-child(11)::after {
+    animation-delay: 10s;
+}
+
+/* Each transfer starts with its source stage and reaches the next stage. */
+.process-connector:nth-child(2)::after {
+    animation-delay: 0s;
+}
+
+.process-connector:nth-child(4)::after {
+    animation-delay: 2s;
+}
+
+.process-connector:nth-child(6)::after {
+    animation-delay: 4s;
+}
+
+.process-connector:nth-child(8)::after {
+    animation-delay: 6s;
+}
+
+.process-connector:nth-child(10)::after {
+    animation-delay: 8s;
+}
+
+@keyframes process-step-glow {
+    0%, 16.66% {
+        background: color-mix(in srgb, var(--step-color) 10%, transparent);
+        transform: translateY(-3px);
+    }
+
+    18%, 100% {
+        background: transparent;
+        transform: translateY(0);
+    }
+}
+
+@keyframes process-underlight {
+    0%, 16.66% {
+        opacity: .9;
+        transform: translateX(-50%) scale(1.15);
+    }
+
+    18%, 100% {
+        opacity: 0;
+        transform: translateX(-50%) scale(.55);
+    }
+}
+
+@keyframes process-energy-transfer {
+    0% {
+        right: 0;
+        opacity: 0;
+    }
+
+    2% {
+        opacity: 1;
+    }
+
+    14% {
+        right: calc(100% - 7px);
+        opacity: 1;
+    }
+
+    16.66% {
+        right: calc(100% - 7px);
+        opacity: 0;
+    }
+
+    100% {
+        right: 0;
+        opacity: 0;
+    }
+}
+
+/* Mobile keeps the existing horizontal scrolling behavior. */
+@media (max-width: 900px) {
+    .process {
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+
+    .process-connector {
+        min-width: 35px;
+    }
+
+    .process-item {
+        flex-shrink: 0;
+    }
+}
 
 /* =========================================================
    PROJECTS
@@ -1488,48 +1666,24 @@ img {
 }
 
 .project-image-one {
-
-    background:
-        radial-gradient(
-            circle at 70% 30%,
-            rgba(0,217,255,.3),
-            transparent 25%
-        ),
-        linear-gradient(
-            145deg,
-            #b9c4bf,
-            #596460
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/project-table.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .project-image-two {
-
-    background:
-        radial-gradient(
-            circle at 20% 30%,
-            rgba(183,243,74,.28),
-            transparent 25%
-        ),
-        linear-gradient(
-            145deg,
-            #d5d8d0,
-            #858c84
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/project-chair.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .project-image-three {
-
-    background:
-        radial-gradient(
-            circle at 75% 60%,
-            rgba(139,92,246,.3),
-            transparent 25%
-        ),
-        linear-gradient(
-            145deg,
-            #c9c1c8,
-            #70666f
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/project-cabinet.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .project-category {
@@ -1738,33 +1892,24 @@ img {
 }
 
 .workshop-one {
-
-    background:
-        linear-gradient(
-            145deg,
-            #d0d6d2,
-            #6b7771
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/workshop-assembly.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .workshop-two {
-
-    background:
-        linear-gradient(
-            145deg,
-            #d5d1c5,
-            #777064
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/workshop-cnc.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .workshop-three {
-
-    background:
-        linear-gradient(
-            145deg,
-            #d0c8d0,
-            #756d76
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/workshop-craft.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .location-badge {
@@ -1871,33 +2016,24 @@ img {
 }
 
 .journal-one {
-
-    background:
-        linear-gradient(
-            135deg,
-            #cdd9d5,
-            #677772
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/journal-digital-design.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .journal-two {
-
-    background:
-        linear-gradient(
-            135deg,
-            #ddd4c6,
-            #807567
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/journal-materials.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .journal-three {
-
-    background:
-        linear-gradient(
-            135deg,
-            #d4cde0,
-            #756a82
-        );
+    background-image: linear-gradient(rgba(15, 20, 18, .08), rgba(15, 20, 18, .08)), url("../images/landing/journal-detail.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .journal-content {
@@ -2839,6 +2975,27 @@ img {
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
+
+    .process-item,
+    .process-item::after,
+    .process-connector,
+    .process-connector::after {
+        animation: none !important;
+    }
+
+    .process-item {
+        transform: none !important;
+        background: transparent !important;
+    }
+
+    .process-item::after,
+    .process-connector::after {
+        display: none !important;
+    }
+
+    .process-connector {
+        box-shadow: none !important;
+    }
 
     html {
         scroll-behavior: auto;

@@ -32,3 +32,5 @@ node_modules/
 
 # Temporary
 *.tmp
+# Local archive (never commit)
+_local_archive/
