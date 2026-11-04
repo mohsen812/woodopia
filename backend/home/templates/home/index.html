@@ -134,8 +134,8 @@
                     </span>
 
                     <h1>
-                        رویایت را
-                        <span>بساز.</span>
+                        ساخت محصول
+                        <span>از ایده تا واقعیت</span>
                     </h1>
 
                     <p class="hero-description">
@@ -201,9 +201,12 @@
 
                         <div class="product-image product-image-hero">
 
-                            <div class="product-shape">
-                                <span></span>
-                            </div>
+                            <img
+                                class="hero-product-image"
+                                src="{% static 'home/images/landing/hero.png' %}"
+                                alt="نمونه محصول طراحی‌شده در FEEMAAS"
+                                fetchpriority="high"
+                            >
 
                             <div class="image-label">
                                 PRODUCT / 001
@@ -279,11 +282,12 @@
                                 FEEMAAS / 2026
                             </span>
 
-                            <div class="visual-object">
-                                <div class="object-top"></div>
-                                <div class="object-leg"></div>
-                                <div class="object-leg second"></div>
-                            </div>
+                            <img
+                                class="beginning-image"
+                                src="{% static 'home/images/landing/hero2.jpg' %}"
+                                alt="فضای طراحی و ساخت محصول"
+                                loading="lazy"
+                            >
 
                         </div>
 
@@ -617,7 +621,6 @@
                             </p>
 
                             <div class="card-footer">
-                                <span>★★★★★</span>
                                 <span>مشاهده →</span>
                             </div>
 
@@ -645,7 +648,6 @@
                             </p>
 
                             <div class="card-footer">
-                                <span>★★★★★</span>
                                 <span>مشاهده →</span>
                             </div>
 
@@ -673,7 +675,6 @@
                             </p>
 
                             <div class="card-footer">
-                                <span>★★★★☆</span>
                                 <span>مشاهده →</span>
                             </div>
 
@@ -852,9 +853,9 @@
 
                     <article class="designer-card">
                         <div class="designer-avatar avatar-one">
-                            <span>AR</span>
+                            <img src="{% static 'home/images/landing/Saba Hoseini.jpg' %}" alt="Saba Hoseini" loading="lazy">
                         </div>
-                        <h3>Aria Rahimi</h3>
+                        <h3>Saba Hoseini</h3>
                         <p>Product Designer</p>
                         <a href="#">Portfolio →</a>
                     </article>
@@ -862,7 +863,7 @@
 
                     <article class="designer-card">
                         <div class="designer-avatar avatar-two">
-                            <span>NM</span>
+                            <img src="{% static 'home/images/landing/Nima Moradi.jpg' %}" alt="Nima Moradi" loading="lazy">
                         </div>
                         <h3>Nima Moradi</h3>
                         <p>Furniture Designer</p>
@@ -872,7 +873,7 @@
 
                     <article class="designer-card">
                         <div class="designer-avatar avatar-three">
-                            <span>SK</span>
+                            <img src="{% static 'home/images/landing/Sara Karimi.jpg' %}" alt="Sara Karimi" loading="lazy">
                         </div>
                         <h3>Sara Karimi</h3>
                         <p>Industrial Designer</p>
@@ -882,7 +883,7 @@
 
                     <article class="designer-card">
                         <div class="designer-avatar avatar-four">
-                            <span>AM</span>
+                            <img src="{% static 'home/images/landing/Ali Mehr.jpg' %}" alt="Ali Mehr" loading="lazy">
                         </div>
                         <h3>Ali Mehr</h3>
                         <p>Product Designer</p>
