@@ -566,3 +566,228 @@ class WorkshopTenderAvailabilityTests(TestCase):
                 organization=self.active_workshop,
             ).exists()
         )
+
+class ProjectConsultantReassignmentTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from organizations.models import Membership, Organization, OrganizationRole
+        from projects.models import Project, ProjectAssignment
+
+        User = get_user_model()
+        cls.ops = User.objects.create_user(
+            username="reassign_ops",
+            email="reassign_ops@example.com",
+            password="Test-password-482!",
+        )
+        cls.customer_user = User.objects.create_user(
+            username="reassign_customer",
+            email="reassign_customer@example.com",
+            password="Test-password-482!",
+        )
+        cls.user_one = User.objects.create_user(
+            username="reassign_one",
+            email="reassign_one@example.com",
+            password="Test-password-482!",
+        )
+        cls.user_two = User.objects.create_user(
+            username="reassign_two",
+            email="reassign_two@example.com",
+            password="Test-password-482!",
+        )
+
+        group = Group.objects.create(name="FEEMAAS Operations")
+        cls.ops.groups.add(group)
+
+        customer = Organization.objects.create(
+            name="Reassignment Customer",
+            organization_type="customer",
+            status="active",
+            owner=cls.customer_user,
+        )
+        org_one = Organization.objects.create(
+            name="Consultant One",
+            organization_type="company",
+            status="active",
+            owner=cls.user_one,
+        )
+        cls.org_two = Organization.objects.create(
+            name="Consultant Two",
+            organization_type="company",
+            status="active",
+            owner=cls.user_two,
+        )
+        role = OrganizationRole.objects.create(
+            name="consultant",
+            organization_type="company",
+        )
+        cls.member_one = Membership.objects.create(
+            user=cls.user_one,
+            organization=org_one,
+            role_fk=role,
+            status="active",
+        )
+        cls.member_two = Membership.objects.create(
+            user=cls.user_two,
+            organization=cls.org_two,
+            role_fk=role,
+            status="active",
+        )
+        cls.project = Project.objects.create(
+            title="Reassignment Test Project",
+            customer=customer,
+            created_by=cls.customer_user,
+            status="consulting",
+        )
+        cls.old_assignment = ProjectAssignment.objects.create(
+            project=cls.project,
+            membership=cls.member_one,
+            assigned_by=cls.ops,
+            status="active",
+        )
+
+    def url(self):
+        return reverse(
+            "operations:reassign_consultant",
+            args=[self.project.pk],
+        )
+
+    def test_operations_can_reassign_and_history_is_preserved(self):
+        from projects.models import ProjectActivity, ProjectAssignment
+
+        self.client.force_login(self.ops)
+        response = self.client.post(
+            self.url(),
+            {"membership_id": str(self.member_two.pk)},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        self.old_assignment.refresh_from_db()
+        self.assertEqual(self.old_assignment.status, "inactive")
+        self.assertIsNotNone(self.old_assignment.ended_at)
+
+        new = ProjectAssignment.objects.get(
+            project=self.project,
+            status="active",
+        )
+        self.assertEqual(new.membership, self.member_two)
+        self.assertEqual(new.assigned_by, self.ops)
+        self.assertIsNotNone(new.started_at)
+        self.assertIsNone(new.ended_at)
+
+        event = ProjectActivity.objects.get(
+            project=self.project,
+            event_type="project.consultant_reassigned",
+        )
+        self.assertEqual(event.actor, self.ops)
+        self.assertEqual(
+            event.metadata["previous_assignment"]["assignment_id"],
+            self.old_assignment.pk,
+        )
+        self.assertEqual(
+            event.metadata["new_assignment"]["assignment_id"],
+            new.pk,
+        )
+
+    def test_same_consultant_is_no_op(self):
+        from projects.models import ProjectAssignment, ProjectActivity
+
+        self.client.force_login(self.ops)
+        response = self.client.post(
+            self.url(),
+            {"membership_id": str(self.member_one.pk)},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            ProjectAssignment.objects.filter(project=self.project).count(),
+            1,
+        )
+        self.assertFalse(
+            ProjectActivity.objects.filter(
+                project=self.project,
+                event_type="project.consultant_reassigned",
+            ).exists()
+        )
+
+    def test_historical_consultant_selection_creates_new_record(self):
+        from projects.models import ProjectAssignment
+
+        self.client.force_login(self.ops)
+        self.client.post(self.url(), {"membership_id": str(self.member_two.pk)})
+        self.client.post(self.url(), {"membership_id": str(self.member_one.pk)})
+
+        records = list(
+            ProjectAssignment.objects.filter(
+                project=self.project,
+            ).order_by("id").values_list("status", "membership_id")
+        )
+        self.assertEqual(len(records), 3)
+        self.assertEqual(
+            [record[0] for record in records],
+            ["inactive", "inactive", "active"],
+        )
+        self.assertEqual(records[-1][1], self.member_one.pk)
+
+    def test_draft_project_cannot_be_reassigned(self):
+        from projects.models import ProjectAssignment
+
+        self.project.status = "draft"
+        self.project.save(update_fields=["status"])
+        self.client.force_login(self.ops)
+        response = self.client.post(
+            self.url(),
+            {"membership_id": str(self.member_two.pk)},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.old_assignment.refresh_from_db()
+        self.assertEqual(self.old_assignment.status, "active")
+        self.assertEqual(
+            ProjectAssignment.objects.filter(
+                project=self.project,
+                status="active",
+            ).count(),
+            1,
+        )
+
+    def test_inactive_consultant_organization_is_rejected(self):
+        self.org_two.status = "suspended"
+        self.org_two.save(update_fields=["status"])
+        self.client.force_login(self.ops)
+        response = self.client.post(
+            self.url(),
+            {"membership_id": str(self.member_two.pk)},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.old_assignment.refresh_from_db()
+        self.assertEqual(self.old_assignment.status, "active")
+
+    def test_non_operations_user_is_forbidden(self):
+        normal = get_user_model().objects.create_user(
+            username="reassign_forbidden",
+            email="reassign_forbidden@example.com",
+            password="Test-password-482!",
+        )
+        self.client.force_login(normal)
+        response = self.client.post(
+            self.url(),
+            {"membership_id": str(self.member_two.pk)},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_is_not_allowed(self):
+        self.client.force_login(self.ops)
+        response = self.client.get(self.url())
+        self.assertEqual(response.status_code, 405)
+
+    def test_invalid_membership_id_does_not_change_assignment(self):
+        from projects.models import ProjectAssignment
+
+        self.client.force_login(self.ops)
+        response = self.client.post(
+            self.url(),
+            {"membership_id": "invalid"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            ProjectAssignment.objects.filter(project=self.project).count(),
+            1,
+        )

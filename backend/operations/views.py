@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from datetime import timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -21,7 +21,8 @@ from operations.models import (
     WorkshopStatusLog,
     TenderAvailabilityLog,
 )
-from projects.models import Project
+from projects.models import Project, ProjectAssignment
+from projects.services import reassign_project_consultant
 from django.contrib.auth import get_user_model
 
 
@@ -34,6 +35,37 @@ def _require_operations_access(user):
 
 
 @login_required
+@require_POST
+def reassign_consultant(request, project_id):
+    _require_operations_access(request.user)
+
+    membership_id = request.POST.get("membership_id", "").strip()
+    if not membership_id.isdigit():
+        messages.error(request, "شناسه عضویت مشاور معتبر نیست.")
+        return redirect("operations:dashboard")
+
+    project = get_object_or_404(Project, pk=project_id)
+    membership = get_object_or_404(Membership, pk=int(membership_id))
+
+    try:
+        assignment, changed = reassign_project_consultant(
+            project=project,
+            membership=membership,
+            operations_user=request.user,
+        )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("operations:dashboard")
+
+    if changed:
+        messages.success(request, "مشاور پروژه با موفقیت تغییر کرد.")
+    else:
+        messages.info(request, "این مشاور از قبل مسئول فعال پروژه است.")
+
+    return redirect("operations:dashboard")
+
+
+@login_required
 def operations_dashboard(request):
     _require_operations_access(request.user)
 
@@ -41,6 +73,37 @@ def operations_dashboard(request):
         return redirect("operations:dashboard")
 
     User = get_user_model()
+
+    consultant_assignment_projects = (
+        Project.objects
+        .filter(status__in=["consulting", "tender", "production"])
+        .select_related("customer")
+        .prefetch_related(
+            Prefetch(
+                "assignments",
+                queryset=ProjectAssignment.objects.filter(
+                    status="active"
+                ).select_related(
+                    "membership__user",
+                    "membership__organization",
+                ),
+                to_attr="active_consultant_assignments",
+            )
+        )
+        .order_by("-updated_at")
+    )
+
+    available_consultant_memberships = (
+        Membership.objects
+        .filter(
+            status="active",
+            role_fk__name="consultant",
+            organization__status="active",
+            user__is_active=True,
+        )
+        .select_related("user", "organization", "role_fk")
+        .order_by("organization__name", "user__username")
+    )
 
     projects_by_status = list(
         Project.objects.values("status")
@@ -107,6 +170,8 @@ def operations_dashboard(request):
         ).count(),
         "projects_by_status": projects_by_status,
         "project_status_labels": dict(Project.STATUS_CHOICES),
+        "consultant_assignment_projects": consultant_assignment_projects,
+        "available_consultant_memberships": available_consultant_memberships,
         "pending_access_requests": AccessRequest.objects.filter(
             status="pending"
         ).select_related("user").order_by("-created_at")[:12],

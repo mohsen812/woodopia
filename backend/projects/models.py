@@ -1,5 +1,6 @@
 ﻿from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from organizations.models import Organization
 
 
@@ -203,6 +204,15 @@ class ProjectAssignment(models.Model):
         default="active"
     )
 
+    started_at = models.DateTimeField(
+        default=timezone.now
+    )
+
+    ended_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
@@ -211,16 +221,12 @@ class ProjectAssignment(models.Model):
         auto_now=True
     )
 
-
     class Meta:
-
         constraints = [
             models.UniqueConstraint(
-                fields=[
-                    "project",
-                    "membership",
-                ],
-                name="unique_project_membership_assignment"
+                fields=["project"],
+                condition=models.Q(status="active"),
+                name="unique_active_project_assignment",
             )
         ]
 
@@ -245,6 +251,10 @@ class ProjectActivity(models.Model):
         (
             "project.consultant_claimed",
             "Project claimed by consultant",
+        ),
+        (
+            "project.consultant_reassigned",
+            "Project consultant reassigned",
         ),
     ]
 

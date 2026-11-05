@@ -39,6 +39,16 @@ button,input {font:inherit}
 }
 .workshop-reason:focus {border-color:var(--cyan)}
 .workshop-reason::placeholder {color:var(--muted)}
+.consultant-select {
+    display:block;width:100%;min-width:210px;margin-top:9px;padding:9px 11px;
+    border:1px solid var(--line);border-radius:9px;background:#0d192a;
+    color:var(--text);outline:none;font:inherit;
+}
+.consultant-select:focus {border-color:var(--cyan)}
+.assignment-form {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.assignment-form .consultant-select {flex:1;margin-top:0}
+.assignment-current {color:var(--muted);font-size:11px;line-height:1.9;margin-top:5px}
+.assignment-current strong {color:var(--text);font-weight:600}
 button {cursor:pointer}
 .layout {display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
 .sidebar {
@@ -208,6 +218,7 @@ td {color:#dbe6f6}
         <nav>
             <a class="active" href="#overview"><span class="nav-icon">◈</span> نمای کلی</a>
             <a href="#performance"><span class="nav-icon">◉</span> عملکرد سامانه</a>
+            <a href="#consultant-assignments"><span class="nav-icon">⇄</span> انتساب مشاوران <span class="tag">{{ consultant_assignment_projects|length }}</span></a>
             <a href="#access-queue"><span class="nav-icon">⌁</span> درخواست‌های دسترسی <span class="tag">{{ pending_access_count }}</span></a>
             <a href="#organization-queue"><span class="nav-icon">▦</span> درخواست‌های سازمانی <span class="tag">{{ pending_application_count }}</span></a>
             <a href="#workshop-management"><span class="nav-icon">⚒</span> مدیریت کارگاه‌ها <span class="tag">{{ workshops|length }}</span></a>
@@ -409,6 +420,57 @@ td {color:#dbe6f6}
                 <div class="live-caption">پنجرهٔ زمانی: ۵ دقیقه</div>
             </div>
         </div>
+    </section>
+
+    <section class="section-grid" id="consultant-assignments">
+        <article class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>انتساب و تغییر مشاور پروژه‌ها</h2>
+                    <p>هر پروژه فقط یک مشاور فعال دارد؛ سوابق انتساب قبلی حفظ می‌شوند.</p>
+                </div>
+                <span class="tag">{{ consultant_assignment_projects|length }} پروژه</span>
+            </div>
+            <div class="request-list">
+                {% for project in consultant_assignment_projects %}
+                {% with current_assignment=project.active_consultant_assignments.0 %}
+                <div class="request">
+                    <div class="request-name">{{ project.title|default:"پروژه بدون عنوان" }}</div>
+                    <div class="request-meta">
+                        شناسه: #{{ project.pk }} · مشتری: {{ project.customer.name|default:"—" }} · وضعیت: {{ project.get_status_display }}
+                    </div>
+                    <div class="assignment-current">
+                        مشاور فعلی:
+                        {% if current_assignment %}
+                            <strong>{{ current_assignment.membership.user.get_full_name|default:current_assignment.membership.user.username }}</strong>
+                            · {{ current_assignment.membership.organization.name }}
+                        {% else %}
+                            <strong>تخصیص نیافته</strong>
+                        {% endif %}
+                    </div>
+                    {% if available_consultant_memberships %}
+                    <form class="assignment-form" method="post" action="{% url 'operations:reassign_consultant' project.pk %}" onsubmit="return confirm('مشاور این پروژه تغییر کند؟ دسترسی مشاور قبلی قطع و سوابق گفتگو حفظ خواهد شد.');">
+                        {% csrf_token %}
+                        <select class="consultant-select" name="membership_id" required>
+                            <option value="" selected>انتخاب مشاور جدید…</option>
+                            {% for consultant in available_consultant_memberships %}
+                            <option value="{{ consultant.pk }}" {% if current_assignment and consultant.pk == current_assignment.membership_id %}selected{% endif %}>
+                                {{ consultant.user.get_full_name|default:consultant.user.username }} · {{ consultant.organization.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-primary" type="submit">ثبت انتساب</button>
+                    </form>
+                    {% else %}
+                    <div class="request-meta">در حال حاضر مشاور فعال و واجد شرایطی برای انتساب وجود ندارد.</div>
+                    {% endif %}
+                </div>
+                {% endwith %}
+                {% empty %}
+                <div class="empty">پروژه‌ای در وضعیت مشاوره، مناقصه یا تولید برای انتساب مشاور وجود ندارد.</div>
+                {% endfor %}
+            </div>
+        </article>
     </section>
 
     <section class="section-grid" id="access-queue">

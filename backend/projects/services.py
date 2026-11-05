@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils import timezone
 
 from organizations.models import Membership
 
@@ -61,8 +62,12 @@ def claim_project(project, membership):
     """
     Assign a project to a consultant.
 
-    The membership must belong to an active consultant.
+    The project row is locked to prevent concurrent claims.
     """
+
+    project = Project.objects.select_for_update().get(
+        pk=project.pk
+    )
 
     if membership.status != "active":
         raise ValueError(
@@ -84,17 +89,10 @@ def claim_project(project, membership):
             "Project is not available for consultant review."
         )
 
-    assignment = (
-        ProjectAssignment.objects
-        .select_for_update()
-        .filter(
-            project=project,
-            status="active",
-        )
-        .first()
-    )
-
-    if assignment:
+    if ProjectAssignment.objects.filter(
+        project=project,
+        status="active",
+    ).exists():
         raise ValueError(
             "Project has already been claimed."
         )
@@ -104,6 +102,7 @@ def claim_project(project, membership):
         membership=membership,
         assigned_by=None,
         status="active",
+        started_at=timezone.now(),
     )
 
     create_project_activity(
@@ -113,6 +112,92 @@ def claim_project(project, membership):
     )
 
     return assignment
+
+
+@transaction.atomic
+def reassign_project_consultant(project, membership, operations_user):
+    """
+    Reassign a project to an active consultant membership.
+
+    Historical assignments are never reactivated. Every real reassignment
+    creates a new ProjectAssignment record.
+    """
+
+    project = Project.objects.select_for_update().get(pk=project.pk)
+
+    allowed_statuses = ("consulting", "tender", "production")
+    if project.status not in allowed_statuses:
+        raise ValueError(
+            "Consultant reassignment is not allowed for this project status."
+        )
+
+    membership = (
+        Membership.objects
+        .select_related("organization", "role_fk", "user")
+        .get(pk=membership.pk)
+    )
+
+    if membership.status != "active":
+        raise ValueError("Consultant membership is not active.")
+
+    if not membership.role_fk or membership.role_fk.name != "consultant":
+        raise ValueError("Selected membership is not a consultant.")
+
+    if membership.organization.status != "active":
+        raise ValueError("Consultant organization is not active.")
+
+    current = (
+        ProjectAssignment.objects
+        .select_related("membership__user", "membership__organization")
+        .filter(project=project, status="active")
+        .first()
+    )
+
+    if current and current.membership_id == membership.pk:
+        return current, False
+
+    now = timezone.now()
+    previous_metadata = None
+
+    if current:
+        previous_metadata = {
+            "assignment_id": current.pk,
+            "membership_id": current.membership_id,
+            "user_id": current.membership.user_id,
+            "organization_id": current.membership.organization_id,
+        }
+        current.status = "inactive"
+        current.ended_at = now
+        current.save(
+            update_fields=["status", "ended_at", "updated_at"]
+        )
+
+    new_assignment = ProjectAssignment.objects.create(
+        project=project,
+        membership=membership,
+        assigned_by=operations_user,
+        status="active",
+        started_at=now,
+        ended_at=None,
+    )
+
+    create_project_activity(
+        project=project,
+        event_type="project.consultant_reassigned",
+        actor=operations_user,
+        metadata={
+            "previous_assignment": previous_metadata,
+            "new_assignment": {
+                "assignment_id": new_assignment.pk,
+                "membership_id": membership.pk,
+                "user_id": membership.user_id,
+                "organization_id": membership.organization_id,
+            },
+            "operations_user_id": operations_user.pk,
+        },
+    )
+
+    return new_assignment, True
 
 
 def get_consultant_projects(membership):
