@@ -43,6 +43,10 @@ path(
     include("workspace.urls")
     ),
     path(
+        "api/chat/",
+        include("chat.urls")
+    ),
+    path(
     "workspace/",
     include("workspace.urls")
     ),

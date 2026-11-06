@@ -14,6 +14,7 @@
 
 <link rel="stylesheet"
       href="{% static 'workspace/workshop/css/workshop.css' %}">
+<link rel="stylesheet" href="{% static 'workspace/core/css/project-chat.css' %}">
 
 </head>
 
@@ -692,13 +693,7 @@
                 class="project-tab-content"
                 data-project-content="discussion">
 
-                <div class="workspace-panel">
-
-                    <div class="empty-state">
-                        بخش گفتگو آماده توسعه است.
-                    </div>
-
-                </div>
+                <div class="project-chat-mount" data-project-chat-mount></div>
 
             </section>
 
@@ -857,7 +852,9 @@
      SCRIPTS
 ========================================================== -->
 
+<script src="{% static 'workspace/core/js/project-chat.js' %}"></script>
 <script src="{% static 'workspace/workshop/js/workshop.js' %}"></script>
+
 
 <script src="{% static 'workspace/workshop/js/workshop-project.js' %}"></script>
 

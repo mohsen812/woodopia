@@ -1516,6 +1516,13 @@ const projectProgressHtml =
         project.progress
     );
 
+    const previousChatContainer =
+        projectView.querySelector("[data-project-chat-mount]");
+
+    if (previousChatContainer && window.ProjectChat) {
+        window.ProjectChat.destroy(previousChatContainer);
+    }
+
     projectView.innerHTML = `
 
         <button
@@ -1786,22 +1793,7 @@ const projectProgressHtml =
                 data-project-tab-content="messages"
             >
 
-                <div class="project-tab-panel">
-
-                    <span class="eyebrow">
-                        PROJECT MESSAGES
-                    </span>
-
-                    <h3>
-                        پیام‌های پروژه
-                    </h3>
-
-                    <p>
-                        ارتباطات مشتری، مشاور، کارگاه،
-                        طراح و سایر عوامل پروژه در این بخش نمایش داده خواهد شد.
-                    </p>
-
-                </div>
+                <div class="project-chat-mount" data-project-chat-mount></div>
 
             </div>
 
@@ -2028,6 +2020,27 @@ const projectProgressHtml =
                             );
 
                         }
+
+                        if (target === "messages") {
+                            const chatContainer = targetPanel
+                                ? targetPanel.querySelector("[data-project-chat-mount]")
+                                : null;
+
+                            if (chatContainer && window.ProjectChat) {
+                                window.ProjectChat.mount({
+                                    projectId: project.id,
+                                    container: chatContainer
+                                });
+                            }
+                        } else {
+                            const existingChatContainer =
+                                projectView.querySelector("[data-project-chat-mount]");
+
+                            if (existingChatContainer && window.ProjectChat) {
+                                window.ProjectChat.close(existingChatContainer);
+                            }
+                        }
+
 if (
     target === "tender"
 ) {
@@ -2242,6 +2255,13 @@ if (sendToConsultantButton) {
         closeProjectViewButton.addEventListener(
 	        "click",
             function () {
+
+                const chatContainer =
+                    projectView.querySelector("[data-project-chat-mount]");
+
+                if (chatContainer && window.ProjectChat) {
+                    window.ProjectChat.destroy(chatContainer);
+                }
 
                 projectView.classList.add("hidden");
 

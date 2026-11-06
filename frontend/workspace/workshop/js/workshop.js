@@ -670,6 +670,13 @@
             }
 
 
+            const chatContainer =
+                modal.querySelector("[data-project-chat-mount]");
+
+            if (chatContainer && window.ProjectChat) {
+                window.ProjectChat.destroy(chatContainer);
+            }
+
             modal.classList.remove("open");
 
             modal.setAttribute(

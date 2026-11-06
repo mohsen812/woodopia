@@ -58,6 +58,14 @@ def reassign_consultant(request, project_id):
         return redirect("operations:dashboard")
 
     if changed:
+        from chat.services import refresh_project_chat_access
+
+        transaction.on_commit(
+            lambda: refresh_project_chat_access(
+                project.pk,
+                added_by=request.user,
+            )
+        )
         messages.success(request, "مشاور پروژه با موفقیت تغییر کرد.")
     else:
         messages.info(request, "این مشاور از قبل مسئول فعال پروژه است.")

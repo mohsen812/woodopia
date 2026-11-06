@@ -23,6 +23,15 @@
             }
 
 
+            const previousChatContainer = document.querySelector(
+                '#workshop-project-modal [data-project-chat-mount]'
+            );
+
+            if (previousChatContainer && window.ProjectChat) {
+                window.ProjectChat.destroy(previousChatContainer);
+            }
+
+
             this.currentProject = {
                 ...project
             };
@@ -250,6 +259,33 @@
                             target
                         );
 
+
+
+                        if (target === "discussion") {
+                            const discussionPanel = modal.querySelector(
+                                '[data-project-content="discussion"]'
+                            );
+                            const chatContainer = discussionPanel
+                                ? discussionPanel.querySelector("[data-project-chat-mount]")
+                                : null;
+                            const project = this.currentProject || {};
+                            const projectId =
+                                project.project_id || project.projectId || project.id;
+
+                            if (chatContainer && projectId && window.ProjectChat) {
+                                window.ProjectChat.mount({
+                                    projectId: projectId,
+                                    container: chatContainer
+                                });
+                            }
+                        } else {
+                            const existingChatContainer =
+                                modal.querySelector("[data-project-chat-mount]");
+
+                            if (existingChatContainer && window.ProjectChat) {
+                                window.ProjectChat.close(existingChatContainer);
+                            }
+                        }
 
 
                         if (target === "files") {

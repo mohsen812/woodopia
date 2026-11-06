@@ -1196,6 +1196,38 @@ function renderConsultantProjectTab(
         consultantCurrentProject;
 
 
+    if (tab === "messages") {
+
+        let chatContainer =
+            content.querySelector("[data-project-chat-mount]");
+
+        if (!chatContainer) {
+            content.innerHTML =
+                '<div class="project-chat-mount" data-project-chat-mount></div>';
+
+            chatContainer =
+                content.querySelector("[data-project-chat-mount]");
+        }
+
+        if (chatContainer && window.ProjectChat) {
+            window.ProjectChat.mount({
+                projectId: project.id,
+                container: chatContainer
+            });
+        }
+
+        return;
+    }
+
+
+    const existingChatContainer =
+        content.querySelector("[data-project-chat-mount]");
+
+    if (existingChatContainer && window.ProjectChat) {
+        window.ProjectChat.close(existingChatContainer);
+    }
+
+
     switch (tab) {
 
 
@@ -1312,27 +1344,6 @@ function renderConsultantProjectTab(
         /* ------------------------------------------
            OTHER MVP TABS
         ------------------------------------------ */
-
-        case "messages":
-
-            content.innerHTML = `
-
-                <div class="empty-state">
-
-                    <h3>
-                        گفتگو
-                    </h3>
-
-                    <p>
-                        بخش گفتگو در MVP بعدی تکمیل می‌شود.
-                    </p>
-
-                </div>
-
-            `;
-
-            break;
-
 
         case "timeline":
 
