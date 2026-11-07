@@ -42,7 +42,7 @@
          DASHBOARD SIDEBAR
     ========================== -->
 
-    <aside class="sidebar">
+    <aside class="sidebar" id="customer-sidebar" aria-label="منوی اصلی">
 
         <div class="brand">
 
@@ -239,6 +239,8 @@
     درخواست همکاری
 </button>
 </aside>
+
+
     <!-- =========================
          MAIN WORKSPACE
     ========================== -->
@@ -260,7 +262,8 @@
 
         <header class="topbar">
 
-            <div>
+
+            <div class="topbar-heading">
 
                 <div class="breadcrumb">
                     FEEMAAS / Workspace
@@ -755,6 +758,51 @@
         <a href="/users/logout/" class="primary-button">خروج از حساب</a>
     </div>
 </section>
+
+        <!-- MOBILE BOTTOM NAVIGATION -->
+        <div class="mobile-more-backdrop" id="mobile-more-backdrop"
+             aria-hidden="true"></div>
+
+        <section class="mobile-more-panel" id="mobile-more-panel"
+                 aria-label="سایر بخش‌ها" aria-hidden="true">
+            <div class="mobile-more-heading">
+                <strong>سایر بخش‌ها</strong>
+                <button type="button" id="mobile-more-close"
+                        aria-label="بستن">×</button>
+            </div>
+            <div class="mobile-more-grid">
+                <button class="mobile-more-item" data-view="tenders">◇ <span>مناقصه‌ها</span></button>
+                <button class="mobile-more-item" data-view="contracts">▤ <span>قراردادها</span></button>
+                <button class="mobile-more-item" data-view="payments">◈ <span>پرداخت‌ها</span></button>
+                <button class="mobile-more-item" data-view="files">□ <span>فایل‌ها</span></button>
+                <button class="mobile-more-item" data-view="settings">⚙ <span>تنظیمات</span></button>
+                <button class="mobile-more-item" data-view="profile">● <span>حساب کاربری</span></button>
+                <button class="mobile-more-item collaboration-request-trigger"
+                        data-action="collaboration-request">✦ <span>درخواست همکاری</span></button>
+            </div>
+        </section>
+
+        <nav class="mobile-bottom-nav" aria-label="ناوبری اصلی">
+            <button class="mobile-bottom-item active" data-view="dashboard">
+                <span class="mobile-bottom-icon">⌂</span>
+                <span>خانه</span>
+            </button>
+            <button class="mobile-bottom-item" data-view="projects">
+                <span class="mobile-bottom-icon">▣</span>
+                <span>پروژه‌ها</span>
+            </button>
+            <button class="mobile-bottom-item" data-view="messages">
+                <span class="mobile-bottom-icon">✉</span>
+                <span>پیام‌ها</span>
+            </button>
+            <button class="mobile-bottom-item" type="button"
+                    id="mobile-more-toggle" aria-expanded="false"
+                    aria-controls="mobile-more-panel">
+                <span class="mobile-bottom-icon">•••</span>
+                <span>بیشتر</span>
+            </button>
+        </nav>
+
 </main>
   
 

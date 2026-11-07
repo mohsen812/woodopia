@@ -1,18 +1,20 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>FEEMAAS | انتخاب محیط</title>
+    <title>FEEMAAS | انتخاب محیط کاری</title>
 
     <style>
+        :root {
+            --text: #202938;
+            --muted: #8992a2;
+            --border: #edf0f5;
+            --surface: #ffffff;
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -20,250 +22,518 @@
         body {
             margin: 0;
             min-height: 100vh;
+            font-family: Tahoma, Arial, sans-serif;
+            color: var(--text);
+            background: #ffffff;
+            overflow-x: hidden;
+        }
 
-            font-family:
-                Tahoma,
-                Arial,
-                sans-serif;
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: .17;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-            background:
-                radial-gradient(
-                    circle at top right,
-                    rgba(164, 112, 57, 0.16),
-                    transparent 34%
-                ),
-                #11100e;
+        body::before {
+            top: -220px;
+            right: -150px;
+            background: #b8d9ff;
+        }
 
-            color: #f4f1eb;
+        body::after {
+            bottom: -230px;
+            left: -140px;
+            background: #e5caff;
+        }
 
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-
-            padding: 32px;
+            align-items: center;
+            padding: 55px 24px;
         }
 
         .gateway {
-            width: min(920px, 100%);
+            width: 100%;
+            max-width: 1080px;
+            margin: auto;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 34px;
+            margin-bottom: 48px;
+            animation: fade-up .65s ease both;
         }
 
         .brand {
-            font-size: 32px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            direction: ltr;
+            margin-bottom: 30px;
+        }
+
+        .brand-mark {
+            width: 39px;
+            height: 39px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            color: white;
+            font-size: 20px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #5278f5, #8256df);
+            box-shadow: 0 7px 18px rgba(101, 108, 231, .23);
+        }
+
+        .brand-name {
+            font-size: 23px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #253047;
+        }
+
+        .eyebrow {
+            color: #7183bd;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        .heading {
+            font-size: clamp(25px, 4vw, 35px);
             font-weight: 800;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
+            line-height: 1.7;
+            margin: 0 0 10px;
+            color: #202a3b;
         }
 
         .subtitle {
-            color: #b9b4ac;
-            font-size: 15px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 2;
+            margin: 0;
         }
 
         .workspace-grid {
             display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
 
-            grid-template-columns:
-                repeat(
-                    auto-fit,
-                    minmax(240px, 1fr)
-                );
+        .workspace-form {
+            min-width: 0;
+            margin: 0;
+            animation: fade-up .65s ease both;
+        }
 
-            gap: 18px;
+        .workspace-form:nth-child(2) {
+            animation-delay: .08s;
+        }
+
+        .workspace-form:nth-child(3) {
+            animation-delay: .16s;
+        }
+
+        .workspace-form:nth-child(4) {
+            animation-delay: .24s;
         }
 
         .workspace-card {
+            --accent: #5278f5;
+            --soft: #edf2ff;
+            --glow: rgba(82, 120, 245, .12);
+
+            position: relative;
             display: block;
-
-            border: 1px solid
-                rgba(255, 255, 255, 0.10);
-
-            border-radius: 18px;
-
-            padding: 26px;
-
-            background:
-                rgba(255, 255, 255, 0.045);
-
-            color: inherit;
-
-            text-decoration: none;
-
+            width: 100%;
+            min-height: 215px;
+            padding: 27px;
+            overflow: hidden;
+            text-align: right;
+            font-family: inherit;
+            color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 23px;
+            cursor: pointer;
+            box-shadow: 0 5px 22px rgba(30, 45, 75, .035);
             transition:
-                transform 0.18s ease,
-                border-color 0.18s ease,
-                background 0.18s ease;
+                transform .28s ease,
+                box-shadow .28s ease,
+                border-color .28s ease;
+        }
 
-            backdrop-filter: blur(8px);
+        .workspace-card::before {
+            content: "";
+            position: absolute;
+            width: 175px;
+            height: 175px;
+            left: -70px;
+            bottom: -100px;
+            border-radius: 50%;
+            background: var(--glow);
+            transition: transform .4s ease;
         }
 
         .workspace-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-7px);
+            border-color: var(--accent);
+            box-shadow: 0 18px 42px var(--glow);
+        }
 
-            border-color:
-                rgba(221, 169, 98, 0.65);
+        .workspace-card:hover::before {
+            transform: scale(1.6);
+        }
 
-            background:
-                rgba(255, 255, 255, 0.075);
+        .workspace-card:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        .workspace-card.customer {
+            --accent: #3985e8;
+            --soft: #eaf3ff;
+            --glow: rgba(57, 133, 232, .14);
+        }
+
+        .workspace-card.workshop {
+            --accent: #e18a3b;
+            --soft: #fff2e5;
+            --glow: rgba(225, 138, 59, .14);
+        }
+
+        .workspace-card.consultant {
+            --accent: #16a68b;
+            --soft: #e4f8f2;
+            --glow: rgba(22, 166, 139, .14);
+        }
+
+        .workspace-card.designer {
+            --accent: #9662db;
+            --soft: #f2eaff;
+            --glow: rgba(150, 98, 219, .14);
+        }
+
+        .workspace-card.company {
+            --accent: #64748b;
+            --soft: #eef2f6;
+            --glow: rgba(100, 116, 139, .14);
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 23px;
         }
 
         .workspace-icon {
-            width: 54px;
-            height: 54px;
-
-            border-radius: 50%;
-
+            width: 62px;
+            height: 62px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 19px;
+            color: var(--accent);
+            background: var(--soft);
+            transition:
+                transform .35s ease,
+                border-radius .35s ease;
+        }
 
-            margin-bottom: 18px;
+        .workspace-card:hover .workspace-icon {
+            transform: rotate(-7deg) scale(1.09);
+            border-radius: 22px;
+        }
 
-            font-size: 23px;
+        .workspace-icon svg {
+            width: 31px;
+            height: 31px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
-            background:
-                rgba(221, 169, 98, 0.12);
-
-            border:
-                1px solid
-                rgba(221, 169, 98, 0.35);
+        .card-number {
+            color: #c3c9d3;
+            font-size: 12px;
+            font-weight: 700;
+            direction: ltr;
         }
 
         .workspace-name {
             font-size: 19px;
-            font-weight: 700;
-
-            margin-bottom: 8px;
+            font-weight: 800;
+            margin-bottom: 9px;
+            color: #263247;
         }
 
         .organization-name {
-            color: #aaa49b;
-            font-size: 13px;
-
-            margin-bottom: 18px;
+            min-height: 20px;
+            color: #929aaa;
+            font-size: 12px;
+            margin-bottom: 10px;
+            line-height: 1.8;
         }
 
         .workspace-role {
-            color: #d9d2c8;
-            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent);
+            background: var(--soft);
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
         }
 
         .enter {
-            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 22px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f2f6;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 800;
+        }
 
-            color: #dcae6a;
+        .enter-arrow {
+            font-size: 18px;
+            transition: transform .25s ease;
+        }
 
-            font-size: 13px;
-            font-weight: 700;
+        .workspace-card:hover .enter-arrow {
+            transform: translateX(-5px);
+        }
+
+        .footer {
+            text-align: center;
+            color: #b0b6c1;
+            font-size: 11px;
+            margin-top: 38px;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .page {
+                align-items: flex-start;
+                padding: 40px 17px;
+            }
+
+            .header {
+                margin-bottom: 32px;
+            }
+
+            .brand {
+                margin-bottom: 22px;
+            }
+
+            .workspace-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .workspace-card {
+                min-height: 195px;
+                padding: 22px;
+                border-radius: 19px;
+            }
+
+            .workspace-icon {
+                width: 55px;
+                height: 55px;
+            }
+
+            .footer {
+                margin-top: 28px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="gateway">
+<div class="page">
+    <main class="gateway">
 
-    <div class="header">
+        <header class="header">
 
-        <div class="brand">
-            FEEMAAS
-        </div>
+            <div class="brand">
+                <div class="brand-mark">F</div>
+                <div class="brand-name">FEEMAAS</div>
+            </div>
 
-        <div class="subtitle">
-            محیط کاری موردنظر خود را انتخاب کنید
-        </div>
+            <div class="eyebrow">YOUR WORKSPACE</div>
 
-    </div>
+            <h1 class="heading">
+                به فضای کاری خود خوش آمدید
+            </h1>
 
+            <p class="subtitle">
+                برای ادامه، محیط کاری موردنظر خود را انتخاب کنید.
+            </p>
 
-    <div class="workspace-grid">
+        </header>
 
-        {% for workspace in workspaces %}
+        <section class="workspace-grid" aria-label="محیط‌های کاری">
 
-            <form
-                method="post"
-                action="{% url 'workspace_switch' %}"
-                class="workspace-card"
-            >
+            {% for workspace in workspaces %}
 
-                {% csrf_token %}
-
-                <input
-                    type="hidden"
-                    name="membership_id"
-                    value="{{ workspace.membership_id }}"
+                <form
+                    method="post"
+                    action="{% url 'workspace_switch' %}"
+                    class="workspace-form"
                 >
+                    {% csrf_token %}
 
-                <button
-                    type="submit"
-                    style="
-                        all: unset;
-                        display: block;
-                        width: 100%;
-                        cursor: pointer;
-                    "
-                >
+                    <input
+                        type="hidden"
+                        name="membership_id"
+                        value="{{ workspace.membership_id }}"
+                    >
 
-                    <div class="workspace-icon">
+                    <button
+                        type="submit"
+                        class="workspace-card {{ workspace.workspace }}"
+                        aria-label="ورود به محیط {{ workspace.workspace }}"
+                    >
 
-                        {% if workspace.workspace == "customer" %}
-                            C
-                        {% elif workspace.workspace == "workshop" %}
-                            W
-                        {% elif workspace.workspace == "consultant" %}
-                            C
-                        {% elif workspace.workspace == "designer" %}
-                            D
-                        {% else %}
-                            F
-                        {% endif %}
+                        <div class="card-content">
 
-                    </div>
+                            <div class="card-top">
 
+                                <div class="workspace-icon">
 
-                    <div class="workspace-name">
+                                    {% if workspace.workspace == "customer" %}
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
 
-                        {% if workspace.workspace == "customer" %}
-                            محیط مشتری
-                        {% elif workspace.workspace == "workshop" %}
-                            محیط کارگاه
-                        {% elif workspace.workspace == "consultant" %}
-                            محیط مشاور
-                        {% elif workspace.workspace == "designer" %}
-                            محیط طراح
-                        {% else %}
-                            محیط FEEMAAS
-                        {% endif %}
+                                    {% elif workspace.workspace == "workshop" %}
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M3 21V8l6 3V8l6 3V5l6-3v19H3Z"/>
+                                            <path d="M8 21v-5h4v5"/>
+                                            <path d="M16 14h2"/>
+                                        </svg>
 
-                    </div>
+                                    {% elif workspace.workspace == "consultant" %}
+                                        <svg viewBox="0 0 24 24">
+                                            <rect x="3" y="7" width="18" height="14" rx="2"/>
+                                            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                            <path d="M3 12h18"/>
+                                            <path d="M10 12v2h4v-2"/>
+                                        </svg>
 
+                                    {% elif workspace.workspace == "designer" %}
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="m15 5 4 4"/>
+                                            <path d="M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/>
+                                            <path d="m13 7 4 4"/>
+                                        </svg>
 
-                    <div class="organization-name">
-                        {{ workspace.organization_name }}
-                    </div>
+                                    {% else %}
+                                        <svg viewBox="0 0 24 24">
+                                            <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                            <path d="M8 8h8v8H8z"/>
+                                            <path d="M8 3v5M16 3v5M8 16v5M16 16v5"/>
+                                        </svg>
+                                    {% endif %}
 
+                                </div>
 
-                    <div class="workspace-role">
-                        نقش: {{ workspace.role }}
-                    </div>
+                                <span class="card-number">
+                                    {{ forloop.counter|stringformat:"02d" }}
+                                </span>
 
+                            </div>
 
-                    <div class="enter">
-                        ورود به محیط ←
-                    </div>
+                            <div class="workspace-name">
 
-                </button>
+                                {% if workspace.workspace == "customer" %}
+                                    محیط مشتری
+                                {% elif workspace.workspace == "workshop" %}
+                                    محیط کارگاه
+                                {% elif workspace.workspace == "consultant" %}
+                                    محیط مشاور
+                                {% elif workspace.workspace == "designer" %}
+                                    محیط طراح
+                                {% else %}
+                                    محیط سازمانی
+                                {% endif %}
 
-            </form>
+                            </div>
 
-        {% endfor %}
+                            <div class="organization-name">
+                                {{ workspace.organization_name }}
+                            </div>
 
-    </div>
+                            <span class="workspace-role">
+                                نقش: {{ workspace.role }}
+                            </span>
 
+                            <div class="enter">
+                                <span>ورود به این محیط</span>
+                                <span class="enter-arrow">←</span>
+                            </div>
+
+                        </div>
+
+                    </button>
+
+                </form>
+
+            {% endfor %}
+
+        </section>
+
+        <footer class="footer">
+            FEEMAAS · فضای یکپارچه مدیریت و همکاری
+        </footer>
+
+    </main>
 </div>
 
 </body>

@@ -2008,3 +2008,70 @@ class ProjectTenderVisibilityAPITests(TestCase):
 
             self.assertEqual(len(bids), 1)
             self.assertEqual(bids[0]["workshop"], self.workshop.id)
+
+
+class CustomerStandardizationAPITests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+
+        self.user = User.objects.create_user(
+            username="standardization_customer",
+            email="standardization_customer@example.com",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="standardization_other",
+            email="standardization_other@example.com",
+            password="testpass123",
+        )
+
+        self.customer = Organization.objects.create(
+            name="Standardization Customer",
+            organization_type="customer",
+            status="active",
+            owner=self.user,
+        )
+
+        role = OrganizationRole.objects.create(
+            name="owner",
+            organization_type="customer",
+        )
+
+        Membership.objects.create(
+            user=self.user,
+            organization=self.customer,
+            role_fk=role,
+            status="active",
+        )
+
+        self.project = Project.objects.create(
+            title="Standardization API Project",
+            customer=self.customer,
+            created_by=self.user,
+            status="consulting",
+        )
+
+    def test_customer_can_view_own_project_standardization(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            f"/api/projects/{self.project.id}/standardization/view/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data["project_id"],
+            self.project.id,
+        )
+        self.assertEqual(response.data["items"], [])
+
+    def test_other_user_cannot_view_customer_standardization(self):
+        self.client.force_authenticate(user=self.other_user)
+
+        response = self.client.get(
+            f"/api/projects/{self.project.id}/standardization/view/"
+        )
+
+        self.assertEqual(response.status_code, 404)

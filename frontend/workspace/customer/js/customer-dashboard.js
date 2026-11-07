@@ -211,6 +211,58 @@ document.addEventListener(
                 ".topbar h1"
             );
 
+        const moreToggle = document.getElementById("mobile-more-toggle");
+        const morePanel = document.getElementById("mobile-more-panel");
+        const moreBackdrop = document.getElementById("mobile-more-backdrop");
+        const moreClose = document.getElementById("mobile-more-close");
+
+        function closeMobileMenu(returnFocus = false) {
+            if (!morePanel) return;
+            morePanel.classList.remove("is-open");
+            if (moreBackdrop) moreBackdrop.classList.remove("is-visible");
+            morePanel.setAttribute("aria-hidden", "true");
+            if (moreBackdrop) moreBackdrop.setAttribute("aria-hidden", "true");
+            if (moreToggle) moreToggle.setAttribute("aria-expanded", "false");
+            if (returnFocus && moreToggle) moreToggle.focus();
+        }
+
+        function openMobileMenu() {
+            if (!morePanel) return;
+            morePanel.classList.add("is-open");
+            if (moreBackdrop) moreBackdrop.classList.add("is-visible");
+            morePanel.setAttribute("aria-hidden", "false");
+            if (moreBackdrop) moreBackdrop.setAttribute("aria-hidden", "false");
+            if (moreToggle) moreToggle.setAttribute("aria-expanded", "true");
+        }
+
+        if (moreToggle) {
+            moreToggle.addEventListener("click", function () {
+                if (morePanel && morePanel.classList.contains("is-open")) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+        }
+
+        if (moreClose) moreClose.addEventListener("click", () => closeMobileMenu());
+        if (moreBackdrop) moreBackdrop.addEventListener("click", () => closeMobileMenu());
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && morePanel &&
+                morePanel.classList.contains("is-open")) {
+                closeMobileMenu(true);
+            }
+        });
+
+        const collaborationTrigger = document.querySelector(
+            '[data-action="collaboration-request"]'
+        );
+        if (collaborationTrigger) {
+            collaborationTrigger.addEventListener("click", function () {
+                closeMobileMenu();
+            });
+        }
 
         navItems.forEach(
             item => {
@@ -279,20 +331,12 @@ document.addEventListener(
                         }
 
 
-                        navItems.forEach(
-                            nav => {
-
-                                nav.classList.remove(
-                                    "active"
-                                );
-
-                            }
-                        );
-
-
-                        this.classList.add(
-                            "active"
-                        );
+                        navItems.forEach(nav => {
+                            nav.classList.toggle(
+                                "active",
+                                nav.dataset.view === target
+                            );
+                        });
 
 
                         if(pageTitle){
@@ -335,6 +379,7 @@ document.addEventListener(
 
                         }
 
+                        closeMobileMenu();
 
                     }
                 );
@@ -469,18 +514,20 @@ document.addEventListener("DOMContentLoaded", function () {
             await loadHistory();
         } catch (error) {
             const detail = String(error.message || "");
-            const match = detail.match(/-\s*(\{.*\})\s*$/);
+            const separator = " - ";
+            const separatorIndex = detail.indexOf(separator);
+            const serverMessage = separatorIndex >= 0
+                ? detail.substring(separatorIndex + separator.length)
+                : "";
+
             let friendly = "ثبت درخواست ناموفق بود. لطفاً دوباره تلاش کنید.";
 
-            if (match) {
-                try {
-                    const parsed = JSON.parse(match[1]);
-                    if (parsed.error) friendly = parsed.error;
-                } catch (ignored) {}
-            } else if (detail.includes("409")) {
-                friendly = "برای این نوع همکاری یک درخواست در انتظار بررسی دارید.";
-            } else if (detail.includes("403")) {
+            if (detail.includes("API Error: 409")) {
+                friendly = serverMessage || "برای این نوع همکاری یک درخواست در انتظار بررسی دارید.";
+            } else if (detail.includes("API Error: 403")) {
                 friendly = "نشست شما منقضی شده است؛ صفحه را تازه‌سازی و دوباره وارد شوید.";
+            } else if (detail.includes("API Error: 400")) {
+                friendly = serverMessage || friendly;
             }
 
             showMessage(friendly, true);
